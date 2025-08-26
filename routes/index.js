@@ -1,8 +1,12 @@
 import express from 'express';
 const router = express.Router();
 
-router.get('/', (req, res) => {
-    res.render('index', { title: 'Home' });
+import db from '../config/dynamoDB.js';
+
+router.get('/', async (req, res) => {
+    const data = await db.getFormData();
+
+    res.render('index', { data });
     });
 
 export default router;
