@@ -30,8 +30,8 @@ class DynamoDB {
 
             };
             const data = await this.docClient.send(new ScanCommand(params));
-      console.log("Form data fetched successfully", data.Items);
-            return data.Items;
+      console.log("Form data fetched successfully", data.Items || []);
+            return data.Items || [];
         } catch (error) {
             console.error("Error fetching form data:", error);
             throw new Error("Could not fetch form data");
