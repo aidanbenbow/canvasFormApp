@@ -21,6 +21,12 @@ hitCanvas.height = config[layer].height;
             mainCanvas.style.backgroundColor = config[layer].bg;
             hitCanvas.style.backgroundColor = config[layer].hitBg;
           
-        }
+        } 
+    }
+    getContext(layer){
+        return this.layers[layer]?.ctx || null;
+    }
+    getHitContext(layer){
+        return this.layers[layer]?.hitCtx || null;
     }
 }

@@ -15,7 +15,7 @@ class DynamoDB {
         });
 
         this.docClient = DynamoDBDocumentClient.from(client);
-        console.log(this.docClient);
+        
     }
     async getFormData() {
         try {
@@ -30,7 +30,7 @@ class DynamoDB {
 
             };
             const data = await this.docClient.send(new ScanCommand(params));
-      console.log("Form data fetched successfully", data.Items || []);
+     
             return data.Items || [];
         } catch (error) {
             console.error("Error fetching form data:", error);

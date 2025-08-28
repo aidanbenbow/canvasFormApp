@@ -1,3 +1,6 @@
+import { TextBoxRenderer } from "./renderers/boxes/textBox.js";
+import { InputBoxRenderer } from "./renderers/boxes/inputBox.js";
+
 export const canvasConfig = {
     main: {
         mainId: '#mainCanvas',
@@ -8,3 +11,16 @@ export const canvasConfig = {
         height: 600,
     }
 }
+
+export const myPluginManifest = {
+    renderers: [
+      {
+        id: 'textBox',
+        class: TextBoxRenderer
+      },
+      {
+        id: 'inputBox',
+        class: InputBoxRenderer
+      }
+    ]
+  };
