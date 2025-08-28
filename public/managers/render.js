@@ -9,8 +9,8 @@ export class RenderManager {
     }
 
     render(drawable, context) {
-        
-        const renderer = this.registry.get(drawable.type) || this.fallbackRenderer;
+        const isFirstScreenRender = context.firstScreen
+        const renderer = isFirstScreenRender ? this.registry.get('formIcon') : this.registry.get(drawable.type) || this.fallbackRenderer;
    
         renderer?.render?.(drawable, context); // Optional renderer method per drawable type
         

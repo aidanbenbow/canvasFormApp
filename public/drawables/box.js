@@ -20,7 +20,11 @@ export class Box {
             }),
             ...(type === 'imageBox' && {
                 image: generateHitHex(`${type}-image-${this.id}`)
-            })
+            }),
+            ...(type === 'textBox' && {
+                icon0: generateHitHex(`${type}-icon0-${this.id}`),
+                icon1: generateHitHex(`${type}-icon1-${this.id}`)
+              })
         
         };
         

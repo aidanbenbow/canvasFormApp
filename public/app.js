@@ -1,6 +1,7 @@
 import { canvasConfig, myPluginManifest } from "./constants.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
+import { formIconPlugin } from "./plugins/formIconPlugin.js";
 
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
@@ -19,9 +20,10 @@ const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
 
 renderBuild.registerFromManifest(myPluginManifest)
+renderBuild.usePlugin(formIconPlugin)
 
 const context = renderBuild.createRendererContext()
-
+context.firstScreen = true;
 
 const rendererSystem = renderBuild.createRendererSystem()
 rendererSystem.start();
@@ -39,14 +41,16 @@ async function init(data) {
       console.error('Expected array, got:', info);
       return;
     }
-  
+  let gap = 20;
     for (const form of info) {
       
       for (const item of form.formStructure) {
+        item.startPosition.y += gap;
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
         const renderer = context.pipeline.renderManager
         const box = createBox(item, renderer);
         context.pipeline.add(box);
+        gap += 20;
       }
     }
   }

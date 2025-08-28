@@ -1,5 +1,6 @@
 import { TextBoxRenderer } from "./renderers/boxes/textBox.js";
 import { InputBoxRenderer } from "./renderers/boxes/inputBox.js";
+import { FormIconRenderer } from "./renderers/formIcon.js";
 
 export const canvasConfig = {
     main: {

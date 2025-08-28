@@ -68,7 +68,12 @@ export class RenderSystemBuilder {
           this.eventBus.emit('rendererOverridden', { type, renderer });
         });
       }
-    
+      usePlugin(plugin) {
+        plugin.registerRenderers?.(this.rendererRegistry, this.eventBus);
+        plugin.registerActions?.(this.actionRegistry); // if you support actions
+        plugin.registerOverlays?.(this.overlayRegistry); // if overlays are modular
+        plugin.registerLifecycle?.(this.eventBus); // optional lifecycle hooks
+      }
      
 
 }
