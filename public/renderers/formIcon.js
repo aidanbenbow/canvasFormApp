@@ -5,7 +5,7 @@ export class FormIconRenderer {
   
     render(box, rendererContext) {
       if (box.type !== 'textBox') return;
-      const { ctx, hitCtx } = rendererContext;
+      const { ctx, hitCtx, hitRegistry } = rendererContext;
   
       const iconText = box.text;
       const iconSize = 50;
@@ -20,12 +20,28 @@ export class FormIconRenderer {
       positions.forEach((pos, index) => {
         ctx.fillText(iconText, pos.x, pos.y);
   
+        const hitColor = box.hitColors[`icon${index}`] || box.hitColors.main;
         // Store clickable region for hit detection
         if (hitCtx) {
-          const hitColor = box.hitColors[`icon${index}`] || box.hitColors.main;
+          
           hitCtx.fillStyle = hitColor;
           hitCtx.fillRect(pos.x, pos.y - iconSize, iconSize * iconText.length, iconSize);
         }
+
+        // Register hit region action
+        hitRegistry?.register(hitColor, {
+            box,
+            region: `icon${index}`,
+            metadata: {
+                formId: box.id,
+                action: ()=> this.eventBus.emit('loadForm', box.Id)
+            }
+        })
       });
     }
+    clear(rendererContext) {
+        const { ctx, hitCtx } = rendererContext;
+        ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        hitCtx?.clearRect(0, 0, hitCtx.canvas.width, hitCtx.canvas.height);
+      }
   }

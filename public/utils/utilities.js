@@ -33,6 +33,7 @@ export function measureTextSize(text, fontSize, maxWidth = Infinity) {
 
   export function createBoxFromFormItem(item, renderer) {
     return new Box(
+        item.id,
       item.type,
       item.startPosition,
       item.size,

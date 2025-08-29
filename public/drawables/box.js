@@ -3,7 +3,8 @@ import { utilsRegister } from "../utils/register.js";
 
 
 export class Box {
-    constructor(type, startPosition, size, text, fill, renderer, action = null) {
+    constructor(id,type, startPosition, size, text, fill, renderer, action = null) {
+        this.id = id;
         this.type = type;
         this.id = `${Date.now()}`; // Unique ID based on type and timestamp
         this.startPosition = startPosition;
@@ -27,7 +28,7 @@ export class Box {
               })
         
         };
-        
+       
         this.fontSize = size.height * 0.6;
         this.select = false
 

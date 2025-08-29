@@ -1,4 +1,7 @@
+import { HitManager } from "../managers/hit.js";
+import { interactionManager } from "../managers/interaction.js";
 import { RenderManager } from "../managers/render.js";
+import { HitRegistry } from "../registries/hitRegistry.js";
 import { RenderPipeline } from "../renderers/pipeline.js";
 import { RendererSystem } from "../renderers/renderSystem.js";
 import { RendererContext } from "../renderers/rendererContext.js";
@@ -9,7 +12,11 @@ export class RenderSystemBuilder {
         this.canvasManager = canvasManager;
         this.eventBus = eventBus;
         this.rendererRegistry = rendererRegistry;
+        const hitCtx = this.canvasManager.getHitContext('main');        
 
+        this.hitRegistry = new HitRegistry();
+        this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus);
+        this.interactionManager = new interactionManager(this.canvasManager, this.hitManager);
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
@@ -21,6 +28,7 @@ export class RenderSystemBuilder {
         const context = new RendererContext({
             ctx: this.canvasManager.getContext(layer),
             hitCtx: this.canvasManager.getHitContext(layer),
+            hitRegistry: this.hitRegistry,
             pipeline: this.pipeline,
             textEditorController: this.textEditorController|| null,
             selectionController: this.selectionController|| null,
@@ -48,7 +56,7 @@ export class RenderSystemBuilder {
       }
       attachLifecycleHooks() {
         this.eventBus.on('beforeRender', () => {
-          // maybe flush dirty regions or prep overlays
+          this.hitRegistry.clear();
         });
         this.eventBus.on('afterRender', () => {
           // diagnostics, plugin hooks, etc.

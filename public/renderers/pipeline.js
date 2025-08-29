@@ -25,8 +25,9 @@ export class RenderPipeline {
     }
 
     renderFrame() {
+        
         if (!this.dirty) return;
-
+console.log('Rendering frame with', this.drawables.size, 'drawables');
         this.renderManager.clearAll(this.rendererContext); // Clear all layers
         for (const drawable of this.drawables) {
            
@@ -55,6 +56,10 @@ export class RenderPipeline {
                 this.drawables.delete(drawable);
             }
         }
+        this.invalidate();
+    }
+    clearAll() {
+        this.drawables.clear();
         this.invalidate();
     }
 }

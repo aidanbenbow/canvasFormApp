@@ -12,6 +12,7 @@ export class RendererSystem {
     }
   
     start() {
+       
       this.pipeline.start();
     }
   
