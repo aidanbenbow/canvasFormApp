@@ -27,10 +27,10 @@ export class RenderPipeline {
     renderFrame() {
         
         if (!this.dirty) return;
-console.log('Rendering frame with', this.drawables.size, 'drawables');
+       
         this.renderManager.clearAll(this.rendererContext); // Clear all layers
         for (const drawable of this.drawables) {
-           
+   
             this.renderManager.render(drawable, this.rendererContext); // Dispatch to correct renderer
         }
 
@@ -62,5 +62,15 @@ console.log('Rendering frame with', this.drawables.size, 'drawables');
         this.drawables.clear();
         this.invalidate();
     }
+    clearExcept(targetBox) {
+        // Filter drawables to keep only the clicked box
+        this.drawables = new Set([...this.drawables].filter(box => box === targetBox));
+      
+        this.invalidate();
+      }
+      clearExceptById(targetId) {
+        this.drawables = new Set([...this.drawables].filter(box => box.id === targetId));
+        this.invalidate();
+      }
 }
 

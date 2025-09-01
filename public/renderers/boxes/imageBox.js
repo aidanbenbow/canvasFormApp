@@ -6,7 +6,7 @@ export class ImageBoxRenderer extends BoxRenderer {
         const { ctx, hitCtx, boxHitManager } = rendererContext;
         const { x, y } = box.startPosition;
         const { width, height } = box.size;
-
+console.log('Rendering ImageBox at', box.startPosition, 'with size', box.size);
         // Draw background fill (optional, for debugging or fallback)
         ctx.fillStyle = box.fill || 'transparent';
         ctx.fillRect(x, y, width, height);

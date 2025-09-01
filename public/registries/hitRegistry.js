@@ -5,7 +5,7 @@ export class HitRegistry {
   
     register(hex, info) {
       this.registry.set(hex.toLowerCase(), info);
-      
+      console.log(`Registered hit region: ${hex.toLowerCase()}`, info);
     }
   
     unregister(hex) {

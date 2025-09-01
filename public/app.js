@@ -36,8 +36,10 @@ rendererSystem.start();
 context.pipeline.setRendererContext(context)
 
 system.eventBus.on('hitClick', (hitObject) => {
-    context.pipeline.clearAll();
-    context.pipeline.add(hitObject);
+    context.pipeline.clearExceptById(hitObject.box.id);
+    context.firstScreen = false;
+    console.log('Clicked on object:', hitObject.box);
+    context.pipeline.add(hitObject.box);
     context.pipeline.invalidate();
   });
 
@@ -57,6 +59,7 @@ async function init(data) {
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
         const renderer = context.pipeline.renderManager
         const box = createBox(item, renderer);
+
         context.pipeline.add(box);
         gap += 20;
       }

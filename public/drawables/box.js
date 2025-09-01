@@ -6,7 +6,7 @@ export class Box {
     constructor(id,type, startPosition, size, text, fill, renderer, action = null) {
         this.id = id;
         this.type = type;
-        this.id = `${Date.now()}`; // Unique ID based on type and timestamp
+        
         this.startPosition = startPosition;
         this.size = size;
         this.text = text;

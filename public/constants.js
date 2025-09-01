@@ -1,6 +1,7 @@
 import { TextBoxRenderer } from "./renderers/boxes/textBox.js";
 import { InputBoxRenderer } from "./renderers/boxes/inputBox.js";
 import { FormIconRenderer } from "./renderers/formIcon.js";
+import { ImageBoxRenderer } from "./renderers/boxes/imageBox.js";
 
 export const canvasConfig = {
     main: {
@@ -22,6 +23,10 @@ export const myPluginManifest = {
       {
         id: 'inputBox',
         class: InputBoxRenderer
+      },
+      {
+        id: "imageBox",
+        class: ImageBoxRenderer
       }
     ]
   };

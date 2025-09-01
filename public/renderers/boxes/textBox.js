@@ -13,7 +13,7 @@ export class TextBoxRenderer extends BoxRenderer {
       ctx.fillStyle = 'black';
       ctx.font = `${box.fontSize}px Arial`;
       ctx.fillText(box.text, x + 10, y + 20);
-  
+  console.log('Rendering TextBox at', box.startPosition, 'with size', box.size);
       this.renderCommon(box, ctx, hitCtx, textEditorController, boxHitManager);
     }
   }
