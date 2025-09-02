@@ -1,10 +1,12 @@
 import { HitManager } from "../managers/hit.js";
 import { interactionManager } from "../managers/interaction.js";
 import { RenderManager } from "../managers/render.js";
+import { AssetRegistry } from "../registries/assetRegistry.js";
 import { HitRegistry } from "../registries/hitRegistry.js";
 import { RenderPipeline } from "../renderers/pipeline.js";
 import { RendererSystem } from "../renderers/renderSystem.js";
 import { RendererContext } from "../renderers/rendererContext.js";
+import { utilsRegister } from "../utils/register.js";
 
 
 export class RenderSystemBuilder {
@@ -14,6 +16,7 @@ export class RenderSystemBuilder {
         this.rendererRegistry = rendererRegistry;
         const hitCtx = this.canvasManager.getHitContext('main');        
 
+        this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
         this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus);
         this.interactionManager = new interactionManager(this.canvasManager, this.hitManager);
@@ -35,7 +38,8 @@ export class RenderSystemBuilder {
             interactionManager: this.interactionManager|| null,
             focusManager: this.focusManager|| null,
             boxManager: this.boxManager|| null,
-            boxHitManager: this.boxHitManager || null
+            boxHitManager: this.boxHitManager || null,
+            assetRegistry: this.assetRegistry || null,
           });
         
           this.components.rendererContext = context;
@@ -53,6 +57,14 @@ export class RenderSystemBuilder {
           const instance = new RendererClass();
           this.rendererRegistry.register(id, instance);
         });
+        const loadImage = utilsRegister.get('asset', 'loadImage');
+        Object.entries(manifest.images || {}).forEach(([key, path]) => {
+
+          const image = loadImage(path); // preload or lazy-load
+          this.assetRegistry.register(key, image);
+        });
+      
+      
       }
       attachLifecycleHooks() {
         this.eventBus.on('beforeRender', () => {

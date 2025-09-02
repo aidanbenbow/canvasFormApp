@@ -41,6 +41,14 @@ export function measureTextSize(text, fontSize, maxWidth = Infinity) {
       item.text,
       item.color,
       renderer,
-      item.actionKey || null
+      item.actionKey || null,
+      item.imageKey || null,
+      
     );
+  }
+
+  export function loadImage(path) {
+    const img = new Image();
+    img.src = path;
+    return img;
   }

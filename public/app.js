@@ -27,6 +27,7 @@ const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rend
 renderBuild.registerFromManifest(myPluginManifest)
 renderBuild.usePlugin(formIconPlugin)
 
+
 const context = renderBuild.createRendererContext()
 context.firstScreen = true;
 
@@ -59,7 +60,7 @@ async function init(data) {
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
         const renderer = context.pipeline.renderManager
         const box = createBox(item, renderer);
-
+console.log(box);
         context.pipeline.add(box);
         gap += 20;
       }

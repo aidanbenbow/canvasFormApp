@@ -1,0 +1,8 @@
+{
+    "images": {
+      "button-unpushed": "/images/button_unpushed.png",
+      "button-pushed": "/images/button_pushed.png",
+      "checkbox-unchecked": "/images/checkbox_unchecked.png",
+      "checkbox-tick": "/images/checkbox_tick.png"
+    }
+  }

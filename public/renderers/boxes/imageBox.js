@@ -3,15 +3,16 @@ import { BoxRenderer } from "./basicBox.js";
 
 export class ImageBoxRenderer extends BoxRenderer {
     render(box, rendererContext) {
-        const { ctx, hitCtx, boxHitManager } = rendererContext;
+        const { ctx, hitCtx, boxHitManager, assetRegistry } = rendererContext;
         const { x, y } = box.startPosition;
         const { width, height } = box.size;
-console.log('Rendering ImageBox at', box.startPosition, 'with size', box.size);
+
         // Draw background fill (optional, for debugging or fallback)
         ctx.fillStyle = box.fill || 'transparent';
         ctx.fillRect(x, y, width, height);
 
         // Draw image if available
+        box.image = assetRegistry.get(box.imageKey);
         if (box.image instanceof Image && box.image.complete) {
             ctx.drawImage(box.image, x, y, width, height);
         } else {

@@ -28,5 +28,10 @@ export const myPluginManifest = {
         id: "imageBox",
         class: ImageBoxRenderer
       }
-    ]
+    ],
+    images: {
+      "button-unpushed": "/images/button_unpushed.png",
+      "checkbox-tick": "/images/checkbox_tick.png"
+    }
+  
   };

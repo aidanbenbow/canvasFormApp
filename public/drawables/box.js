@@ -3,7 +3,7 @@ import { utilsRegister } from "../utils/register.js";
 
 
 export class Box {
-    constructor(id,type, startPosition, size, text, fill, renderer, action = null) {
+    constructor(id,type, startPosition, size, text, fill, renderer, actionKey, imageKey) {
         this.id = id;
         this.type = type;
         
@@ -34,8 +34,10 @@ export class Box {
 
         this.renderer = renderer;
         this.textRenderer = this.renderer.registry.get('textBox');
-        this.action = action
-        this.actionKey = null; // Action key for image boxes
+        
+        this.actionKey = actionKey
+        this.imageKey = imageKey
+
     }
 
     getCentre() {
