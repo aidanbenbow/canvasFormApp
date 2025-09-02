@@ -27,7 +27,7 @@ export class RenderPipeline {
     renderFrame() {
         
         if (!this.dirty) return;
-       
+        
         this.renderManager.clearAll(this.rendererContext); // Clear all layers
         for (const drawable of this.drawables) {
    

@@ -28,7 +28,7 @@ export class Box {
               })
         
         };
-       
+      
         this.fontSize = size.height * 0.6;
         this.select = false
 

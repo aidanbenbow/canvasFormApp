@@ -1,11 +1,12 @@
 import { utilsRegister } from "../utils/register.js";
 
 export class HitManager {
-    constructor( hitRegistry, hitCtx, eventBus) {
+    constructor( hitRegistry, hitCtx, eventBus, actionRegistry) {
       this.getHitHex = utilsRegister.get('hit', 'getHitHex');
       this.hitRegistry = hitRegistry;
         this.hitCtx = hitCtx;
         this.eventBus = eventBus;
+        this.actionRegistry = actionRegistry;
     }
   
     getHoverInfo(pos) {
@@ -13,11 +14,29 @@ export class HitManager {
       return this.hitRegistry.get(hex);
     }
     handleClick(pos) {
-      const hex = this.getHitHex(this.hitCtx,pos);
+      const hex = this.getHitHex(this.hitCtx, pos);
       const hitObject = this.hitRegistry.get(hex);
-        if(hitObject){
-            this.eventBus.emit('hitClick', hitObject);
+     
+    
+      if (hitObject) {
+        this.eventBus.emit('hitClick', hitObject);
+    
+        const actionKey = hitObject.metadata?.actionKey;
+    
+        if (actionKey) {
+          const actionFn = this.actionRegistry?.get(actionKey);
+          if (typeof actionFn === 'function') {
+            actionFn(hitObject.box);
+            this.eventBus.emit('actionTriggered', {
+              box: hitObject.box,
+              region: hitObject.region,
+              actionKey
+            });
+          } else {
+            console.warn(`No action registered for key: ${actionKey}`);
+          }
         }
+      }
     }
     handleMouseMove(pos) {
       const hex = this.getHitHex(this.hitCtx,pos);

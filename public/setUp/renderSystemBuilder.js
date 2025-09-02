@@ -1,6 +1,7 @@
 import { HitManager } from "../managers/hit.js";
 import { interactionManager } from "../managers/interaction.js";
 import { RenderManager } from "../managers/render.js";
+import { ActionRegistry } from "../registries/actionRegistry.js";
 import { AssetRegistry } from "../registries/assetRegistry.js";
 import { HitRegistry } from "../registries/hitRegistry.js";
 import { RenderPipeline } from "../renderers/pipeline.js";
@@ -16,9 +17,10 @@ export class RenderSystemBuilder {
         this.rendererRegistry = rendererRegistry;
         const hitCtx = this.canvasManager.getHitContext('main');        
 
+        this.actionRegistry = new ActionRegistry();
         this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
-        this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus);
+        this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus, this.actionRegistry);
         this.interactionManager = new interactionManager(this.canvasManager, this.hitManager);
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
@@ -62,6 +64,11 @@ export class RenderSystemBuilder {
 
           const image = loadImage(path); // preload or lazy-load
           this.assetRegistry.register(key, image);
+        });
+
+        Object.entries(manifest.actions || {}).forEach(([key, fn]) => {
+          this.actionRegistry?.register(key, fn);
+          console.log(`[ACTION] Registered action: ${key}`);
         });
       
       

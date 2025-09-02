@@ -3,7 +3,7 @@ import { BoxRenderer } from "./basicBox.js";
 
 export class ImageBoxRenderer extends BoxRenderer {
     render(box, rendererContext) {
-        const { ctx, hitCtx, boxHitManager, assetRegistry } = rendererContext;
+        const { ctx, hitCtx, boxHitManager, assetRegistry, hitRegistry } = rendererContext;
         const { x, y } = box.startPosition;
         const { width, height } = box.size;
 
@@ -24,9 +24,19 @@ export class ImageBoxRenderer extends BoxRenderer {
             ctx.fillText('Image not loaded', x + 10, y + 20);
         }
 
+      
         // Hit region for interaction
-        hitCtx.fillStyle = box.hitColors.image;
+        hitCtx.fillStyle = box.hitColors.image || '#000000';
+       
         hitCtx.fillRect(x, y, width, height);
+        
+        // Register hit region action
+        hitRegistry?.register(box.hitColors.image, {
+            box,
+            region: 'image',
+            metadata: { imageKey: box.imageKey,
+                        actionKey: box.actionKey }
+        });
 
         // Shared overlays and gizmos
         this.renderCommon(box, ctx, hitCtx, null, boxHitManager);

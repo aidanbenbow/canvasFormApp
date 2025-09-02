@@ -2,7 +2,7 @@ import { BoxRenderer } from "./basicBox.js";
 
 export class InputBoxRenderer extends BoxRenderer {
   render(box, rendererContext) {
-    const { ctx, hitCtx, textEditorController, boxHitManager } = rendererContext;
+    const { ctx, hitCtx, textEditorController, boxHitManager, hitRegistry } = rendererContext;
     const { x, y } = box.startPosition;
     const { width, height } = box.size;
 
@@ -32,6 +32,12 @@ export class InputBoxRenderer extends BoxRenderer {
     hitCtx.fillStyle = box.hitColors.text;
     hitCtx.fillRect(x + 60, y + 10, width - 70, height - 20);
 
+    // Register hit region actions
+    hitRegistry?.register(box.hitColors.text, {
+      box,
+      region: 'text',
+      metadata: { actionKey: box.actionKey }
+    });
     // Shared overlays
     this.renderCommon(box, ctx, hitCtx, textEditorController, boxHitManager);
   }

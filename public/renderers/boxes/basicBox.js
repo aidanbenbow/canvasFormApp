@@ -4,10 +4,10 @@ export class BoxRenderer {
       const { width, height } = box.size;
   
       // Draw hit region
-      if (box.hitColors?.main) {
-        hitCtx.fillStyle = box.hitColors.main;
-        hitCtx.fillRect(x, y, width, height);
-      }
+      // if (box.hitColors?.main) {
+      //   hitCtx.fillStyle = box.hitColors.main;
+      //   hitCtx.fillRect(x, y, width, height);
+      // }
   
       // Selection overlays
       if (textEditorController?.activeBox === box) {

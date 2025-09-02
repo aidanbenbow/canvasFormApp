@@ -1,5 +1,6 @@
-import { canvasConfig, myPluginManifest } from "./constants.js";
+import { canvasConfig, createPluginManifest } from "./constants.js";
 import { CanvasManager } from "./managers/canvas.js";
+import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 
@@ -24,6 +25,8 @@ utilsRegister.registerPlugin(coreUtilsPlugin)
 
 const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
 
+const myPluginManifest = createPluginManifest({ eventBus: system.eventBus });
+ 
 renderBuild.registerFromManifest(myPluginManifest)
 renderBuild.usePlugin(formIconPlugin)
 
@@ -36,11 +39,21 @@ rendererSystem.start();
 
 context.pipeline.setRendererContext(context)
 
+const messageOverlay = new MessageOverlay()
+
 system.eventBus.on('hitClick', (hitObject) => {
     context.pipeline.clearExceptById(hitObject.box.id);
     context.firstScreen = false;
-    console.log('Clicked on object:', hitObject.box);
+   
     context.pipeline.add(hitObject.box);
+    context.pipeline.add(messageOverlay);
+    context.pipeline.invalidate();
+  });
+
+  system.eventBus.on('showMessage', ({ text, position, duration }) => {
+    console.log('Showing message:', text, position, duration);
+    console.log(context.pipeline.drawables)
+    messageOverlay.showMessage(text, position, duration);
     context.pipeline.invalidate();
   });
 
