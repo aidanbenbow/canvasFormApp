@@ -17,15 +17,45 @@ export class TextEditorController {
         this.startEditing(box);
     }
     startEditing(box, field = 'text') {
-        //if (box.type !== 'textBox') return;
         const value = typeof box[field] === 'string' ? box[field] : '';
-
+      
         this.activeBox = box;
-        this.activeField = field; // Not used in this controller, but kept for consistency
+        this.activeField = field;
         this.caretIndex = value.length;
-        this.selectionStart = this.selectionEnd= this.caretIndex;
+        this.selectionStart = this.selectionEnd = this.caretIndex;
+      
+        const input = document.getElementById('canvasTextInput');
+        if (input) {
+            input.style.position = 'absolute';
+input.style.left = `${box.startPosition.x}px`;
+input.style.top = `${box.startPosition.y + box.size.height / 2}px`;
+input.style.width = '1px';
+input.style.height = '1px';
+input.style.opacity = '0';
+input.style.pointerEvents = 'none';
+input.style.zIndex = '1000'; // Ensure it's above other layers
+          input.value = value;
+          input.focus({ preventScroll: true });
+          
+          input.setSelectionRange(value.length, value.length);
+      
+          // Remove previous listeners to avoid stacking
+          input.oninput = () => {
+            const newText = input.value;
+            this.activeBox[this.activeField] = newText;
+      
+            if (typeof this.activeBox.updateText === 'function' && this.activeField === 'text') {
+              this.activeBox.updateText(newText);
+            }
+      
+            this.caretIndex = newText.length;
+            this.selectionStart = this.selectionEnd = this.caretIndex;
+            this.pipeline.invalidate();
+          };
+        }
+      
         this.pipeline.invalidate();
-    }
+      }
 
     stopEditing() {
         this.activeBox = null;
