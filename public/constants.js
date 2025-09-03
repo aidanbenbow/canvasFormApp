@@ -61,7 +61,7 @@ export const myPluginManifest = {
   
   };
 
-  export function createPluginManifest({ eventBus }) {
+  export function createPluginManifest({ eventBus, textEditorController }) {
     return {
       renderers: [
         { id: 'textBox', class: TextBoxRenderer },
@@ -82,14 +82,36 @@ export const myPluginManifest = {
           console.log(`Box ${box.id} highlighted`);
         },
         sendButton: (box) => {
-          eventBus.emit('showMessage', {
-            text: "Message sent ✅",
-            position: { x: box.startPosition.x, y: box.startPosition.y - 30 },
-            duration: 3000
-          });
+          const editedBox = textEditorController.activeBox;
+          if (editedBox?.type === 'inputBox') {
+            const message = editedBox.text?.trim() || "No input provided";
+        
+            eventBus.emit('showMessage', {
+              text: `Message sent: ${message}`,
+              position: {
+                x: box.startPosition.x,
+                y: box.startPosition.y - 80
+              },
+              duration: 3000
+            });
+        
+            console.log(`Message sent from inputBox ${editedBox.id}: "${message}"`);
+          } else {
+            console.warn("No inputBox is currently being edited.");
+            eventBus.emit('showMessage', {
+              text: "No input to send ❌",
+              position: {
+                x: box.startPosition.x,
+                y: box.startPosition.y - 30
+              },
+              duration: 3000
+            });
+          }
+        
         },
         writeText: (box) => {
-          console.log(`Box ${box.id} text updated to: hi`);
+          textEditorController.startEditing(box);
+          console.log(`Box ${box.id} text editing started`);
         }
       }
     };

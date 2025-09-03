@@ -1,4 +1,5 @@
 import { canvasConfig, createPluginManifest } from "./constants.js";
+import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
@@ -24,15 +25,17 @@ utilsRegister.on('onRegister', (ns, name, fn) => {
 utilsRegister.registerPlugin(coreUtilsPlugin)
 
 const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
+const context = renderBuild.createRendererContext()
+context.firstScreen = true;
 
-const myPluginManifest = createPluginManifest({ eventBus: system.eventBus });
+const textEditorController = new TextEditorController(context.pipeline)
+
+const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, textEditorController });
  
 renderBuild.registerFromManifest(myPluginManifest)
 renderBuild.usePlugin(formIconPlugin)
 
 
-const context = renderBuild.createRendererContext()
-context.firstScreen = true;
 
 const rendererSystem = renderBuild.createRendererSystem()
 rendererSystem.start();
@@ -52,7 +55,7 @@ system.eventBus.on('hitClick', (hitObject) => {
 
   system.eventBus.on('showMessage', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);
-    console.log(context.pipeline.drawables)
+   // console.log(context.pipeline.drawables)
     messageOverlay.showMessage(text, position, duration);
     context.pipeline.invalidate();
   });
@@ -73,7 +76,7 @@ async function init(data) {
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
         const renderer = context.pipeline.renderManager
         const box = createBox(item, renderer);
-console.log(box);
+
         context.pipeline.add(box);
         gap += 20;
       }
