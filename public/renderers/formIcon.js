@@ -5,8 +5,8 @@ export class FormIconRenderer {
   
     render(box, rendererContext) {
       if (box.type !== 'textBox') return;
-      const { ctx, hitCtx, hitRegistry } = rendererContext;
-  
+      const { ctx, hitCtx, hitRegistry, mode } = rendererContext;
+  console.log(mode)
       const iconText = box.text;
       const iconSize = 50;
       const positions = [
@@ -32,9 +32,10 @@ export class FormIconRenderer {
         hitRegistry?.register(hitColor, {
             box,
             region: `icon${index}`,
+            mode: mode,
             metadata: {
                 formId: box.id,
-                action: ()=> this.eventBus.emit('loadForm', box.Id)
+                action: ()=> this.eventBus.emit('loadForm', {formId:box.id, mode})
             }
         })
       });

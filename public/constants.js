@@ -4,6 +4,7 @@ import { InputBoxRenderer } from "./renderers/boxes/inputBox.js";
 import { ImageBoxRenderer } from "./renderers/boxes/imageBox.js";
 
 import { MessageOverlayRenderer } from "./renderers/messageOverlay.js";
+import { AdminOverlayRenderer } from "./renderers/adminOverlay.js";
 
 export const canvasConfig = {
     main: {
@@ -11,6 +12,14 @@ export const canvasConfig = {
         hitId: '#mainHitCanvas',
         bg: 'grey',
         hitBg: 'red',
+        width: 800,
+        height: 600,
+    },
+    overlay: {
+        mainId: '#adminOverlayCanvas',
+        hitId: '#adminOverlayHitCanvas',
+        bg: 'transparent',
+        hitBg: 'transparent',
         width: 800,
         height: 600,
     }
@@ -67,7 +76,7 @@ export const myPluginManifest = {
         { id: 'textBox', class: TextBoxRenderer },
         { id: 'inputBox', class: InputBoxRenderer },
         { id: 'imageBox', class: ImageBoxRenderer },
-        { id: 'messageOverlay', class: MessageOverlayRenderer }
+        { id: 'adminOverlay', class: AdminOverlayRenderer }
       ],
       images: {
         "button-unpushed": "/images/button_unpushed.png",

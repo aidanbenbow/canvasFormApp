@@ -14,18 +14,20 @@
         }
         #mainCanvas {
             display: inline-block
-           
         }
     </style>
 </head>
 <body>
     <canvas id="mainCanvas"></canvas>
     <canvas id="mainHitCanvas"></canvas>
+    <canvas id="adminOverlayCanvas" style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
+    <canvas id="adminOverlayHitCanvas"></canvas>
 
     <div id="data">
-        <%- JSON.stringify(data) %>
+        <%- JSON.stringify(forms) %>
         
     </div>
+    <div id="user"><%=mode%></div>
 
     <input id="canvasTextInput" type="text" style="position:absolute; opacity:0; pointer-events:none;" />
 

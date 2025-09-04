@@ -55,13 +55,13 @@ export class Box {
     updateText(newText) {
         this.text = newText;
         
-        this.size = this.textRenderer.measureTextSize(this.text, this.fontSize);
+       // this.size = this.textRenderer.measureTextSize(this.text, this.fontSize);
         this.Gizmo.centre = this.getCentre();
     }
 
     moveTo(pos) {
         this.startPosition = pos;
-        this.Gizmo.updateCentre(this.getCentre());
+       // this.Gizmo.updateCentre(this.getCentre());
     }
 
     resizeTo(size) {

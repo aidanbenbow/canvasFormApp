@@ -11,6 +11,7 @@ export class RenderPipeline {
     }
 
     add(drawable) {
+       
         this.drawables.add(drawable);
         this.invalidate();
     }
@@ -69,7 +70,7 @@ export class RenderPipeline {
         this.invalidate();
       }
       clearExceptById(targetId) {
-        this.drawables = new Set([...this.drawables].filter(box => box.id === targetId));
+        this.drawables = new Set([...this.drawables].filter(box => box.id === targetId|| box.isOverlay));
         this.invalidate();
       }
 }

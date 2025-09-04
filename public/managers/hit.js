@@ -22,6 +22,7 @@ export class HitManager {
         this.eventBus.emit('hitClick', hitObject);
     
         const actionKey = hitObject.metadata?.actionKey;
+        const directAction = hitObject.metadata?.action
     
         if (actionKey) {
           const actionFn = this.actionRegistry?.get(actionKey);
@@ -34,7 +35,13 @@ export class HitManager {
             });
           } else {
             console.warn(`No action registered for key: ${actionKey}`);
-          }
+          } }else if(typeof directAction === 'function') {
+            directAction(hitObject.box);
+            this.eventBus.emit('actionTriggered', {
+              box: hitObject.box,
+              region: hitObject.region,
+              action: 'direct'
+            });
         }
       }
     }

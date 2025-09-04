@@ -26,20 +26,28 @@ export class TextEditorController {
       
         const input = document.getElementById('canvasTextInput');
         if (input) {
-            input.style.position = 'absolute';
-input.style.left = `${box.startPosition.x}px`;
-input.style.top = `${box.startPosition.y + box.size.height / 2}px`;
-input.style.width = '1px';
-input.style.height = '1px';
-input.style.opacity = '0';
-input.style.pointerEvents = 'none';
-input.style.zIndex = '1000'; // Ensure it's above other layers
+          // Position input offscreen to avoid scroll jump
+          input.style.position = 'fixed';
+          input.style.left = '-1000px';
+          input.style.top = '0px';
+          input.style.width = '1px';
+          input.style.height = '1px';
+          input.style.opacity = '0';
+          input.style.pointerEvents = 'none';
+          input.style.zIndex = '1000';
+      
           input.value = value;
-          input.focus({ preventScroll: true });
-          
+      
+          // Focus without scroll
+          try {
+            input.focus({ preventScroll: true });
+          } catch {
+            input.focus(); // fallback for older browsers
+          }
+      
           input.setSelectionRange(value.length, value.length);
       
-          // Remove previous listeners to avoid stacking
+          // Replace previous listener to avoid stacking
           input.oninput = () => {
             const newText = input.value;
             this.activeBox[this.activeField] = newText;

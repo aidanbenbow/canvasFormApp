@@ -1,6 +1,8 @@
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
+import { AdminOverlay } from "./overlays/adminOverlay.js";
+import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
@@ -13,7 +15,9 @@ import {  utilsRegister } from "./utils/register.js";
 const canvas = new CanvasManager(canvasConfig)
 const forms = document.querySelector('#data')
 const data = forms.innerHTML
-console.log(data);
+
+const mode = document.querySelector('#user').innerHTML.trim();
+console.log('Mode:', mode);
 
 const canvasBuilder = new CanvasSystemBuilder(canvas)
 
@@ -27,6 +31,7 @@ utilsRegister.registerPlugin(coreUtilsPlugin)
 const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
 const context = renderBuild.createRendererContext()
 context.firstScreen = true;
+context.mode = mode; // 'admin' or 'user'
 
 const textEditorController = new TextEditorController(context.pipeline)
 
@@ -42,21 +47,54 @@ rendererSystem.start();
 
 context.pipeline.setRendererContext(context)
 
-const messageOverlay = new MessageOverlay()
+const adminCtx = canvas.getContext('overlay');
+const adminOverlay = new AdminOverlay(adminCtx);
+const boxEditor = new BoxEditorOverlay(); // allBoxes = array of Box instances
+adminOverlay.register(boxEditor);
+
+adminOverlay.register(new MessageOverlay());
+context.pipeline.add(adminOverlay);
+
+const adminCanvas = document.querySelector('#adminOverlayCanvas');
+const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
+
+adminCanvas.addEventListener('mousedown', e => {
+console.log('Admin canvas mousedown', e);
+  const { x, y } = mousePosition( adminCanvas, e);
+  boxEditor.handleMouseDown(x, y);
+});
+
+adminCanvas.addEventListener('mousemove', e => {
+  const { x, y } = mousePosition( adminCanvas, e);
+  boxEditor.handleMouseMove(x, y);
+  context.pipeline.invalidate(); // trigger redraw
+});
+
+adminCanvas.addEventListener('mouseup', () => {
+  boxEditor.handleMouseUp();
+});
+
 
 system.eventBus.on('hitClick', (hitObject) => {
     context.pipeline.clearExceptById(hitObject.box.id);
     context.firstScreen = false;
-   
-    context.pipeline.add(hitObject.box);
-    context.pipeline.add(messageOverlay);
+    adminCanvas.style.pointerEvents = 'auto';
+  boxEditor.setBoxes([hitObject.box]);
+   // context.pipeline.add(hitObject.box);
+   // context.pipeline.add(messageOverlay);
+    context.pipeline.invalidate();
+  });
+
+  system.eventBus.on('loadForm', (data) => {
+    console.log('Loading form data:', data);
+    
     context.pipeline.invalidate();
   });
 
   system.eventBus.on('showMessage', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);
-   // console.log(context.pipeline.drawables)
-    messageOverlay.showMessage(text, position, duration);
+    console.log(context.pipeline.drawables)
+    adminOverlay.showMessage(text, position, duration);
     context.pipeline.invalidate();
   });
 
