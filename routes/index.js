@@ -4,7 +4,7 @@ const router = express.Router();
 import db from '../config/dynamoDB.js';
 
 router.get('/', async (req, res) => {
-    const { mode } = req.query; // 'edit' or 'fill'
+    const { mode } = req.query || 'default' // 'edit' or 'fill'
     const data = await db.getFormData();
 
     res.render('index', { forms: data, mode });
