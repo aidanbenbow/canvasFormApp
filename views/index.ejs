@@ -24,8 +24,7 @@
     <canvas id="adminOverlayHitCanvas"></canvas>
 
     <div id="data">
-        <%- JSON.stringify(forms) %>
-        
+        <%- JSON.stringify(typeof forms !== 'undefined' ? forms : []) %>
     </div>
     <div id="user"><%=mode%></div>
 
