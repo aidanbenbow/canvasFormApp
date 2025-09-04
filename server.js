@@ -18,6 +18,11 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  res.locals.mode = req.query?.mode || 'default';
+  next();
+});
+
 app.use('/', indexRoutes);
 
 app.listen(4500, () => {
