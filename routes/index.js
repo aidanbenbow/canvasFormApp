@@ -4,9 +4,10 @@ const router = express.Router();
 import db from '../config/dynamoDB.js';
 
 router.get('/', async (req, res) => {
+    const { mode } = req.query; // 'edit' or 'fill'
     const data = await db.getFormData();
 
-    res.render('index', { data });
+    res.render('index', { forms: data, mode });
     });
 
     router.get('/forms', async (req, res) => {
