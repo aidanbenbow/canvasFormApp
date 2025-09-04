@@ -26,7 +26,7 @@
     <div id="data">
         <%- JSON.stringify(typeof forms !== 'undefined' ? forms : []) %>
     </div>
-    <div id="user"><%=mode%></div>
+    <div id="user"><%= typeof mode !== 'undefined' ? mode : 'default' %></div>
 
     <input id="canvasTextInput" type="text" style="position:absolute; opacity:0; pointer-events:none;" />
 
