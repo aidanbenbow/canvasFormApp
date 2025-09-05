@@ -12,10 +12,10 @@ router.get('/', async (req, res) => {
     });
 
     router.get('/forms', async (req, res) => {
-        const { mode } = req.query; // 'edit' or 'fill'
-        const data = await db.getFormData(); // Fetch all forms from DynamoDB
+        // const { mode } = req.query; // 'edit' or 'fill'
+        // const data = await db.getFormData(); // Fetch all forms from DynamoDB
       
-        res.render('index', { forms: data }); // Pass mode to the view
+        res.render('test'); // Pass mode to the view
       });
 
 export default router;
