@@ -29,7 +29,7 @@ utilsRegister.registerPlugin(coreUtilsPlugin)
 const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
 const context = renderBuild.createRendererContext()
 context.firstScreen = true;
-context.mode = mode; // 'admin' or 'user'
+
 
 const textEditorController = new TextEditorController(context.pipeline)
 
