@@ -6,6 +6,7 @@ import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
+import { SaveButtonPlugin } from "./plugins/saveButton.js";
 
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
@@ -53,15 +54,31 @@ const boxEditor = new BoxEditorOverlay(); // allBoxes = array of Box instances
 adminOverlay.register(boxEditor);
 
 adminOverlay.register(new MessageOverlay());
+adminOverlay.register(new SaveButtonPlugin({
+  ctx: adminCtx,
+  onSave: (boxes) => {
+    console.log('Saving boxes:', boxes);
+}
+}
+));
 context.pipeline.add(adminOverlay);
 
 const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
 
 adminCanvas.addEventListener('mousedown', e => {
-console.log('Admin canvas mousedown', e);
-  const { x, y } = mousePosition( adminCanvas, e);
+  console.log('Admin canvas mousedown', e);
+  const { x, y } = mousePosition(adminCanvas, e);
   boxEditor.handleMouseDown(x, y);
+});
+
+adminCanvas.addEventListener('mousedown', e => {
+  const { x, y } = mousePosition(adminCanvas, e);
+  adminOverlay.plugins.forEach(p => {
+    if (typeof p.handleClick === 'function') {
+      p.handleClick(x, y);
+    }
+  });
 });
 
 adminCanvas.addEventListener('mousemove', e => {
@@ -76,10 +93,15 @@ adminCanvas.addEventListener('mouseup', () => {
 
 
 system.eventBus.on('hitClick', (hitObject) => {
+  boxEditor.setBoxes(
+    Array.from(context.pipeline.drawables).filter(
+      d => d.id === hitObject.box.id && (d.type === 'textBox' || d.type === 'inputBox' || d.type === 'imageBox')
+    )
+  );
     context.pipeline.clearExceptById(hitObject.box.id);
     context.firstScreen = false;
     adminCanvas.style.pointerEvents = 'auto';
-  boxEditor.setBoxes([hitObject.box]);
+ 
    // context.pipeline.add(hitObject.box);
    // context.pipeline.add(messageOverlay);
     context.pipeline.invalidate();

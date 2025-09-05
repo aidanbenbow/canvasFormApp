@@ -1,5 +1,6 @@
 export class AdminOverlayRenderer {
     render(drawable, rendererContext) {
+       
       drawable.render(rendererContext); // Delegate to the drawable’s own logic
     }
   

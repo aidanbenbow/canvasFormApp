@@ -6,7 +6,7 @@ import db from '../config/dynamoDB.js';
 router.get('/', async (req, res) => {
     const mode = req.query?.mode || 'default';
     const data = await db.getFormData();
-
+     console.log('Fetched form data:', data);
     res.render('index', { forms: data });
     });
 
