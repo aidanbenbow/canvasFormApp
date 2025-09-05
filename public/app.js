@@ -63,13 +63,13 @@ context.pipeline.add(adminOverlay);
 const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
 
-adminCanvas.addEventListener('mousedown', e => {
+adminCanvas.addEventListener('pointerdown', e => {
   console.log('Admin canvas mousedown', e);
   const { x, y } = mousePosition(adminCanvas, e);
   boxEditor.handleMouseDown(x, y);
 });
 
-adminCanvas.addEventListener('mousedown', e => {
+adminCanvas.addEventListener('pointerdown', e => {
   const { x, y } = mousePosition(adminCanvas, e);
   adminOverlay.plugins.forEach(p => {
     if (typeof p.handleClick === 'function') {
@@ -78,13 +78,13 @@ adminCanvas.addEventListener('mousedown', e => {
   });
 });
 
-adminCanvas.addEventListener('mousemove', e => {
+adminCanvas.addEventListener('pointermove', e => {
   const { x, y } = mousePosition( adminCanvas, e);
   boxEditor.handleMouseMove(x, y);
   context.pipeline.invalidate(); // trigger redraw
 });
 
-adminCanvas.addEventListener('mouseup', () => {
+adminCanvas.addEventListener('pointerup', () => {
   boxEditor.handleMouseUp();
 });
 
