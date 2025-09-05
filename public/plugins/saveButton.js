@@ -1,11 +1,11 @@
 export class SaveButtonPlugin {
-    constructor({ ctx, onSave }) {
+    constructor({ ctx, onSave, logicalWidth }) {
       this.type = 'saveButton';
       this.ctx = ctx;
       this.onSave = onSave;
-      this.position = { x: ctx.canvas.width - 110, y: 10 };
       this.width = 100;
       this.height = 30;
+      this.position = { x: logicalWidth - this.width-10, y: 10 };
     }
   
     render({ ctx }) {

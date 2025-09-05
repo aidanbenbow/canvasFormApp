@@ -50,12 +50,14 @@ const adminOverlay = new AdminOverlay(adminCtx);
 const boxEditor = new BoxEditorOverlay(); // allBoxes = array of Box instances
 adminOverlay.register(boxEditor);
 
+const logicalWidth = window.innerWidth;
 adminOverlay.register(new MessageOverlay());
 adminOverlay.register(new SaveButtonPlugin({
   ctx: adminCtx,
   onSave: (boxes) => {
     console.log('Saving boxes:', boxes);
-}
+},
+  logicalWidth
 }
 ));
 context.pipeline.add(adminOverlay);
