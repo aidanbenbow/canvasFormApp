@@ -17,9 +17,6 @@ const canvas = new CanvasManager(canvasConfig)
 const forms = document.querySelector('#data')
 const data = forms.innerHTML
 
-const mode = document.querySelector('#user').innerHTML.trim();
-console.log('Mode:', mode);
-
 const canvasBuilder = new CanvasSystemBuilder(canvas)
 
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
