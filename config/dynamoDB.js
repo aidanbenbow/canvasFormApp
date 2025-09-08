@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -17,6 +17,27 @@ class DynamoDB {
         this.docClient = DynamoDBDocumentClient.from(client);
         
     }
+    async saveMessage(id, message, label = 'Untitled') {
+      try {
+        const params = {
+          TableName: 'testdata',
+          Item: {
+            id,
+            message,
+            label,
+            timestamp: Date.now()
+          }
+        };
+  
+        const result = await this.docClient.send(new PutCommand(params));
+        console.log('Message saved to testdata:', result);
+        return result;
+      } catch (error) {
+        console.error('Error saving message to testdata:', error);
+        throw new Error('Could not save message');
+      }
+    }
+  
     async getFormData() {
         try {
             const params = {

@@ -90,22 +90,10 @@ export const myPluginManifest = {
           box.highlighted = true;
           console.log(`Box ${box.id} highlighted`);
         },
-        sendButton: (box) => {
+        sendButton: async (box) => {
           const editedBox = textEditorController.activeBox;
-          if (editedBox?.type === 'inputBox') {
-            const message = editedBox.text?.trim() || "No input provided";
         
-            eventBus.emit('showMessage', {
-              text: `Message sent: ${message}`,
-              position: {
-                x: box.startPosition.x,
-                y: box.startPosition.y - 80
-              },
-              duration: 3000
-            });
-        
-            console.log(`Message sent from inputBox ${editedBox.id}: "${message}"`);
-          } else {
+          if (editedBox?.type !== 'inputBox') {
             console.warn("No inputBox is currently being edited.");
             eventBus.emit('showMessage', {
               text: "No input to send ❌",
@@ -115,8 +103,48 @@ export const myPluginManifest = {
               },
               duration: 3000
             });
+            return;
           }
         
+          const message = editedBox.text?.trim();
+          if (!message) return;
+        
+          try {
+            const response = await fetch('/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: editedBox.id,
+                message,
+                label: editedBox.label || 'Untitled'
+              })
+            
+            });
+        
+            const result = await response.json();
+            console.log('Message saved:', result);
+        
+            eventBus.emit('showMessage', {
+              text: `Message sent: ${message}`,
+              position: {
+                x: box.startPosition.x + 300,
+                y: box.startPosition.y - 80
+              },
+              duration: 3000
+            });
+        
+            console.log(`Message sent from inputBox ${editedBox.id}: "${message}"`);
+          } catch (error) {
+            console.error('Error sending message:', error);
+            eventBus.emit('showMessage', {
+              text: "Failed to send message ❌",
+              position: {
+                x: box.startPosition.x,
+                y: box.startPosition.y - 30
+              },
+              duration: 3000
+            });
+          }
         },
         writeText: (box) => {
           textEditorController.startEditing(box);

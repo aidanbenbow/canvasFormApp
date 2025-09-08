@@ -144,14 +144,14 @@ export class TextEditorController {
 
     initKeyboardListeners() {
         window.addEventListener('keydown', (e) => {
-            if(e.key === ' '){
-                e.preventDefault(); // Prevent default space behavior
-            }
+          
             if (!this.activeBox) return;
 
             if (e.key.length === 1) {
+                e.preventDefault(); // Prevent default character input
                 this.insertChar(e.key);
             } else if (e.key === 'Backspace') {
+                e.preventDefault(); // Prevent default backspace behavior
                 this.deleteChar();
             } else if (e.key === 'ArrowLeft') {
                 this.moveCaretLeft(e.shiftKey);
@@ -159,10 +159,7 @@ export class TextEditorController {
                 this.moveCaretRight(e.shiftKey);
             } else if (e.key === 'Escape') {
                 this.stopEditing();
-            } else if(e.key === ' '){
-                e.preventDefault(); // Prevent default space behavior
-                this.insertChar(' ');
-            }
+            } 
         });
     }
 

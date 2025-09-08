@@ -12,5 +12,17 @@ router.get('/', async (req, res) => {
     res.render('index', {data });
     });
 
+    router.post('/messages', async (req, res) => {
+        const { id, message, label } = req.body;
+
+        try {
+          const result = await db.saveMessage(id, message, label);
+          res.json({ success: true, result });
+        } catch (error) {
+          res.status(500).json({ error: error.message });
+        }
+      
+    });
+
 
 export default router;
