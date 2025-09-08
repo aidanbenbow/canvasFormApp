@@ -4,6 +4,10 @@ export class BoxEditorOverlay {
       this.boxes = boxes;
       this.selectedBox = null;
       this.dragOffset = null;
+      this.editable = false
+    }
+    setMode(mode){
+      this.editable = mode === 'admin'
     }
     setBoxes(boxes) {
         console.log(boxes);
@@ -11,6 +15,7 @@ export class BoxEditorOverlay {
         }
   
     render({ ctx }) {
+      if(!this.editable) return;
       ctx.save();
       ctx.strokeStyle = 'blue';
       ctx.lineWidth = 2;
@@ -31,7 +36,7 @@ export class BoxEditorOverlay {
     }
   
     handleMouseDown(x, y) {
-        console.log(this.boxes);
+        if(!this.editable) return;
       for (const box of this.boxes) {
         const { x: bx, y: by } = box.startPosition;
         const { width, height } = box.size;
@@ -45,6 +50,7 @@ export class BoxEditorOverlay {
     }
   
     handleMouseMove(x, y) {
+        if(!this.editable) return;
       if (this.selectedBox && this.dragOffset) {
         const newX = x - this.dragOffset.x;
         const newY = y - this.dragOffset.y;
@@ -53,6 +59,7 @@ export class BoxEditorOverlay {
     }
   
     handleMouseUp() {
+        if(!this.editable) return;
       this.selectedBox = null;
       this.dragOffset = null;
     }

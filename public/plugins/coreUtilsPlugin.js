@@ -1,4 +1,4 @@
-import { generateHitHex, getHitHex, getMousePosition, measureTextSize, createBoxFromFormItem, loadImage } from "../utils/utilities.js";
+import { generateHitHex, getHitHex, getMousePosition, measureTextSize, createBoxFromFormItem, loadImage, normalizePos } from "../utils/utilities.js";
 
 
 // plugins/coreUtilsPlugin.js
@@ -10,5 +10,6 @@ export const coreUtilsPlugin = {
       registry.register('text', 'measureTextSize', measureTextSize);
       registry.register('box', 'createBoxFromFormItem', createBoxFromFormItem);
       registry.register('asset', 'loadImage', loadImage);
+      registry.register('normalise', 'normalizePos', normalizePos);
     }
   };

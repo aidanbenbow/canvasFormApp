@@ -16,10 +16,11 @@ export class HitManager {
     handleClick(pos) {
       const hex = this.getHitHex(this.hitCtx, pos);
       const hitObject = this.hitRegistry.get(hex);
-     
+      console.log(this.hitRegistry);
+     console.log('HitManager handleClick:', { pos, hex, hitObject });
     
       if (hitObject) {
-        this.eventBus.emit('hitClick', hitObject);
+       // this.eventBus.emit('hitClick', hitObject);
     
         const actionKey = hitObject.metadata?.actionKey;
         const directAction = hitObject.metadata?.action

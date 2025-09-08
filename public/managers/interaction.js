@@ -6,6 +6,7 @@ export class interactionManager{
         this.canvas = canvasManager.layers.main.canvas;
         this.hitManager = hitManager;
         this.getMousePos = utilsRegister.get('mouse', 'getMousePosition');
+        this.normalisePos = utilsRegister.get('normalise', 'normalizePos');
         
         this.attachListeners();
     }
@@ -13,7 +14,8 @@ export class interactionManager{
     attachListeners(){
         this.canvas.addEventListener('click', (e) => {
             const pos = this.getMousePos(this.canvas, e);
-            this.hitManager.handleClick(pos);
+            const normPos = this.normalisePos(this.canvas, pos);
+            this.hitManager.handleClick(normPos);
         });
 
         this.canvas.addEventListener('mousemove', (e) => {

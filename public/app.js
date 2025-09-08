@@ -6,6 +6,7 @@ import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
+import { LoginPlugin } from "./plugins/login.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
 
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
@@ -16,6 +17,17 @@ import {  utilsRegister } from "./utils/register.js";
 const canvas = new CanvasManager(canvasConfig)
 const forms = document.querySelector('#data')
 const data = forms.innerHTML
+
+const modeState = {
+  current: 'fill',
+  switchTo(newMode) {
+    this.current = newMode;
+    system.eventBus.emit('modeChanged', newMode);
+  },
+  isAdmin() {
+    return this.current === 'admin';
+  }
+};
 
 const canvasBuilder = new CanvasSystemBuilder(canvas)
 
@@ -28,7 +40,7 @@ utilsRegister.registerPlugin(coreUtilsPlugin)
 
 const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
 const context = renderBuild.createRendererContext()
-context.firstScreen = true;
+context.firstScreen = false;
 
 
 const textEditorController = new TextEditorController(context.pipeline)
@@ -49,6 +61,7 @@ const adminCtx = canvas.getContext('overlay');
 const adminOverlay = new AdminOverlay(adminCtx);
 const boxEditor = new BoxEditorOverlay(); // allBoxes = array of Box instances
 adminOverlay.register(boxEditor);
+adminOverlay.setMode(modeState.current)
 
 const logicalWidth = window.innerWidth;
 adminOverlay.register(new MessageOverlay());
@@ -61,6 +74,15 @@ adminOverlay.register(new SaveButtonPlugin({
 }
 ));
 context.pipeline.add(adminOverlay);
+
+adminOverlay.register(
+  new LoginPlugin({
+    ctx: adminCtx,
+    onLogin: () =>{ modeState.switchTo('admin')
+    console.log('Switched to admin mode');
+  }
+  })
+)
 
 const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
@@ -95,7 +117,7 @@ adminCanvas.addEventListener('pointermove', e => {
 adminCanvas.addEventListener('pointerup', () => {
   boxEditor.handleMouseUp();
 });
-
+//adminCanvas.style.pointerEvents = 'auto';
 
 system.eventBus.on('hitClick', (hitObject) => {
   boxEditor.setBoxes(
@@ -125,14 +147,19 @@ system.eventBus.on('hitClick', (hitObject) => {
     context.pipeline.invalidate();
   });
 
+  system.eventBus.on('modeChanged', (newMode) => {
+    boxEditor.setMode(newMode);
+  });
+
 async function init(data) {
     const info = JSON.parse(data);
+    const form = info[0];
     if (!Array.isArray(info)) {
       console.error('Expected array, got:', info);
       return;
     }
   let gap = 20;
-    for (const form of info) {
+    
       
       for (const item of form.formStructure) {
         item.startPosition.y += gap;
@@ -145,7 +172,8 @@ async function init(data) {
         context.pipeline.add(box);
         gap += 20;
       }
-    }
+    boxEditor.setBoxes(Array.from(context.pipeline.drawables).filter(d => d.type === 'textBox' || d.type === 'inputBox' || d.type === 'imageBox'));
+    boxEditor.setMode(modeState.current);
   }
 
  await init(data);

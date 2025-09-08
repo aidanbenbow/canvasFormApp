@@ -56,7 +56,9 @@ export class Box {
         this.text = newText;
         
        // this.size = this.textRenderer.measureTextSize(this.text, this.fontSize);
+       if (this.Gizmo) {
         this.Gizmo.centre = this.getCentre();
+      }
     }
 
     moveTo(pos) {

@@ -13,6 +13,16 @@ export function getMousePosition(canvas,event) {
     };
 }
 
+export function normalizePos(canvas, pos) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  return {
+    x: Math.floor((pos.x - rect.left) * dpr),
+    y: Math.floor((pos.y - rect.top) * dpr),
+  };
+}
+
 export function getHitHex(ctx, pos) {
      const hitHex = ctx.getImageData(pos.x, pos.y, 1, 1).data;
     const hex = ((hitHex[0] << 16) | (hitHex[1] << 8) | hitHex[2]).toString(16).padStart(6, '0');
