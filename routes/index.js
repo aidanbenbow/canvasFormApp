@@ -4,15 +4,12 @@ const router = express.Router();
 import db from '../config/dynamoDB.js';
 
 router.get('/', async (req, res) => {
- 
     const data = await db.getFormData();
-    
-     console.log('Fetched form data:', data);
      
     res.render('index', {data });
     });
 
-    router.post('/messages', async (req, res) => {
+    router.post('/', async (req, res) => {
       const { formId, inputs } = req.body;
     console.log('Received message data:', req.body);
     if (!formId || typeof inputs !== 'object' || Array.isArray(inputs)) {
