@@ -9,9 +9,20 @@ export class TextEditorController {
         this.selectionStart = this.caretIndex;
         this.selectionEnd = this.caretIndex;
 
+        this.boxes = [];
+
         this.initCaretBlink();
         this.initKeyboardListeners();
     }
+
+    setBoxes(boxes) {
+        this.boxes = boxes;
+      }
+    
+      getAllBoxes() {
+        return this.boxes;
+      }
+    
 
     handle(box){
         this.startEditing(box);

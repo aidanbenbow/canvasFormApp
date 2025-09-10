@@ -3,14 +3,15 @@ import { utilsRegister } from "../utils/register.js";
 
 
 export class Box {
-    constructor(id,type, startPosition, size, text, fill, renderer, actionKey, imageKey) {
+    constructor({id,type, startPosition, size, text, label, fill, renderer, action, imageKey}) {
+      
         this.id = id;
         this.type = type;
         
         this.startPosition = startPosition;
         this.size = size;
         this.text = text;
-        this.label = 'label'; // Default label for input boxes
+        this.label = label || 'label'; // Default label for input boxes
         this.fill = fill;
         const generateHitHex = utilsRegister.get('hit', 'generateHitHex');
         this.hitColors = {
@@ -33,9 +34,10 @@ export class Box {
         this.select = false
 
         this.renderer = renderer;
+      
         this.textRenderer = this.renderer.registry.get('textBox');
         
-        this.actionKey = actionKey
+        this.actionKey = action
         this.imageKey = imageKey
 
     }
@@ -78,7 +80,8 @@ export class Box {
         this.Gizmo.updateCentre(this.getCentre());
     }
     serialize() {
-       
+        console.log('Serializing box:', this.id, this.type, this.fill, this.imageKey, this.actionKey);
+
         return {
           type: this.type,
           startPosition: this.startPosition,
@@ -87,7 +90,7 @@ export class Box {
           color: this.fill,
           label: this.label,
           editable: this.editable,
-          imageKey: this.image?.key || null, // if using assetManager
+          imageKey: this.imageKey || null, // if using assetManager
             action: this.actionKey
         };
       }

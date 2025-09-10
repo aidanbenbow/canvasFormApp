@@ -4,6 +4,7 @@ import { CanvasManager } from "./managers/canvas.js";
 import { AdminOverlay } from "./overlays/adminOverlay.js";
 import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
+import { AddInputBoxPlugin } from "./plugins/addInputBox.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 import { LoginPlugin } from "./plugins/login.js";
@@ -65,24 +66,102 @@ adminOverlay.setMode(modeState.current)
 
 const logicalWidth = window.innerWidth;
 adminOverlay.register(new MessageOverlay());
-adminOverlay.register(new SaveButtonPlugin({
-  ctx: adminCtx,
-  onSave: (boxes) => {
-    console.log('Saving boxes:', boxes);
-},
-  logicalWidth
-}
-));
+
 context.pipeline.add(adminOverlay);
 
-adminOverlay.register(
-  new LoginPlugin({
+
+
+function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, boxEditor, renderer }) {
+  const saveButtonPlugin = new SaveButtonPlugin({
     ctx: adminCtx,
-    onLogin: () =>{ modeState.switchTo('admin')
+    logicalWidth,
+    boxes: boxEditor,
+    onSave: async (boxes) => {
+      const formStructure = boxes
+        .filter(box => ['textBox', 'inputBox', 'imageBox'].includes(box.type))
+        .map(box => box.serialize());
+    
+console.log('Form Structure to Save:', formStructure);
+
+      try {
+        const response = await fetch('http://localhost:4500/saveFormStructure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: 'form-001',
+            formStructure,
+            label: 'Admin Form Layout'
+          }),
+        });
+    
+        if (!response.ok) throw new Error('Failed to save form structure');
+        const result = await response.json();
+        console.log('Save successful:', result);
+      } catch (err) {
+        console.error('Save error:', err);
+      }
+    }
+  });
+
+  const addInputPlugin = new AddInputBoxPlugin({
+    ctx: adminCtx,
+    logicalWidth,
+    boxEditor,
+    renderer
+  });
+
+  adminOverlay.register(saveButtonPlugin);
+  adminOverlay.register(addInputPlugin);
+
+  adminOverlay.registerHitRegions(hitRegistry);
+  adminOverlay.drawHitRegions(hitCtx);
+}
+
+const loginCanvas = document.querySelector('#loginCanvas');
+const loginCtx = loginCanvas.getContext('2d');
+loginCanvas.width = window.innerWidth;
+loginCanvas.height = window.innerHeight;
+
+const loginPlugin = new LoginPlugin({
+  ctx: loginCtx,
+  onLogin: () => {
+    modeState.switchTo('admin');
     console.log('Switched to admin mode');
+    adminCanvas.style.pointerEvents = 'auto';
+    loginCanvas.style.pointerEvents = 'none'; // disable login canvas once logged in
+
+    setupAdminPlugins({
+      adminOverlay,
+      hitRegistry: context.hitRegistry,
+      hitCtx: canvas.getHitContext('main'),
+      logicalWidth,
+      boxEditor: boxEditor,
+      renderer: context.pipeline
+    });
+
   }
-  })
-)
+});
+
+function renderLogin() {
+  loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
+  loginPlugin.render({ ctx: loginCtx });
+}
+
+renderLogin();
+
+document.addEventListener('pointerdown', e => {
+  const { x, y } = utilsRegister.get('mouse', 'getMousePosition')(loginCanvas, e);
+  const withinLogin = (
+    x >= loginPlugin.bounds.x &&
+    x <= loginPlugin.bounds.x + loginPlugin.bounds.width &&
+    y >= loginPlugin.bounds.y &&
+    y <= loginPlugin.bounds.y + loginPlugin.bounds.height
+  );
+
+  if (withinLogin && modeState.current !== 'admin') {
+    loginPlugin.handleClick(x, y);
+  }
+});
 
 const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
@@ -117,7 +196,7 @@ adminCanvas.addEventListener('pointermove', e => {
 adminCanvas.addEventListener('pointerup', () => {
   boxEditor.handleMouseUp();
 });
-//adminCanvas.style.pointerEvents = 'auto';
+
 
 system.eventBus.on('hitClick', (hitObject) => {
   boxEditor.setBoxes(
@@ -149,11 +228,14 @@ system.eventBus.on('hitClick', (hitObject) => {
 
   system.eventBus.on('modeChanged', (newMode) => {
     boxEditor.setMode(newMode);
+    adminCanvas.style.pointerEvents = newMode === 'admin' ? 'auto' : 'none';
+    loginCanvas.style.pointerEvents = newMode === 'admin' ? 'none' : 'auto';
+    context.pipeline.invalidate();
   });
 
 async function init(data) {
     const info = JSON.parse(data);
-    const form = info[0];
+    const form = info[1];
     if (!Array.isArray(info)) {
       console.error('Expected array, got:', info);
       return;
@@ -164,7 +246,7 @@ async function init(data) {
       for (const item of form.formStructure) {
         item.startPosition.y += gap;
         item.id = `${form.id}`;
-        
+      
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
         const renderer = context.pipeline.renderManager
         const box = createBox(item, renderer);
@@ -174,6 +256,8 @@ async function init(data) {
       }
     boxEditor.setBoxes(Array.from(context.pipeline.drawables).filter(d => d.type === 'textBox' || d.type === 'inputBox' || d.type === 'imageBox'));
     boxEditor.setMode(modeState.current);
+    // console.log('Boxes set in BoxEditor:', boxEditor.getBoxes());
+    textEditorController.setBoxes(boxEditor.getBoxes());
   }
 
  await init(data);

@@ -14,10 +14,10 @@ export class HitManager {
       return this.hitRegistry.get(hex);
     }
     handleClick(pos) {
+      
       const hex = this.getHitHex(this.hitCtx, pos);
       const hitObject = this.hitRegistry.get(hex);
-      console.log(this.hitRegistry);
-     console.log('HitManager handleClick:', { pos, hex, hitObject });
+     
     
       if (hitObject) {
        // this.eventBus.emit('hitClick', hitObject);

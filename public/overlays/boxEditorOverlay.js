@@ -13,6 +13,13 @@ export class BoxEditorOverlay {
         console.log(boxes);
         this.boxes = boxes;
         }
+        getBoxes() {
+          return this.boxes;
+        }
+        addBox(box) {
+          this.boxes.push(box);
+        }
+      
   
     render({ ctx }) {
       if(!this.editable) return;

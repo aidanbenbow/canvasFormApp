@@ -42,4 +42,19 @@ export class AdminOverlay {
 
       this.plugins.forEach(plugin => plugin.render({ ctx: this.ctx }));
     }
+    registerHitRegions(hitRegistry) {
+      this.plugins.forEach(plugin => {
+        if (typeof plugin.registerHitRegion === 'function') {
+          plugin.registerHitRegion(hitRegistry);
+        }
+      });
+    }
+    
+    drawHitRegions(hitCtx) {
+      this.plugins.forEach(plugin => {
+        if (typeof plugin.drawHitRegion === 'function') {
+          plugin.drawHitRegion(hitCtx);
+        }
+      });
+    }
   }

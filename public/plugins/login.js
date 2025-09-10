@@ -31,4 +31,24 @@ export class LoginPlugin {
         }
       }
     }
+    getHitHex() {
+      return 'login-001';
+    }
+  
+    getHitColor() {
+      return '#ff0002';
+    }
+  
+    registerHitRegion(hitRegistry) {
+      hitRegistry.register(this.getHitHex(), {
+        type: this.type,
+        plugin: this,
+        bounds: this.position
+      });
+    }
+  
+    drawHitRegion(hitCtx) {
+      hitCtx.fillStyle = this.getHitColor();
+      hitCtx.fillRect(this.position.x, this.position.y, this.width, this.height);
+    }
   }

@@ -12,15 +12,14 @@ export class interactionManager{
     }
 
     attachListeners(){
-        this.canvas.addEventListener('click', (e) => {
+        document.addEventListener('click', (e) => {
             const pos = this.getMousePos(this.canvas, e);
             const normPos = this.normalisePos(this.canvas, pos);
             this.hitManager.handleClick(normPos);
         });
-
-        this.canvas.addEventListener('mousemove', (e) => {
+    
+        document.addEventListener('mousemove', (e) => {
             const pos = this.getMousePos(this.canvas, e);
-           
             this.hitManager.handleMouseMove(pos);
         });
     }

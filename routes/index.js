@@ -13,11 +13,29 @@ router.get('/', async (req, res) => {
     });
 
     router.post('/messages', async (req, res) => {
-        const { id, message, label } = req.body;
+      const { formId, inputs } = req.body;
+    console.log('Received message data:', req.body);
+    if (!formId || typeof inputs !== 'object' || Array.isArray(inputs)) {
+      return res.status(400).json({ error: 'Invalid payload. Expected formId and inputs object.' });
+    }
+  
+      try {
+        const result = await db.saveMessage(formId, inputs);
+        res.json({ success: true, result });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
 
+    router.post('/saveFormStructure', async (req, res) => {
+        const { id, formStructure, label } = req.body;
+        if (!id || !formStructure) {
+          return res.status(400).json({ error: 'Missing id or formStructure' });
+        }
+      
         try {
-          const result = await db.saveMessage(id, message, label);
-          res.json({ success: true, result });
+          await db.updateFormData(id, formStructure, label);
+          res.json({ success: true });
         } catch (error) {
           res.status(500).json({ error: error.message });
         }

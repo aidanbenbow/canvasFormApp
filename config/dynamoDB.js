@@ -17,24 +17,28 @@ class DynamoDB {
         this.docClient = DynamoDBDocumentClient.from(client);
         
     }
-    async saveMessage(id, message, label = 'Untitled') {
+    async saveMessage(formId, inputs = []) {
       try {
-        const params = {
-          TableName: 'testdata',
-          Item: {
-            id,
-            message,
-            label,
-            timestamp: Date.now()
-          }
+        const timestamp = Date.now()
+    
+        const payload = {
+          id: 'msg-' + timestamp,
+         formId,
+          ...inputs,
+          timestamp
         };
-  
+    
+        const params = {
+          TableName: 'cscstudents',
+          Item: payload
+        };
+    
         const result = await this.docClient.send(new PutCommand(params));
-        console.log('Message saved to testdata:', result);
+        console.log('Form saved to testdata:', result);
         return result;
       } catch (error) {
-        console.error('Error saving message to testdata:', error);
-        throw new Error('Could not save message');
+        console.error('Error saving form to testdata:', error);
+        throw new Error('Could not save form');
       }
     }
   

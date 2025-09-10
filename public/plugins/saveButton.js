@@ -1,11 +1,13 @@
 export class SaveButtonPlugin {
-    constructor({ ctx, onSave, logicalWidth }) {
+    constructor({ ctx, onSave, logicalWidth, boxes }) {
       this.type = 'saveButton';
       this.ctx = ctx;
       this.onSave = onSave;
       this.width = 100;
       this.height = 30;
       this.position = { x: logicalWidth - this.width-10, y: 10 };
+      this.boxes = boxes; // Reference to boxes to save
+      
     }
   
     render({ ctx }) {
@@ -26,7 +28,28 @@ export class SaveButtonPlugin {
         y <= this.position.y + this.height;
   
       if (withinBounds && typeof this.onSave === 'function') {
-        this.onSave(); // Trigger save logic
+        this.onSave(this.boxes.getBoxes()); // Trigger save logic
       }
     }
+    getHitHex() {
+      return 'save-001';
+    }
+  
+    getHitColor() {
+      return '#ff0001';
+    }
+  
+    registerHitRegion(hitRegistry) {
+      hitRegistry.register(this.getHitHex(), {
+        type: this.type,
+        plugin: this,
+        bounds: this.position
+      });
+    }
+  
+    drawHitRegion(hitCtx) {
+      hitCtx.fillStyle = this.getHitColor();
+      hitCtx.fillRect(this.position.x, this.position.y, this.width, this.height);
+    }
+  
   }

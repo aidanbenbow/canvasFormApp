@@ -44,16 +44,19 @@ export function measureTextSize(text, fontSize, maxWidth = Infinity) {
   export function createBoxFromFormItem(item, renderer) {
  
     return new Box(
-        item.id,
-      item.type,
-      item.startPosition,
-      item.size,
-      item.text,
-      item.color,
-      renderer,
-      item.actionKey || null,
-      item.imageKey || null,
+        {
+          id: item.id,
+          type: item.type,
+          startPosition: item.startPosition,
+          size: item.size || { width: 100, height: 40 },
+          text: item.text || '',
+          label: item.label || 'Label',
+          fill: item.color || '#ffffff',
+          renderer,
+          action: item.action || null,
+          imageKey: item.imageKey || null
       
+        }
     );
   }
 
