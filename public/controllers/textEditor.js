@@ -29,7 +29,7 @@ export class TextEditorController {
     }
     startEditing(box, field = 'text') {
         const value = typeof box[field] === 'string' ? box[field] : '';
-      
+      console.log('Starting to edit box:', box.id, 'field:', field, 'with initial value:', value);
         this.activeBox = box;
         this.activeField = field;
         this.caretIndex = value.length;
@@ -175,7 +175,7 @@ export class TextEditorController {
     }
 
     drawCaret(ctx) {
-        
+       
         if (!this.activeBox|| !this.activeField || !this.blinkState) return;
 
         const field = this.activeField; // Use the active field for caret drawing

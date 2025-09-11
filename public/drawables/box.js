@@ -56,6 +56,9 @@ export class Box {
 
     updateText(newText) {
         this.text = newText;
+        if (this.textSizerPlugin) {
+            this.textSizerPlugin.onTextUpdate(this, newText);
+          }
         
        // this.size = this.textRenderer.measureTextSize(this.text, this.fontSize);
        if (this.Gizmo) {
@@ -70,6 +73,8 @@ export class Box {
 
     resizeTo(size) {
         this.size = size;
+        const minWidth = 150;
+this.size.width = Math.max(this.size.width, minWidth);
         const maxWidth = this.size.width * 0.8; // Limit text width to 80% of box width
         this.fontSize = size.height * 0.6;
 
@@ -77,7 +82,7 @@ export class Box {
           this.size = this.renderer.measureTextSize(this.text, this.fontSize, maxWidth);
         }
       
-        this.Gizmo.updateCentre(this.getCentre());
+       // this.Gizmo.updateCentre(this.getCentre());
     }
     serialize() {
         console.log('Serializing box:', this.id, this.type, this.fill, this.imageKey, this.actionKey);

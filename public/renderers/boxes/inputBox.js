@@ -17,7 +17,10 @@ export class InputBoxRenderer extends BoxRenderer {
 
     // Input field
     ctx.fillStyle = 'white';
-    ctx.fillRect(x + 60, y + 10, width - 70, height - 20);
+    const labelMetrics = ctx.measureText(box.label);
+const inputX = x + labelMetrics.width + 20;
+const inputWidth = width - (inputX - x) - 10;
+    ctx.fillRect(inputX, y + 10, inputWidth, height - 20);
     ctx.strokeStyle = 'gray';
     ctx.strokeRect(x + 60, y + 10, width - 70, height - 20);
 

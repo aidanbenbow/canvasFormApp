@@ -1,3 +1,4 @@
+import { TextEditorController } from "../controllers/textEditor.js";
 import { HitManager } from "../managers/hit.js";
 import { interactionManager } from "../managers/interaction.js";
 import { RenderManager } from "../managers/render.js";
@@ -22,9 +23,12 @@ export class RenderSystemBuilder {
         this.hitRegistry = new HitRegistry();
         this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus, this.actionRegistry);
         this.interactionManager = new interactionManager(this.canvasManager, this.hitManager);
+         
+
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
+        this.textEditorController = new TextEditorController(this.pipeline);
         this.components = {};
         
         this.attachRendererHooks();

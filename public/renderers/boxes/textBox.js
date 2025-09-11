@@ -6,7 +6,7 @@ export class TextBoxRenderer extends BoxRenderer {
       const { ctx, hitCtx, textEditorController, boxHitManager } = rendererContext;
       const { x, y } = box.startPosition;
       const { width, height } = box.size;
-  
+     
       ctx.fillStyle = box.fill;
       ctx.fillRect(x, y, width, height);
   

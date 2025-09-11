@@ -9,6 +9,7 @@ import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 import { LoginPlugin } from "./plugins/login.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
+import { TextSizerPlugin } from "./plugins/textResizer.js";
 
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
@@ -44,9 +45,10 @@ const context = renderBuild.createRendererContext()
 context.firstScreen = false;
 
 
-const textEditorController = new TextEditorController(context.pipeline)
+//const textEditorController = new TextEditorController(context.pipeline)
 
-const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, textEditorController });
+const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
+ textEditorController: context.textEditorController });
  
 renderBuild.registerFromManifest(myPluginManifest)
 renderBuild.usePlugin(formIconPlugin)
@@ -241,7 +243,8 @@ async function init(data) {
       return;
     }
   let gap = 20;
-    
+  const registry = context.pipeline.renderManager.registry;
+    const textSizerPlugin = new TextSizerPlugin({rendererRegistry:registry});
       
       for (const item of form.formStructure) {
         item.startPosition.y += gap;
@@ -251,13 +254,15 @@ async function init(data) {
         const renderer = context.pipeline.renderManager
         const box = createBox(item, renderer);
 
+        box.autoResize = true;
+        box.textSizerPlugin = textSizerPlugin;
         context.pipeline.add(box);
         gap += 20;
       }
     boxEditor.setBoxes(Array.from(context.pipeline.drawables).filter(d => d.type === 'textBox' || d.type === 'inputBox' || d.type === 'imageBox'));
     boxEditor.setMode(modeState.current);
     // console.log('Boxes set in BoxEditor:', boxEditor.getBoxes());
-    textEditorController.setBoxes(boxEditor.getBoxes());
+    context.textEditorController.setBoxes(boxEditor.getBoxes());
   }
 
  await init(data);
