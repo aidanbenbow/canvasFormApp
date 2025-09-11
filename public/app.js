@@ -86,7 +86,7 @@ function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, bo
 console.log('Form Structure to Save:', formStructure);
 
       try {
-        const response = await fetch('/saveFormStructure', {
+        const response = await fetch('/api/saveFormStructure', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

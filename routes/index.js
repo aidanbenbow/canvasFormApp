@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     res.render('index', {data });
     });
 
-    router.post('/', async (req, res) => {
+    router.post('/api/message', async (req, res) => {
       const { formId, inputs } = req.body;
     console.log('Received message data:', req.body);
     if (!formId || typeof inputs !== 'object' || Array.isArray(inputs)) {
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
       }
     });
 
-    router.post('/saveFormStructure', async (req, res) => {
+    router.post('/api/saveFormStructure', async (req, res) => {
         const { id, formStructure, label } = req.body;
         if (!id || !formStructure) {
           return res.status(400).json({ error: 'Missing id or formStructure' });
