@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 //   next();
 // });
 
-app.use('/api', indexRoutes);
+app.use('/', indexRoutes);
 app.use(express.static('public'));
 app.listen(4500, () => {
   console.log("Server is running on port 4500");
