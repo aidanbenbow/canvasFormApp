@@ -9,7 +9,7 @@ export class LoginPlugin {
         }
 
     draw(ctx) {
-      ctx.fillStyle = 'gray';
+      ctx.fillStyle = 'blue';
       ctx.fillRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
       ctx.fillStyle = 'white';
       ctx.fillText('Admin Login', this.bounds.x + 10, this.bounds.y + 25);

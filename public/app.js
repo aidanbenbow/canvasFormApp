@@ -10,6 +10,7 @@ import { formIconPlugin } from "./plugins/formIconPlugin.js";
 import { LoginPlugin } from "./plugins/login.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
 import { TextSizerPlugin } from "./plugins/textResizer.js";
+import { HitRouter } from "./routes/hitRouter.js";
 
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
@@ -86,7 +87,7 @@ function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, bo
 console.log('Form Structure to Save:', formStructure);
 
       try {
-        const response = await fetch('/api/saveFormStructure', {
+        const response = await fetch('/saveFormStructure', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -199,20 +200,9 @@ adminCanvas.addEventListener('pointerup', () => {
   boxEditor.handleMouseUp();
 });
 
-
-system.eventBus.on('hitClick', (hitObject) => {
-  boxEditor.setBoxes(
-    Array.from(context.pipeline.drawables).filter(
-      d => d.id === hitObject.box.id && (d.type === 'textBox' || d.type === 'inputBox' || d.type === 'imageBox')
-    )
-  );
-    context.pipeline.clearExceptById(hitObject.box.id);
-    context.firstScreen = false;
-    adminCanvas.style.pointerEvents = 'auto';
- 
-   // context.pipeline.add(hitObject.box);
-   // context.pipeline.add(messageOverlay);
-    context.pipeline.invalidate();
+const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry );
+system.eventBus.on('hitClick', ({hex}) => {
+  hitRouter.routeHit(hex);
   });
 
   system.eventBus.on('loadForm', (data) => {
@@ -242,12 +232,12 @@ async function init(data) {
       console.error('Expected array, got:', info);
       return;
     }
-  let gap = 20;
+
   const registry = context.pipeline.renderManager.registry;
     const textSizerPlugin = new TextSizerPlugin({rendererRegistry:registry});
       
       for (const item of form.formStructure) {
-        item.startPosition.y += gap;
+        
         item.id = `${form.id}`;
       
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
@@ -257,7 +247,7 @@ async function init(data) {
         box.autoResize = true;
         box.textSizerPlugin = textSizerPlugin;
         context.pipeline.add(box);
-        gap += 20;
+        
       }
     boxEditor.setBoxes(Array.from(context.pipeline.drawables).filter(d => d.type === 'textBox' || d.type === 'inputBox' || d.type === 'imageBox'));
     boxEditor.setMode(modeState.current);

@@ -119,7 +119,7 @@ export const myPluginManifest = {
           }
         
           try {
-            const response = await fetch('/api/message', {
+            const response = await fetch('/message', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

@@ -18,34 +18,34 @@ export class HitManager {
       const hex = this.getHitHex(this.hitCtx, pos);
       const hitObject = this.hitRegistry.get(hex);
      
-    
+    console.log('hitObject', hitObject);
       if (hitObject) {
-       // this.eventBus.emit('hitClick', hitObject);
+        this.eventBus.emit('hitClick', {hex,hitObject});
     
-        const actionKey = hitObject.metadata?.actionKey;
-        const directAction = hitObject.metadata?.action
+      //   const actionKey = hitObject.metadata?.actionKey;
+      //   const directAction = hitObject.metadata?.action
     
-        if (actionKey) {
-          const actionFn = this.actionRegistry?.get(actionKey);
-          if (typeof actionFn === 'function') {
-            actionFn(hitObject.box);
-            this.eventBus.emit('actionTriggered', {
-              box: hitObject.box,
-              region: hitObject.region,
-              actionKey
-            });
-          } else {
-            console.warn(`No action registered for key: ${actionKey}`);
-          } }else if(typeof directAction === 'function') {
-            directAction(hitObject.box);
-            this.eventBus.emit('actionTriggered', {
-              box: hitObject.box,
-              region: hitObject.region,
-              action: 'direct'
-            });
-        }
-      }
-    }
+      //   if (actionKey) {
+      //     const actionFn = this.actionRegistry?.get(actionKey);
+      //     if (typeof actionFn === 'function') {
+      //       actionFn(hitObject.box);
+      //       this.eventBus.emit('actionTriggered', {
+      //         box: hitObject.box,
+      //         region: hitObject.region,
+      //         actionKey
+      //       });
+      //     } else {
+      //       console.warn(`No action registered for key: ${actionKey}`);
+      //     } }else if(typeof directAction === 'function') {
+      //       directAction(hitObject.box);
+      //       this.eventBus.emit('actionTriggered', {
+      //         box: hitObject.box,
+      //         region: hitObject.region,
+      //         action: 'direct'
+      //       });
+      //   }
+      // }
+    }}
     handleMouseMove(pos) {
       const hex = this.getHitHex(this.hitCtx,pos);
       const hitObject = this.hitRegistry.get(hex);

@@ -39,8 +39,15 @@ const inputWidth = width - (inputX - x) - 10;
     hitRegistry?.register(box.hitColors.text, {
       box,
       region: 'text',
+      metadata: { actionKey: 'writeText' }
+    });
+
+    hitRegistry?.register(box.hitColors.label, {
+      box,
+      region: 'label',
       metadata: { actionKey: box.actionKey }
     });
+
     // Shared overlays
     this.renderCommon(box, ctx, hitCtx, textEditorController, boxHitManager);
   }
