@@ -1,6 +1,7 @@
 import  express from "express";
 const app = express();
 
+import crypto from 'crypto';
 import http from "http";
 import { Server } from "socket.io";
 
@@ -40,15 +41,20 @@ io.on('connection', (socket) => {
   socket.on('log', async ({ message, data }) => {
     console.log(`[LOG] ${message}`);
     console.log('Received data:', data);
-
-    // Simulate saving the message (replace with actual DB logic)
+ 
     try {
-      const result = { saved: true, timestamp: Date.now(), data };
+      // Save to DB
+      const result = await db.saveMessage(
+        message, data
+      );
+  
       socket.emit('messageResponse', { success: true, result });
     } catch (error) {
+      console.error('Error saving log:', error);
       socket.emit('messageResponse', { success: false, error: error.message });
     }
   });
+  
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);

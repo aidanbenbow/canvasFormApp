@@ -119,7 +119,7 @@ export const myPluginManifest = {
             return;
           }
 
-          socket.emit('log', { message: `Sending message from form ${box.id}`, data: dataToSend });
+          socket.emit('log', { message: box.id, data: dataToSend });
         
           socket.once('messageResponse', (response) => {
             const { success, result, error } = response;
