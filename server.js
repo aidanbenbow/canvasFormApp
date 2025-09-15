@@ -54,7 +54,12 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use('/', indexRoutes);
+//app.use('/', indexRoutes);
+
+app.get('/', (req, res) => {
+  res.render('index', { data: [] });
+});
+
 app.use(express.static('public'));
 server.listen(4500, () => {
   console.log("Server is running on port 4500");
