@@ -17,8 +17,6 @@ import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
 import {  utilsRegister } from "./utils/register.js";
 
 
-
-
 const canvas = new CanvasManager(canvasConfig)
 const forms = document.querySelector('#data')
 const data = forms.innerHTML
@@ -37,6 +35,7 @@ const modeState = {
 const canvasBuilder = new CanvasSystemBuilder(canvas)
 
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
+export const eventBus = system.eventBus;
 
 utilsRegister.on('onRegister', (ns, name, fn) => {
     console.log(`[UTILS] Registered ${name} in ${ns}`);
@@ -213,9 +212,8 @@ system.eventBus.on('hitClick', ({hex}) => {
     context.pipeline.invalidate();
   });
 
-  system.eventBus.on('showMessage', ({ text, position, duration }) => {
+  system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);
-    console.log(context.pipeline.drawables)
     adminOverlay.showMessage(text, position, duration);
     context.pipeline.invalidate();
   });

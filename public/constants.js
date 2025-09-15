@@ -5,7 +5,9 @@ import { ImageBoxRenderer } from "./renderers/boxes/imageBox.js";
 
 import { MessageOverlayRenderer } from "./renderers/messageOverlay.js";
 import { AdminOverlayRenderer } from "./renderers/adminOverlay.js";
-import socket from "./socketClient.js";
+
+import { emitFeedback, onMessageResponse, sendLog } from "./controllers/socketController.js";
+
 
 export const canvasConfig = {
     main: {
@@ -108,34 +110,38 @@ export const myPluginManifest = {
 
           if (inputData.length === 0) {
             console.warn("No inputBox is currently being edited.");
-            eventBus.emit('showMessage', {
+            socket.emit('feedback', {
+              success: false,
               text: "No input to send ❌",
               position: {
                 x: box.startPosition.x,
                 y: box.startPosition.y - 30
-              },
+              }
+        ,
               duration: 3000
             });
             return;
           }
 
-          socket.emit('log', { message: box.id, data: dataToSend });
+         sendLog(box.id, dataToSend);
         
-          socket.once('messageResponse', (response) => {
-            const { success, result, error } = response;
-        
-            eventBus.emit('showMessage', {
-              text: success ? "Message sent ✅" : `Failed ❌: ${error}`,
-              position: {
-                x: box.startPosition.x + (success ? 300 : 0),
-                y: box.startPosition.y - 80
-              },
-              duration: 3000
-            });
-        
-            if (success) console.log('Message saved:', result);
-            else console.error('Error:', error);
+         onMessageResponse((response) => {
+          emitFeedback({
+            success: response.success,
+            error: response.error,
+            box
           });
+        
+          if (response.success) {
+            allBoxes.forEach(b => {
+              if (b.type === 'inputBox') {
+                b.text = '';
+              }
+            });
+            textEditorController.stopEditing();
+          }
+        });
+        
         
         
         },
