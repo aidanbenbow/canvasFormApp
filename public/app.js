@@ -17,6 +17,8 @@ import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
 import {  utilsRegister } from "./utils/register.js";
 
 
+
+
 const canvas = new CanvasManager(canvasConfig)
 const forms = document.querySelector('#data')
 const data = forms.innerHTML

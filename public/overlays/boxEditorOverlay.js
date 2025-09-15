@@ -10,7 +10,7 @@ export class BoxEditorOverlay {
       this.editable = mode === 'admin'
     }
     setBoxes(boxes) {
-        console.log(boxes);
+      
         this.boxes = boxes;
         }
         getBoxes() {

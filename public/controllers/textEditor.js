@@ -29,7 +29,7 @@ export class TextEditorController {
     }
     startEditing(box, field = 'text') {
         const value = typeof box[field] === 'string' ? box[field] : '';
-      console.log('Starting to edit box:', box.id, 'field:', field, 'with initial value:', value);
+      
         this.activeBox = box;
         this.activeField = field;
         this.caretIndex = value.length;
@@ -71,6 +71,70 @@ export class TextEditorController {
             this.selectionStart = this.selectionEnd = this.caretIndex;
             this.pipeline.invalidate();
           };
+          input.onpaste = (e) => {
+            e.preventDefault();
+            const pasteText = e.clipboardData.getData('text');
+            console.log('Pasting text:', pasteText);
+            this.insertText(pasteText);
+          };
+          input.addEventListener('paste', (e) => {
+            console.log('Paste event triggered');
+          });
+          
+          input.oncopy = (e) => {
+            if (!this.activeBox || !this.activeField) return;
+            const selectedText = this.activeBox[this.activeField].slice(this.selectionStart, this.selectionEnd);
+            e.clipboardData.setData('text/plain', selectedText);
+            e.preventDefault();
+          };
+          
+          input.oncut = (e) => {
+            if (!this.activeBox || !this.activeField) return;
+            const selectedText = this.activeBox[this.activeField].slice(this.selectionStart, this.selectionEnd);
+            e.clipboardData.setData('text/plain', selectedText);
+            this.deleteSelection();
+            e.preventDefault();
+          };
+        }
+      
+        this.pipeline.invalidate();
+      }
+
+      insertText(text) {
+        if (!this.activeBox || !this.activeField) return;
+      
+        const field = this.activeField;
+        const currentText = this.activeBox[field];
+        const before = currentText.slice(0, this.selectionStart);
+        const after = currentText.slice(this.selectionEnd);
+        const newText = before + text + after;
+      
+        this.activeBox[field] = newText;
+        this.caretIndex = this.selectionStart + text.length;
+        this.selectionStart = this.selectionEnd = this.caretIndex;
+      
+        if (typeof this.activeBox.updateText === 'function' && field === 'text') {
+          this.activeBox.updateText(newText);
+        }
+      
+        this.pipeline.invalidate();
+      }
+      
+      deleteSelection() {
+        if (!this.activeBox || !this.activeField || this.selectionStart === this.selectionEnd) return;
+      
+        const field = this.activeField;
+        const currentText = this.activeBox[field];
+        const before = currentText.slice(0, this.selectionStart);
+        const after = currentText.slice(this.selectionEnd);
+        const newText = before + after;
+      
+        this.activeBox[field] = newText;
+        this.caretIndex = this.selectionStart;
+        this.selectionEnd = this.selectionStart;
+      
+        if (typeof this.activeBox.updateText === 'function' && field === 'text') {
+          this.activeBox.updateText(newText);
         }
       
         this.pipeline.invalidate();

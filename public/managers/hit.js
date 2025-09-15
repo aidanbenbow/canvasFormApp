@@ -18,7 +18,7 @@ export class HitManager {
       const hex = this.getHitHex(this.hitCtx, pos);
       const hitObject = this.hitRegistry.get(hex);
      
-    console.log('hitObject', hitObject);
+    
       if (hitObject) {
         this.eventBus.emit('hitClick', {hex,hitObject});
     

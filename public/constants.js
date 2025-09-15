@@ -5,6 +5,7 @@ import { ImageBoxRenderer } from "./renderers/boxes/imageBox.js";
 
 import { MessageOverlayRenderer } from "./renderers/messageOverlay.js";
 import { AdminOverlayRenderer } from "./renderers/adminOverlay.js";
+import socket from "./socketClient.js";
 
 export const canvasConfig = {
     main: {
@@ -117,46 +118,30 @@ export const myPluginManifest = {
             });
             return;
           }
+
+          socket.emit('log', { message: `Sending message from form ${box.id}`, data: dataToSend });
         
-          try {
-            const response = await fetch('/message', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                formId: box.id,
-                inputs: dataToSend,
-              })
-            
-            });
-        
-            const result = await response.json();
-            console.log('Message saved:', result);
+          socket.once('messageResponse', (response) => {
+            const { success, result, error } = response;
         
             eventBus.emit('showMessage', {
-              text: `Message sent`,
+              text: success ? "Message sent ✅" : `Failed ❌: ${error}`,
               position: {
-                x: box.startPosition.x + 300,
+                x: box.startPosition.x + (success ? 300 : 0),
                 y: box.startPosition.y - 80
               },
               duration: 3000
             });
         
-            console.log('sent inputs:', inputData);
-          } catch (error) {
-            console.error('Error sending message:', error);
-            eventBus.emit('showMessage', {
-              text: "Failed to send message ❌",
-              position: {
-                x: box.startPosition.x,
-                y: box.startPosition.y - 30
-              },
-              duration: 3000
-            });
-          }
+            if (success) console.log('Message saved:', result);
+            else console.error('Error:', error);
+          });
+        
+        
         },
         writeText: (box) => {
           textEditorController.startEditing(box);
-          console.log(`Box ${box.id} text editing started`);
+       
         }
       }
     };

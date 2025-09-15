@@ -4,7 +4,7 @@ export class HitRouter {
     constructor(hitRegistry, modeState, textEditorController, actionRegistry) {
       this.hitRegistry = hitRegistry;
       this.actionRegistry = actionRegistry;
-      console.log('HitRouter actionRegistry:', actionRegistry);
+      
       this.modeState = modeState;
       this.textEditorController = textEditorController;
       this.handlers = new Map(); // type -> handler
