@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+import db from './config/dynamoDB.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,8 +57,9 @@ io.on('connection', (socket) => {
 
 //app.use('/', indexRoutes);
 
-app.get('/', (req, res) => {
-  res.render('index', { data: [] });
+app.get('/', async (req, res) => {
+const data = await db.getFormData();
+  res.render('index', { data });
 });
 
 app.use(express.static('public'));
