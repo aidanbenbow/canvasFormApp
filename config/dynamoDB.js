@@ -88,6 +88,20 @@ class DynamoDB {
         }
       }
     
+      async fetchStudentCount() {
+        try {
+          const params = {
+            TableName: 'cscstudents',
+            Select: 'COUNT'
+          };
+    
+          const data = await this.docClient.send(new ScanCommand(params));
+          return data.Count || 0;
+        } catch (error) {
+          console.error("Error fetching student count:", error);
+          return 0;
+        }
+      }
     
     
 }

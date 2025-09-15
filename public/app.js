@@ -72,7 +72,16 @@ const logicalWidth = window.innerWidth;
 adminOverlay.register(new MessageOverlay());
 
 context.pipeline.add(adminOverlay);
+let studentCount = 0;
+const messagePlugin = adminOverlay.plugins.find(p => p.type === 'messageOverlay');
+if (messagePlugin) {
+  messagePlugin.setLiveMessage(() => `👥 Students: ${studentCount}`, { x: 20, y: 160 });
+}
 
+system.eventBus.on('updateStudentCount', (count) => {
+  studentCount = count;
+  context.pipeline.invalidate();
+});
 
 
 function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, boxEditor, renderer }) {

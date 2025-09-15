@@ -7,6 +7,11 @@ socket.on('feedback', ({ text, position, duration }) => {
   eventBus.emit('socketFeedback', { text, position, duration });
 });
 
+socket.on('studentCount', ({ count }) => {
+    console.log('Updated student count:', count);
+    eventBus.emit('updateStudentCount', count);
+});
+
 export function sendLog(message, data) {
   socket.emit('log', { message, data });
 }
