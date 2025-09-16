@@ -1,4 +1,5 @@
 import { canvasConfig, createPluginManifest } from "./constants.js";
+import { emitFeedback, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
@@ -87,7 +88,8 @@ system.eventBus.on('updateStudentCount', (count) => {
 
 
 function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, boxEditor, renderer }) {
-  const saveButtonPlugin = new SaveButtonPlugin({
+  
+ let saveButtonPlugin = new SaveButtonPlugin({
     ctx: adminCtx,
     logicalWidth,
     boxes: boxEditor,
@@ -96,27 +98,24 @@ function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, bo
         .filter(box => ['textBox', 'inputBox', 'imageBox'].includes(box.type))
         .map(box => box.serialize());
     
-console.log('Form Structure to Save:', formStructure);
-
-      try {
-        const response = await fetch('/saveFormStructure', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: 'form-001',
-            formStructure,
-            label: 'Admin Form Layout'
-          }),
-        });
-    
-        if (!response.ok) throw new Error('Failed to save form structure');
-        const result = await response.json();
-        console.log('Save successful:', result);
-      } catch (err) {
-        console.error('Save error:', err);
+        if (formStructure.length === 0) {
+          emitFeedback( {
+            success: false,
+            text: "Nothing to save ❌",
+            box: saveButtonPlugin
+          });
+          return;
+        }
+        const payload = {
+          id: 'form-001',
+          formStructure,
+          label: 'Admin Form Layout'
+        };
+      
+      saveFormStructure(payload, saveButtonPlugin);
       }
-    }
   });
+
 
   const addInputPlugin = new AddInputBoxPlugin({
     ctx: adminCtx,
@@ -130,6 +129,8 @@ console.log('Form Structure to Save:', formStructure);
 
   adminOverlay.registerHitRegions(hitRegistry);
   adminOverlay.drawHitRegions(hitCtx);
+
+  return { saveButtonPlugin, addInputPlugin };
 }
 
 const loginCanvas = document.querySelector('#loginCanvas');

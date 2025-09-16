@@ -6,19 +6,13 @@ import { utilsRegister } from "../utils/register.js";
 
 export class Box {
     constructor({id,type, startPosition, size, text, label, fill, renderer, action, imageKey}) {
-        const scaleFromCanvas = utilsRegister.get('layout', 'scaleFromCanvas');
-        const getCanvasSize = utilsRegister.get('canvas', 'getCanvasSize');
-       
+
         const generateHitHex = utilsRegister.get('hit', 'generateHitHex');
       
         this.id = id;
         this.type = type;
-        const canvasSize = typeof getCanvasSize === 'function'
-  ? getCanvasSize()
-  : { width: 1000, height: 1000 }; // fallback logical size
-        
-        this.startPosition = startPosition;
-        this.logicalPosition = scaleFromCanvas(startPosition, canvasSize.width, canvasSize.height);
+        this.setPosition(startPosition, true);
+       // console.log(canvasSize, this.startPosition, this.logicalPosition);
         this.size = size;
         this.text = text;
         this.label = label || 'label'; // Default label for input boxes
@@ -59,15 +53,32 @@ export class Box {
         };
     }
 
+    setPosition(pos, isLogical = true) {
+        const getCanvasSize = utilsRegister.get('canvas', 'getCanvasSize');
+        const canvasSize = typeof getCanvasSize === 'function'
+          ? getCanvasSize()
+          : { width: 1000, height: 1000 };
+      
+        if (isLogical) {
+          const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
+          this.logicalPosition = pos;
+          this.startPosition = scaleToCanvas(pos, canvasSize.width, canvasSize.height);
+        } else {
+          const scaleFromCanvas = utilsRegister.get('layout', 'scaleFromCanvas');
+          this.startPosition = pos;
+          this.logicalPosition = scaleFromCanvas(pos, canvasSize.width, canvasSize.height);
+        }
+      
+        if (this.Gizmo) {
+          this.Gizmo.centre = this.getCentre();
+        }
+      }
+
     draw(rendererContext) {
         this.renderer.render(this, rendererContext);
         
     }
-    setLogicalPosition(pos) {
-        const canvasSize = getCanvasSize();
-        this.startPosition = scaleToCanvas(pos, canvasSize.width, canvasSize.height);
-        this.logicalPosition = pos;
-      }
+ 
 
     updateText(newText) {
         this.text = newText;
@@ -82,7 +93,7 @@ export class Box {
     }
 
     moveTo(pos) {
-        this.startPosition = pos;
+        this.setPosition(pos, false);
        // this.Gizmo.updateCentre(this.getCentre());
     }
 

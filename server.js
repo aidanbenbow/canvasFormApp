@@ -62,6 +62,19 @@ io.on('connection', (socket) => {
     }
   });
   
+  socket.on('saveFormStructure', async (payload) => {
+    const { id, formStructure, label } = payload;
+  
+    try {
+      const result = await db.updateFormData(id, formStructure, label);
+      socket.emit('formSavedResponse', { success: true, result });
+    } catch (error) {
+      socket.emit('formSavedResponse', {
+        success: false,
+        error: error.message || 'Unknown error'
+      });
+    }
+  });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);

@@ -5,6 +5,7 @@ import { generateHitHex, getHitHex, getMousePosition, measureTextSize, createBox
 // plugins/coreUtilsPlugin.js
 
 export function coreUtilsPlugin(context) {
+ 
   return {
     registerUtilities(registry) {
       registry.register('hit', 'generateHitHex', generateHitHex);
@@ -16,8 +17,10 @@ export function coreUtilsPlugin(context) {
       registry.register('normalise', 'normalizePos', normalizePos);
       registry.register('layout', 'scaleToCanvas', scaleToCanvas);
       registry.register('layout', 'scaleFromCanvas', scaleFromCanvas);
-      registry.register('layout', 'LoGICAL_WIDTH', 1000);
-      registry.register('layout', 'LoGICAL_HEIGHT', 1000);
+      registry.register('layout', 'getLogicalDimensions', () => {
+        const { width, height } = context.canvasManager.getCanvasSize();
+        return { width, height };
+      });
       registry.register('canvas', 'getCanvasSize', context.canvasManager.getCanvasSize.bind(context.canvasManager));
     }
   };
