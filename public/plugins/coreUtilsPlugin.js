@@ -1,8 +1,11 @@
-import { generateHitHex, getHitHex, getMousePosition, measureTextSize, createBoxFromFormItem, loadImage, normalizePos } from "../utils/utilities.js";
+
+import { generateHitHex, getHitHex, getMousePosition, measureTextSize, createBoxFromFormItem, loadImage, normalizePos, scaleToCanvas, scaleFromCanvas } from "../utils/utilities.js";
 
 
 // plugins/coreUtilsPlugin.js
-export const coreUtilsPlugin = {
+
+export function coreUtilsPlugin(context) {
+  return {
     registerUtilities(registry) {
       registry.register('hit', 'generateHitHex', generateHitHex);
       registry.register('hit', 'getHitHex', getHitHex);
@@ -11,5 +14,11 @@ export const coreUtilsPlugin = {
       registry.register('box', 'createBoxFromFormItem', createBoxFromFormItem);
       registry.register('asset', 'loadImage', loadImage);
       registry.register('normalise', 'normalizePos', normalizePos);
+      registry.register('layout', 'scaleToCanvas', scaleToCanvas);
+      registry.register('layout', 'scaleFromCanvas', scaleFromCanvas);
+      registry.register('layout', 'LoGICAL_WIDTH', 1000);
+      registry.register('layout', 'LoGICAL_HEIGHT', 1000);
+      registry.register('canvas', 'getCanvasSize', context.canvasManager.getCanvasSize.bind(context.canvasManager));
     }
   };
+}

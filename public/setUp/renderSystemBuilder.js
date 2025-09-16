@@ -22,7 +22,7 @@ export class RenderSystemBuilder {
         this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
         this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus, this.actionRegistry);
-        this.interactionManager = new interactionManager(this.canvasManager, this.hitManager);
+        //this.interactionManager = new interactionManager(this.canvasManager, this.hitManager);
          
 
         this.renderManager =  new RenderManager(this.rendererRegistry);
@@ -38,10 +38,11 @@ export class RenderSystemBuilder {
             ctx: this.canvasManager.getContext(layer),
             hitCtx: this.canvasManager.getHitContext(layer),
             hitRegistry: this.hitRegistry,
+            hitManager: this.hitManager,
             pipeline: this.pipeline,
             textEditorController: this.textEditorController|| null,
             selectionController: this.selectionController|| null,
-            interactionManager: this.interactionManager|| null,
+            interactionManager:  null,
             focusManager: this.focusManager|| null,
             boxManager: this.boxManager|| null,
             boxHitManager: this.boxHitManager || null,

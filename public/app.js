@@ -1,6 +1,7 @@
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
+import { interactionManager } from "./managers/interaction.js";
 import { AdminOverlay } from "./overlays/adminOverlay.js";
 import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
@@ -40,14 +41,15 @@ export const eventBus = system.eventBus;
 utilsRegister.on('onRegister', (ns, name, fn) => {
     console.log(`[UTILS] Registered ${name} in ${ns}`);
   });
-utilsRegister.registerPlugin(coreUtilsPlugin)
-
-const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
-const context = renderBuild.createRendererContext()
-context.firstScreen = false;
-
-
-//const textEditorController = new TextEditorController(context.pipeline)
+  
+  const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
+  const context = renderBuild.createRendererContext()
+  context.canvasManager = canvas; // ✅ Attach canvasManager to context
+  context.firstScreen = false;
+  
+  utilsRegister.registerPlugin(coreUtilsPlugin(context))
+context.interactionManager = new interactionManager(canvas, context.hitManager);
+context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHex'));
 
 const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
  textEditorController: context.textEditorController });
@@ -244,6 +246,8 @@ async function init(data) {
 
   const registry = context.pipeline.renderManager.registry;
     const textSizerPlugin = new TextSizerPlugin({rendererRegistry:registry});
+    const canvasWidth = canvas.layers['main'].canvas.width;
+    const canvasHeight = canvas.layers['main'].canvas.height;
       
       for (const item of form.formStructure) {
         
@@ -251,7 +255,7 @@ async function init(data) {
       
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
         const renderer = context.pipeline.renderManager
-        const box = createBox(item, renderer);
+        const box = createBox(item, renderer, canvasWidth, canvasHeight);
 
         box.autoResize = true;
         box.textSizerPlugin = textSizerPlugin;

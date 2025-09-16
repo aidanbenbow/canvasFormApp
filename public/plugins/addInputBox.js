@@ -1,5 +1,9 @@
 import { utilsRegister } from "../utils/register.js";
 
+const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
+const getCanvasSize = utilsRegister.get('canvas', 'getCanvasSize');
+
+
 export class AddInputBoxPlugin {
     constructor({ ctx, logicalWidth, boxEditor, renderer }) {
       this.type = 'addInputBox';
@@ -31,11 +35,16 @@ export class AddInputBoxPlugin {
   
       if (withinBounds) {
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
+        const canvasSize = getCanvasSize();
+
+const logicalPos = { x: 100, y: 100 };
+const scaledPos = scaleToCanvas(logicalPos, canvasSize.width, canvasSize.height);
+
         const newBox = createBox({
           type: 'inputBox',
           label: 'New Input',
           text: ' ',
-          startPosition: { x: 100, y: 100 },
+          startPosition: scaledPos,
           size: { width: 120, height: 40 },
           fill: '#ffffff',
           id: `input-${Date.now()}`,

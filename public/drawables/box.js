@@ -2,18 +2,28 @@ import { utilsRegister } from "../utils/register.js";
 
 
 
+        
+
 export class Box {
     constructor({id,type, startPosition, size, text, label, fill, renderer, action, imageKey}) {
+        const scaleFromCanvas = utilsRegister.get('layout', 'scaleFromCanvas');
+        const getCanvasSize = utilsRegister.get('canvas', 'getCanvasSize');
+       
+        const generateHitHex = utilsRegister.get('hit', 'generateHitHex');
       
         this.id = id;
         this.type = type;
+        const canvasSize = typeof getCanvasSize === 'function'
+  ? getCanvasSize()
+  : { width: 1000, height: 1000 }; // fallback logical size
         
         this.startPosition = startPosition;
+        this.logicalPosition = scaleFromCanvas(startPosition, canvasSize.width, canvasSize.height);
         this.size = size;
         this.text = text;
         this.label = label || 'label'; // Default label for input boxes
         this.fill = fill;
-        const generateHitHex = utilsRegister.get('hit', 'generateHitHex');
+        
         this.hitColors = {
             main: generateHitHex(`${type}-main-${this.id}`),
             ...(type === 'inputBox' && {
@@ -53,6 +63,11 @@ export class Box {
         this.renderer.render(this, rendererContext);
         
     }
+    setLogicalPosition(pos) {
+        const canvasSize = getCanvasSize();
+        this.startPosition = scaleToCanvas(pos, canvasSize.width, canvasSize.height);
+        this.logicalPosition = pos;
+      }
 
     updateText(newText) {
         this.text = newText;
@@ -89,7 +104,7 @@ this.size.width = Math.max(this.size.width, minWidth);
 
         return {
           type: this.type,
-          startPosition: this.startPosition,
+          startPosition: this.logicalPosition,
           size: this.size,
           text: this.text,
           color: this.fill,

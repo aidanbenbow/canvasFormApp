@@ -1,4 +1,5 @@
 import { Box } from "../drawables/box.js";
+import { utilsRegister } from "./register.js";
 
 export function generateHitHex() {
     const hex = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
@@ -41,27 +42,53 @@ export function measureTextSize(text, fontSize, maxWidth = Infinity) {
     };
   }
 
-  export function createBoxFromFormItem(item, renderer) {
- 
-    return new Box(
-        {
-          id: item.id,
-          type: item.type,
-          startPosition: item.startPosition,
-          size: item.size || { width: 100, height: 40 },
-          text: item.text || '',
-          label: item.label || 'Label',
-          fill: item.color || '#ffffff',
-          renderer,
-          action: item.action || null,
-          imageKey: item.imageKey || null
-      
-        }
-    );
+  export function createBoxFromFormItem(item, renderer, canvasWidth, canvasHeight) {
+    const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
+    const scaledPosition = scaleToCanvas(item.startPosition, canvasWidth, canvasHeight);
+  
+    return new Box({
+      id: item.id,
+      type: item.type,
+      startPosition: scaledPosition,
+      size: item.size || { width: 100, height: 40 },
+      text: item.text || '',
+      label: item.label || 'Label',
+      fill: item.color || '#ffffff',
+      renderer,
+      action: item.action || null,
+      imageKey: item.imageKey || null
+    });
   }
+  
+  
 
   export function loadImage(path) {
     const img = new Image();
     img.src = path;
     return img;
   }
+
+  function getLogicalDimensions() {
+    return {
+      width: utilsRegister.get('layout', 'logicalWidth') || 2000,
+      height: utilsRegister.get('layout', 'logicalHeight') || 1000
+    };
+  }
+  
+
+  export function scaleToCanvas(pos, canvasWidth, canvasHeight) {
+    const { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT } = getLogicalDimensions();
+    return {
+      x: (pos.x / LOGICAL_WIDTH) * canvasWidth,
+      y: (pos.y / LOGICAL_HEIGHT) * canvasHeight
+    };
+  }
+  
+
+export function scaleFromCanvas(pos, canvasWidth, canvasHeight) {
+  const { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT } = getLogicalDimensions();
+  return {
+    x: (pos.x / canvasWidth) * LOGICAL_WIDTH,
+    y: (pos.y / canvasHeight) * LOGICAL_HEIGHT
+  };
+}
