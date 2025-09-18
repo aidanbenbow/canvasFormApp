@@ -1,5 +1,5 @@
 import { canvasConfig, createPluginManifest } from "./constants.js";
-import { emitFeedback, saveFormStructure } from "./controllers/socketController.js";
+import { emitFeedback, fetchAllForms, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
@@ -9,6 +9,7 @@ import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { AddInputBoxPlugin } from "./plugins/addInputBox.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
+import { FormListOverlay } from "./plugins/formListOverlay.js";
 import { LoginPlugin } from "./plugins/login.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
 import { TextSizerPlugin } from "./plugins/textResizer.js";
@@ -154,8 +155,37 @@ const loginPlugin = new LoginPlugin({
       boxEditor: boxEditor,
       renderer: context.pipeline
     });
+  
+    const parsedForms = JSON.parse(data); // your embedded form array
 
+    const formListOverlay = new FormListOverlay({
+      ctx: adminCtx,
+      forms: parsedForms,
+      onEdit: (form) => {
+        console.log('Editing form:', form);
+        init(JSON.stringify([null, form]));
+        context.pipeline.remove(formListOverlay);
+      },
+      onViewResults: (form) => {
+        console.log('Viewing results for form:', form);
+        system.eventBus.emit('viewFormResults', form); // or open a results overlay
+      }
+    
+    });
+    
+    adminOverlay.register(formListOverlay);
+    context.pipeline.add(formListOverlay);
+    //remove textBox, inputBox, imageBox from pipeline drawables
+    const removableBoxes = Array.from(context.pipeline.drawables).filter(d =>
+      ['textBox', 'inputBox', 'imageBox'].includes(d.type)
+    );
+    console.log('Removing boxes:', removableBoxes);
+    context.pipeline.remove(...removableBoxes);
+    formListOverlay.render();
+    context.pipeline.invalidate();
   }
+  
+  
 });
 
 function renderLogin() {

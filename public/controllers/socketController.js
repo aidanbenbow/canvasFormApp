@@ -51,4 +51,17 @@ export function emitFeedback({ success, error, box }) {
       }
     });
   }
+
+  // controllers/socketController.js
+export function fetchAllForms(callback) {
+  console.log('[SOCKET] Emitting getAllForms');
+
+  socket.emit('getAllForms');
+ // socket.on('allFormsData', callback);
+ socket.once('allFormsData', (data) => {
+  console.log('[SOCKET] Received allFormsData:', data);
+  callback(data);
+});
+
+}
   

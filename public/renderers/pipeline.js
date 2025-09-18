@@ -16,10 +16,12 @@ export class RenderPipeline {
         this.invalidate();
     }
 
-    remove(drawable) {
-        this.drawables.delete(drawable);
+    remove(...drawables) {
+        for (const d of drawables) {
+          this.drawables.delete(d);
+        }
         this.invalidate();
-    }
+      }
 
     invalidate() {
         this.dirty = true;
