@@ -65,3 +65,12 @@ export function fetchAllForms(callback) {
 
 }
   
+export function fetchFormResults(formId, callback) {
+  console.log('[SOCKET] Emitting getFormResults for:', formId);
+  socket.emit('getFormResults', { formId });
+
+  socket.once('formResultsData', ({ formId, results }) => {
+    console.log('[SOCKET] Received formResultsData:', results);
+    callback(results);
+  });
+}

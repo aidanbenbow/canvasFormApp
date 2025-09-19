@@ -102,6 +102,24 @@ class DynamoDB {
           return 0;
         }
       }
+
+      async getFormResults(formId) {
+        try {
+          const params = {
+            TableName: 'cscstudents',
+            FilterExpression: 'formId = :formId',
+            ExpressionAttributeValues: {
+              ':formId': formId
+            }
+          };
+      
+          const data = await this.docClient.send(new ScanCommand(params));
+          return data.Items || [];
+        } catch (error) {
+          console.error('Error fetching form results:', error);
+          throw new Error('Could not fetch form results');
+        }
+      }
     
     
 }

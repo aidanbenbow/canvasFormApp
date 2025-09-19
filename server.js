@@ -76,6 +76,16 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('getFormResults', async ({ formId }) => {
+    try {
+      const results = await db.getFormResults(formId);
+      socket.emit('formResultsData', { formId, results });
+    } catch (err) {
+      socket.emit('formResultsData', { formId, results: [], error: err.message });
+    }
+  
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });

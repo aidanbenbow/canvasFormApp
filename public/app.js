@@ -1,10 +1,11 @@
 import { canvasConfig, createPluginManifest } from "./constants.js";
-import { emitFeedback, fetchAllForms, saveFormStructure } from "./controllers/socketController.js";
+import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
 import { AdminOverlay } from "./overlays/adminOverlay.js";
 import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
+import { FormResultsOverlay } from "./overlays/formResults.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { AddInputBoxPlugin } from "./plugins/addInputBox.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
@@ -145,51 +146,60 @@ const loginPlugin = new LoginPlugin({
     modeState.switchTo('admin');
     console.log('Switched to admin mode');
     adminCanvas.style.pointerEvents = 'auto';
-    loginCanvas.style.pointerEvents = 'none'; // disable login canvas once logged in
+    loginCanvas.style.pointerEvents = 'none';
 
     setupAdminPlugins({
       adminOverlay,
       hitRegistry: context.hitRegistry,
       hitCtx: canvas.getHitContext('main'),
       logicalWidth,
-      boxEditor: boxEditor,
+      boxEditor,
       renderer: context.pipeline
     });
-  
-    const parsedForms = JSON.parse(data); // your embedded form array
+
+    const parsedForms = JSON.parse(data);
 
     const formListOverlay = new FormListOverlay({
       ctx: adminCtx,
       forms: parsedForms,
       onEdit: (form) => {
         console.log('Editing form:', form);
-        
         init(JSON.stringify([null, form]));
-        adminOverlay.unregister(formListOverlay); // Remove plugin from admin overlay
-  context.pipeline.invalidate(); // Trigger redraw
-
-        
+        adminOverlay.unregister(formListOverlay);
+        context.pipeline.invalidate();
       },
-      onViewResults: (form) => {
-        console.log('Viewing results for form:', form);
-        system.eventBus.emit('viewFormResults', form); // or open a results overlay
+      onViewResults: (formMeta) => {
+        adminOverlay.unregister(formListOverlay);
+
+        fetchFormResults(formMeta.id, (results) => {
+          const resultsOverlay = new FormResultsOverlay({
+            ctx: adminCtx,
+            form: { ...formMeta, responses: results },
+            onBack: () => {
+              adminOverlay.unregister(resultsOverlay);
+              adminOverlay.register(formListOverlay);
+              context.pipeline.invalidate();
+            }
+          });
+
+          adminOverlay.register(resultsOverlay);
+          context.pipeline.invalidate();
+        });
       }
-    
     });
-    
+
     adminOverlay.register(formListOverlay);
     context.pipeline.add(formListOverlay);
-    //remove textBox, inputBox, imageBox from pipeline drawables
+
     const removableBoxes = Array.from(context.pipeline.drawables).filter(d =>
       ['textBox', 'inputBox', 'imageBox'].includes(d.type)
     );
     console.log('Removing boxes:', removableBoxes);
     context.pipeline.remove(...removableBoxes);
+
     formListOverlay.render();
     context.pipeline.invalidate();
   }
-  
-  
 });
 
 function renderLogin() {
