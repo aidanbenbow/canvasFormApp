@@ -19,25 +19,30 @@ export class FormResultsOverlay {
       ctx.fillText(`📊 Results for: ${this.form.title}`, 10, 25);
   
       // 🔹 Render form results
-      const responses = this.form.responses || [];
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#000';
-      
-      let yOffset = 60;
-      
-      responses.forEach((entry, i) => {
-        const keys = Object.keys(entry);
-        ctx.fillText(`Submission ${i + 1}:`, 20, yOffset);
-        yOffset += 20;
-      
-        keys.forEach((key) => {
-          const value = entry[key] ?? '—';
-          ctx.fillText(`${key}: ${value}`, 40, yOffset);
-          yOffset += 20;
-        });
-      
-        yOffset += 20; // extra spacing between submissions
-      });
+     // 🔹 Render names only
+     const responses = this.form.responses || [];
+     ctx.font = '14px Arial';
+     ctx.fillStyle = '#000';
+     
+     let yOffset = 60;
+     
+     // 🧮 Total count
+     ctx.fillText(`Total submissions: ${responses.length}`, 20, yOffset);
+     yOffset += 30;
+     
+     // 🎲 Random selection
+     const named = responses.filter(r => r.name);
+     const randomEntry = named[Math.floor(Math.random() * named.length)];
+     const randomName = randomEntry?.name ?? '—';
+     
+     ctx.fillText(`🎯 Randomly selected: ${randomName}`, 20, yOffset);
+     yOffset += 40;
+     
+     // 🧑‍💼 List of names
+     named.forEach((entry, i) => {
+       ctx.fillText(`• ${entry.name}`, 20, yOffset);
+       yOffset += 24;
+     });
   
       // 🔙 Back button
       ctx.fillStyle = '#007bff';
