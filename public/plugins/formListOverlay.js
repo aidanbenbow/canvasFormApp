@@ -24,14 +24,14 @@ export class FormListOverlay {
         this.ctx.fillText(`${form.label} (${form.id})`, 30, y + 25);
   
         // Edit button
-        const editBtn = { x: 300, y, width: 50, height: 30 };
+        const editBtn = { x: 200, y, width: 50, height: 30 };
         this.ctx.fillStyle = '#4CAF50';
         this.ctx.fillRect(editBtn.x, editBtn.y + 5, editBtn.width, editBtn.height);
         this.ctx.fillStyle = '#fff';
         this.ctx.fillText('Edit', editBtn.x + 10, editBtn.y + 25);
   
         // View button
-        const viewBtn = { x: 360, y, width: 50, height: 30 };
+        const viewBtn = { x: 260, y, width: 50, height: 30 };
         this.ctx.fillStyle = '#2196F3';
         this.ctx.fillRect(viewBtn.x, viewBtn.y + 5, viewBtn.width, viewBtn.height);
         this.ctx.fillStyle = '#fff';

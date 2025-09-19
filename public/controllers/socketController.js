@@ -74,3 +74,8 @@ export function fetchFormResults(formId, callback) {
     callback(results);
   });
 }
+
+socket.on('formResultsUpdated', ({ formId, results }) => {
+  console.log('[SOCKET] Live update for form:', formId);
+  eventBus.emit('formResultsUpdated', { formId, results });
+});

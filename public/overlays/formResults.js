@@ -6,6 +6,11 @@ export class FormResultsOverlay {
       this.onBack = onBack;
       this.isOverlay = true;
     }
+    updateResponses(newResponses) {
+        this.form.responses = newResponses;
+        this.ctx && this.render({ ctx: this.ctx });
+      }
+      
   
     render({ ctx }) {
       ctx.save();
@@ -31,16 +36,16 @@ export class FormResultsOverlay {
      yOffset += 30;
      
      // 🎲 Random selection
-     const named = responses.filter(r => r.name);
+     const named = responses.filter(r => r.input0);
      const randomEntry = named[Math.floor(Math.random() * named.length)];
-     const randomName = randomEntry?.name ?? '—';
+     const randomName = randomEntry?.input0 ?? '—';
      
      ctx.fillText(`🎯 Randomly selected: ${randomName}`, 20, yOffset);
      yOffset += 40;
      
      // 🧑‍💼 List of names
      named.forEach((entry, i) => {
-       ctx.fillText(`• ${entry.name}`, 20, yOffset);
+       ctx.fillText(`• ${entry.input0}`, 20, yOffset);
        yOffset += 24;
      });
   
