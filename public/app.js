@@ -163,8 +163,12 @@ const loginPlugin = new LoginPlugin({
       forms: parsedForms,
       onEdit: (form) => {
         console.log('Editing form:', form);
+        
         init(JSON.stringify([null, form]));
-        context.pipeline.remove(formListOverlay);
+        adminOverlay.unregister(formListOverlay); // Remove plugin from admin overlay
+  context.pipeline.invalidate(); // Trigger redraw
+
+        
       },
       onViewResults: (form) => {
         console.log('Viewing results for form:', form);

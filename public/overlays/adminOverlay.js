@@ -16,6 +16,13 @@ export class AdminOverlay {
       }
     }
 
+    unregister(plugin) {
+      const index = this.plugins.indexOf(plugin);
+      if (index !== -1) {
+        this.plugins.splice(index, 1);
+      }
+    }
+
     showMessage(text, position, duration) {
         const messagePlugin = this.plugins.find(p => p.type === 'messageOverlay');
         if (messagePlugin) {
