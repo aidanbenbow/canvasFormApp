@@ -34,6 +34,18 @@ export class FormResultsOverlay {
      // 🧮 Total count
      ctx.fillText(`Total submissions: ${responses.length}`, 20, yOffset);
      yOffset += 30;
+
+     // 🧑‍💼 Progress report metrics
+if (this.form.resultsTable === 'progressreports') {
+  const completed = responses.filter(r => r.completed === true).length;
+  const used = responses.filter(r => r.used).length;
+
+  ctx.fillText(`✅ Completed reports: ${completed}`, 20, yOffset);
+  yOffset += 24;
+
+  ctx.fillText(`📌 Reports marked 'used': ${used}`, 20, yOffset);
+  yOffset += 30;
+}
      
      // 🎲 Random selection
      const named = responses.filter(r => r.input0);
