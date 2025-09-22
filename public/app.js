@@ -283,6 +283,10 @@ system.eventBus.on('hitClick', ({hex}) => {
     context.pipeline.invalidate();
   });
 
+  system.eventBus.on('formResultsUpdated', () => {
+    context.pipeline.invalidate();
+  });
+
 async function init(data) {
     const info = JSON.parse(data);
     const form = info[1];

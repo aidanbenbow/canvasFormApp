@@ -22,6 +22,7 @@ const io = new Server(server, {
 
 import indexRoutes from './routes/index.js';
 
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
@@ -117,9 +118,18 @@ app.post('/submitted', async (req, res) => {
     const formData = req.body;
    console.log('Form data received:', formData);
 
+ 
    // Save the form data to DynamoDB
     try {
         await db.saveMessage(formData.formId, formData);
+        // Fetch updated results
+    const updatedResults = await db.getFormResults(formData.formId, 'onequestion');
+
+    // ✅ Emit to all connected clients
+    io.emit('formResultsUpdated', {
+      formId: formData.formId,
+      results: updatedResults
+    });
         res.redirect('/thankyou');
     } catch (error) {
         console.error('Error saving form data:', error);
