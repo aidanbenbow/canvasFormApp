@@ -99,6 +99,19 @@ const data = await db.getFormData();
   res.render('index', { data });
 });
 
+app.get('/form', (req, res) => {
+  const formData = {
+    id: '6a19c9c0-2984-4088-bf4e-06ae0ddb2516',
+    title: 'Seara de Discutie',
+    name: 'фамилия имя / nume prenume',
+    ocupatie: 'Школа, колледж, университет, профессия / Școală, colegiul, universitate, ocupație.',
+    good: 'что тебе понравилось в этом вечере? / ce ti-a placut la seara asta?',
+    better: 'Что может быть лучше? / Ce ar putea fi mai bun?',
+    learnt: 'Сегодня вечером Tы узнали одну вещь? / Un lucru pe care l-ai învățat în seara asta?',
+  };
+  res.render('form', { form: formData });
+});
+
 app.use(express.static('public'));
 server.listen(4500, () => {
   console.log("Server is running on port 4500");

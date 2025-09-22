@@ -1,3 +1,5 @@
+import { eventBus } from "../app.js";
+
 export class FormResultsOverlay {
     constructor({ ctx, form, onBack }) {
       this.type = 'formResultsOverlay';
@@ -7,6 +9,13 @@ export class FormResultsOverlay {
       this.isOverlay = true;
       this.randomName = '—';
 this.randomButtonBounds = null;
+
+// 🔄 Listen for live updates
+eventBus.on('formResultsUpdated', ({ formId, results }) => {
+  if (formId === this.form.id) {
+    this.updateResponses(results);
+  }
+});
 
     }
     updateResponses(newResponses) {
