@@ -109,9 +109,10 @@ function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, bo
           return;
         }
         const payload = {
-          id: 'form-001',
+          id: boxEditor.formMeta.id||`form-${Date.now()}`,
           formStructure,
-          label: 'Admin Form Layout'
+          label: boxEditor.formMeta.label||'Untitled Form',
+          resultsTable: boxEditor.formMeta.resultsTable||'cscstudents'
         };
       
       saveFormStructure(payload, saveButtonPlugin);
@@ -164,6 +165,7 @@ console.log('Parsed forms:', parsedForms);
       forms: parsedForms,
       onEdit: (form) => {
         console.log('Editing form:', form);
+        boxEditor.formMeta = form;
         init(JSON.stringify([null, form]));
         adminOverlay.unregister(formListOverlay);
         context.pipeline.invalidate();

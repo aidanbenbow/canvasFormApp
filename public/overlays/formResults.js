@@ -5,9 +5,15 @@ export class FormResultsOverlay {
       this.form = form;
       this.onBack = onBack;
       this.isOverlay = true;
+      this.randomName = '—';
+this.randomButtonBounds = null;
+
     }
     updateResponses(newResponses) {
         this.form.responses = newResponses;
+        const named = newResponses.filter(r => r.input0);
+        const randomEntry = named[Math.floor(Math.random() * named.length)];
+        this.randomName = randomEntry?.input0 ?? '—';
         this.ctx && this.render({ ctx: this.ctx });
       }
       
@@ -46,15 +52,31 @@ if (this.form.resultsTable === 'progressreports') {
   ctx.fillText(`📌 Reports marked 'used': ${used}`, 20, yOffset);
   yOffset += 30;
 }
+
+// 🎲 Pick Random Name button
+ctx.fillStyle = '#28a745';
+ctx.fillRect(20, yOffset, 180, 30);
+ctx.fillStyle = '#fff';
+ctx.font = '14px Arial';
+ctx.fillText('🎲 Pick Random Name', 30, yOffset + 20);
+
+this.randomButtonBounds = {
+  x: 20,
+  y: yOffset,
+  width: 180,
+  height: 30
+};
+
+yOffset += 40;
+
      
      // 🎲 Random selection
-     const named = responses.filter(r => r.input0);
-     const randomEntry = named[Math.floor(Math.random() * named.length)];
-     const randomName = randomEntry?.input0 ?? '—';
      
-     ctx.fillText(`🎯 Randomly selected: ${randomName}`, 20, yOffset);
+     ctx.fillText(`🎯 Randomly selected: ${this.randomName}`, 20, yOffset);
      yOffset += 40;
      
+     const named = responses.filter(r => r.input0);
+
      // 🧑‍💼 List of names
      named.forEach((entry, i) => {
        ctx.fillText(`• ${entry.input0}`, 20, yOffset);
@@ -98,6 +120,19 @@ if (this.form.resultsTable === 'progressreports') {
       if (withinBack && typeof this.onBack === 'function') {
         this.onBack();
       }
+      const b = this.randomButtonBounds;
+const withinRandom =
+  b && x >= b.x && x <= b.x + b.width &&
+  y >= b.y && y <= b.y + b.height;
+
+if (withinRandom) {
+  const named = this.form.responses?.filter(r => r.input0) || [];
+  const randomEntry = named[Math.floor(Math.random() * named.length)];
+  this.randomName = randomEntry?.input0 ?? '—';
+  this.render({ ctx: this.ctx });
+  return;
+}
+
     }
   
     getHitHex() {
