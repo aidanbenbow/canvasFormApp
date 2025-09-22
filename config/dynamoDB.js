@@ -1,5 +1,5 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DescribeTableCommand, DynamoDBClient,  } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -46,16 +46,17 @@ class DynamoDB {
         try {
             const params = {
                 TableName: 'formStructures', // Replace with your table name
-                ProjectionExpression: '#id, #label, #formStructure',
+                ProjectionExpression: '#id, #label, #formStructure, #resultsTable',
       ExpressionAttributeNames: {
         '#id': 'id',
         '#label': 'label',
-        '#formStructure': 'formStructure'
+        '#formStructure': 'formStructure',
+        '#resultsTable': 'resultsTable'
       }
 
             };
             const data = await this.docClient.send(new ScanCommand(params));
-     
+     console.log("Fetched form data:", data.Items);
             return data.Items || [];
         } catch (error) {
             console.error("Error fetching form data:", error);
@@ -103,17 +104,32 @@ class DynamoDB {
         }
       }
 
-      async getFormResults(formId) {
+      async getFormResults(formId, tableName = 'cscstudents') {
         try {
-          const params = {
-            TableName: 'cscstudents',
-            FilterExpression: 'formId = :formId',
-            ExpressionAttributeValues: {
-              ':formId': formId
-            }
-          };
-      
-          const data = await this.docClient.send(new ScanCommand(params));
+          let params;
+          let command
+
+if(tableName === 'progressreports') {
+             // Query by primary key (id)
+      params = {
+        TableName: tableName  
+        }
+          
+command = new ScanCommand(params);
+          } else {
+          // Scan with filter (less efficient, but works for flat tables)
+      params = {
+        TableName: tableName,
+        FilterExpression: 'formId = :formId',
+        ExpressionAttributeValues: {
+          ':formId':  formId
+        }
+      };
+      command = new ScanCommand(params);
+    }
+
+          const data = await this.docClient.send(command);
+          
           return data.Items || [];
         } catch (error) {
           console.error('Error fetching form results:', error);

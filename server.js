@@ -76,9 +76,10 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('getFormResults', async ({ formId }) => {
+  socket.on('getFormResults', async ({ formId, tableName }) => {
     try {
-      const results = await db.getFormResults(formId);
+      const results = await db.getFormResults(formId, tableName);
+      
       socket.emit('formResultsData', { formId, results });
     } catch (err) {
       socket.emit('formResultsData', { formId, results: [], error: err.message });

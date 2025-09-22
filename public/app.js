@@ -158,7 +158,7 @@ const loginPlugin = new LoginPlugin({
     });
 
     const parsedForms = JSON.parse(data);
-
+console.log('Parsed forms:', parsedForms);
     const formListOverlay = new FormListOverlay({
       ctx: adminCtx,
       forms: parsedForms,
@@ -184,7 +184,7 @@ const loginPlugin = new LoginPlugin({
 
           adminOverlay.register(resultsOverlay);
           context.pipeline.invalidate();
-        });
+        }, formMeta.resultsTable || 'cscstudents');
       }
     });
 
