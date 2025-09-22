@@ -112,6 +112,26 @@ app.get('/form', (req, res) => {
   res.render('form', { form: formData });
 });
 
+app.post('/submitted', async (req, res) => {
+  // console.log('Form data received:', req.body);
+    const formData = req.body;
+   console.log('Form data received:', formData);
+
+   // Save the form data to DynamoDB
+    try {
+        await db.saveMessage(formData.formId, formData);
+        res.redirect('/thankyou');
+    } catch (error) {
+        console.error('Error saving form data:', error);
+        res.status(500).send('Error saving form data');
+    }
+
+});
+
+app.get('/thankyou', (req, res) => {
+  res.render('thankyou');
+});
+
 app.use(express.static('public'));
 server.listen(4500, () => {
   console.log("Server is running on port 4500");

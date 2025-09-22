@@ -29,15 +29,15 @@ class DynamoDB {
         };
     
         const params = {
-          TableName: 'cscstudents',
+          TableName: 'onequestion',
           Item: payload
         };
     
         const result = await this.docClient.send(new PutCommand(params));
-        console.log('Form saved to testdata:', result);
+        console.log('Form saved:', result);
         return result;
       } catch (error) {
-        console.error('Error saving form to testdata:', error);
+        console.error('Error saving form:', error);
         throw new Error('Could not save form');
       }
     }
