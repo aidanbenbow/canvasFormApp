@@ -22,8 +22,12 @@ export class AddBoxPlugin {
       ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
       ctx.fillStyle = 'white';
       ctx.font = '14px Arial';
-      const label = this.boxType === 'inputBox' ? '➕ Add Input Box' : '➕ Add Text Box';
-      ctx.fillText(label, this.position.x + 10, this.position.y + 20);
+      const labelMap = {
+        inputBox: '＋ Add Input Box',
+        textBox: '＋ Add Text Box',
+        imageBox: '＋ Add Image Box'
+      }
+      ctx.fillText(labelMap[this.boxType], this.position.x + 10, this.position.y + 20);
       ctx.restore();
     }
   
@@ -42,17 +46,21 @@ const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
 const logicalPos = { x: 100, y: 100 };
 const scaledPos = scaleToCanvas(logicalPos, canvasSize.width, canvasSize.height);
 
-        const newBox = createBox({
-          type: this.boxType,
-          label: this.boxType === 'inputBox' ? 'Input' : 'Text',
-          text: this.boxType === 'inputBox' ? ' ' : 'Some static text',
-          startPosition: scaledPos,
-          size: { width: 120, height: 40 },
-          fill: '#ffffff',
-          id: `input-${Date.now()}`,
-          color: '#ffff00',
-            action: 'writeText',
-        }, this.renderer);
+const boxConfig = {
+  type: this.boxType,
+  label: this.boxType === 'imageBox' ? 'Send' : (this.boxType === 'inputBox' ? 'Input' : 'Text'),
+  text: this.boxType === 'textBox' ? 'Some static text' : ' ',
+  startPosition: scaledPos,
+  size: { width: 120, height: 40 },
+  fill: '#ffffff',
+  id: `${this.boxType}-${Date.now()}`,
+  color: '#ffff00',
+  action: this.boxType === 'imageBox' ? 'sendButton' : 'writeText',
+  imageKey: this.boxType === 'imageBox' ? "button-unpushed" : undefined // optional
+};
+
+
+        const newBox = createBox(boxConfig, this.renderer);
   
         this.boxEditor.addBox(newBox);
         this.pipeline.add(newBox);

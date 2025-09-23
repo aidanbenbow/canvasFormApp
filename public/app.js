@@ -137,6 +137,17 @@ function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, bo
     boxType: 'textBox'
   });
 
+  const addImagePlugin = new AddBoxPlugin({
+    ctx: adminCtx,
+    logicalWidth,
+    boxEditor,
+    renderer,
+    boxType: 'imageBox',
+    yOffset: 90
+  });
+  adminOverlay.register(addImagePlugin);
+  
+
   adminOverlay.register(saveButtonPlugin);
   adminOverlay.register(addInputPlugin);
   adminOverlay.register(addTextPlugin);
@@ -301,7 +312,7 @@ system.eventBus.on('hitClick', ({hex}) => {
 
 async function init(data) {
     const info = JSON.parse(data);
-    const form = info[1];
+    const form = info[2];
     if (!Array.isArray(info)) {
       console.error('Expected array, got:', info);
       return;
