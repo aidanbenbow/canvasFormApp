@@ -7,7 +7,7 @@ import { AdminOverlay } from "./overlays/adminOverlay.js";
 import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { FormResultsOverlay } from "./overlays/formResults.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
-import { AddInputBoxPlugin } from "./plugins/addInputBox.js";
+import { AddBoxPlugin } from "./plugins/addInputBox.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 import { FormListOverlay } from "./plugins/formListOverlay.js";
@@ -120,15 +120,26 @@ function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, bo
   });
 
 
-  const addInputPlugin = new AddInputBoxPlugin({
+  const addInputPlugin = new AddBoxPlugin({
     ctx: adminCtx,
     logicalWidth,
     boxEditor,
-    renderer
+    renderer,
+    boxType: 'inputBox', 
+    yOffset: 50
+  });
+
+  const addTextPlugin = new AddBoxPlugin({
+    ctx: adminCtx,
+    logicalWidth,
+    boxEditor,
+    renderer,
+    boxType: 'textBox'
   });
 
   adminOverlay.register(saveButtonPlugin);
   adminOverlay.register(addInputPlugin);
+  adminOverlay.register(addTextPlugin);
 
   adminOverlay.registerHitRegions(hitRegistry);
   adminOverlay.drawHitRegions(hitCtx);
@@ -182,8 +193,9 @@ console.log('Parsed forms:', parsedForms);
               adminOverlay.register(formListOverlay);
               context.pipeline.invalidate();
             }
+            
           });
-
+          resultsOverlay.registerHitRegion(context.hitRegistry);
           adminOverlay.register(resultsOverlay);
           context.pipeline.invalidate();
         }, formMeta.resultsTable || 'cscstudents');

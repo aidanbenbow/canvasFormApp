@@ -2,14 +2,15 @@ import { utilsRegister } from "../utils/register.js";
 
 
 
-export class AddInputBoxPlugin {
-    constructor({ ctx, logicalWidth, boxEditor, renderer }) {
+export class AddBoxPlugin {
+    constructor({ ctx, logicalWidth, boxEditor, renderer, boxType = 'inputBox', yOffset = 10 }) {
       
-      this.type = 'addInputBox';
+  this.type = `add-${boxType}`;
+  this.boxType = boxType;
       this.ctx = ctx;
       this.width = 140;
       this.height = 30;
-      this.position = { x: logicalWidth - this.width - 120, y: 10 }; // next to Save button
+      this.position = { x: logicalWidth - this.width - 120, y: yOffset }; // next to Save button
       this.boxEditor = boxEditor;
       this.renderer = renderer.renderManager;
       this.pipeline = renderer;
@@ -21,7 +22,8 @@ export class AddInputBoxPlugin {
       ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
       ctx.fillStyle = 'white';
       ctx.font = '14px Arial';
-      ctx.fillText('➕ Add Input Box', this.position.x + 10, this.position.y + 20);
+      const label = this.boxType === 'inputBox' ? '➕ Add Input Box' : '➕ Add Text Box';
+      ctx.fillText(label, this.position.x + 10, this.position.y + 20);
       ctx.restore();
     }
   
@@ -39,11 +41,11 @@ const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
 
 const logicalPos = { x: 100, y: 100 };
 const scaledPos = scaleToCanvas(logicalPos, canvasSize.width, canvasSize.height);
-console.log(canvasSize, scaledPos);
+
         const newBox = createBox({
-          type: 'inputBox',
-          label: 'New Input',
-          text: ' ',
+          type: this.boxType,
+          label: this.boxType === 'inputBox' ? 'Input' : 'Text',
+          text: this.boxType === 'inputBox' ? ' ' : 'Some static text',
           startPosition: scaledPos,
           size: { width: 120, height: 40 },
           fill: '#ffffff',

@@ -93,20 +93,21 @@ yOffset += 40;
      });
   
       // 🔙 Back button
-      ctx.fillStyle = '#007bff';
-      ctx.fillRect(ctx.canvas.width - 100, 10, 80, 20);
+      ctx.fillStyle = '#007bee';
+      ctx.fillRect(ctx.canvas.width - 400, 10, 80, 20);
       ctx.fillStyle = '#fff';
-      ctx.fillText('← Back', ctx.canvas.width - 90, 25);
+      ctx.fillText('← Back', ctx.canvas.width - 390, 25);
   
       ctx.restore();
     }
   
     registerHitRegion(hitRegistry) {
+      console.log('Registering hit region for FormResultsOverlay');
       hitRegistry.register('form-results-back', {
         type: this.type,
         plugin: this,
         bounds: {
-          x: this.ctx.canvas.width - 100,
+          x: this.ctx.canvas.width - 400,
           y: 10,
           width: 80,
           height: 20
@@ -127,6 +128,7 @@ yOffset += 40;
         y <= 30;
   
       if (withinBack && typeof this.onBack === 'function') {
+        console.log('Back button clicked');
         this.onBack();
       }
       const b = this.randomButtonBounds;
