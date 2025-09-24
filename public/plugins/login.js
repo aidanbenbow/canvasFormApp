@@ -5,7 +5,7 @@ export class LoginPlugin {
     this.bounds = { x: 10, y: 10, width: 100, height: 40 };
     this.type = 'loginPlugin';
     this.eventBus = eventBus;
-    this.textEditorController = editorController;
+    this.editorController = editorController;
 
     this.inputBox = {
       text: '',
@@ -18,6 +18,7 @@ export class LoginPlugin {
   }
 
   render({ ctx }) {
+ 
     this.draw(ctx);
   }
 
@@ -28,6 +29,7 @@ export class LoginPlugin {
       ctx.fillText('Admin Login', this.bounds.x + 10, this.bounds.y + 25);
 
       // Input box
+      
   ctx.fillStyle = '#fff';
   ctx.fillRect(this.inputBox.startPosition.x, this.inputBox.startPosition.y, this.inputBox.size.width, this.inputBox.size.height);
   ctx.strokeStyle = '#000';
@@ -63,8 +65,9 @@ export class LoginPlugin {
     x <= this.inputBox.startPosition.x + this.inputBox.size.width &&
     y >= this.inputBox.startPosition.y &&
     y <= this.inputBox.startPosition.y + this.inputBox.size.height;
-console.log('withinInput', withinInput);
+
   if (withinInput) {
+    console.log('withinInput', withinInput);
     this.editorController.startEditing(this.inputBox, 'text');
     this.eventBus.emit('showKeyboard', { box: this.inputBox, field: 'text' });
   }

@@ -103,6 +103,7 @@ export class TextEditorController {
       }
 
       insertText(text) {
+       
         if (!this.activeBox || !this.activeField) return;
       
         const field = this.activeField;
@@ -150,6 +151,7 @@ export class TextEditorController {
     }
 
     insertChar(char) {
+     
         if (!this.activeBox||!this.activeField) return;
 
         const field = this.activeField; // Use the active field for text insertion
@@ -164,7 +166,7 @@ export class TextEditorController {
         if (typeof this.activeBox.updateText === 'function' && field === 'text') {
             this.activeBox.updateText(newText);
           }
-        
+        console.log(this.pipeline.drawables);
         this.pipeline.invalidate();
     }
 

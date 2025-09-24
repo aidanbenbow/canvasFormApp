@@ -7,7 +7,7 @@ export class PopupKeyboardPlugin {
       this.keySize = { width: 40, height: 40 };
       this.layout = [
         ['Q','W','E','R','T','Y','U','I','O','P'],
-        ['A','S','D','F','G','H','J','K','L'],
+        ['a','S','D','F','G','H','J','K','L'],
         ['Z','X','C','V','B','N','M'],
         ['←','Space','↵']
       ];
@@ -40,29 +40,37 @@ export class PopupKeyboardPlugin {
     }
   
     handleClick(x, y) {
-      const hit = this.keyBounds.find(k =>
-        x >= k.x && x <= k.x + k.width &&
-        y >= k.y && y <= k.y + k.height
-      );
-  
-      if (!hit) return;
+        const hit = this.keyBounds.find(k =>
+          x >= k.x && x <= k.x + k.width &&
+          y >= k.y && y <= k.y + k.height
+        );
+      
+        if (!hit) return;
+      
+        const key = hit.key;
+      console.log('Key pressed:', key);
+        if (key === 'Space') {
+          this.editorController.insertChar(' ');
+          return;
+        }
+      
+        if (key === '←') {
+          this.editorController.deleteChar();
+          return;
+        }
+      
+        if (key === '↵') {
+          const activeBox = this.editorController.activeBox;
+          if (activeBox?.type === 'inputBox' && activeBox?.text) {
+            system.eventBus.emit('loginAttempt', { password: activeBox.text });
+          }
+          return; // ✅ Prevent newline insertion
+        }
+        console.log('Active box:', this.editorController.activeBox);
 
-      const key = hit.key;
-
-  if (key === 'Space') {
-    this.editorController.insertChar(' ');
-  } else if (key === '←') {
-    this.editorController.deleteChar();
-  } else if (key === '↵') {
-    const activeBox = this.editorController.activeBox;
-    if (activeBox?.type === 'inputBox' && activeBox?.text) {
-      system.eventBus.emit('loginAttempt', { password: activeBox.text });
-    }
-    // Optionally skip insertChar('\n') to prevent newline in password
-    return;
-  } else {
-    this.editorController.insertChar(key);
-  }
-    }
+        this.editorController.insertChar(key);
+      }
+      
+    
   }
   

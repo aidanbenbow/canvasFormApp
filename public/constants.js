@@ -7,6 +7,7 @@ import { MessageOverlayRenderer } from "./renderers/messageOverlay.js";
 import { AdminOverlayRenderer } from "./renderers/adminOverlay.js";
 
 import { emitFeedback, onMessageResponse, sendLog } from "./controllers/socketController.js";
+import { LoginRenderer } from "./renderers/loginRenderer.js";
 
 
 export const canvasConfig = {
@@ -79,7 +80,8 @@ export const myPluginManifest = {
         { id: 'textBox', class: TextBoxRenderer },
         { id: 'inputBox', class: InputBoxRenderer },
         { id: 'imageBox', class: ImageBoxRenderer },
-        { id: 'adminOverlay', class: AdminOverlayRenderer }
+        { id: 'adminOverlay', class: AdminOverlayRenderer },
+        { id: 'loginPlugin', class: LoginRenderer }
       ],
       images: {
         "button-unpushed": "/images/button_unpushed.png",

@@ -163,6 +163,7 @@ const loginCanvas = document.querySelector('#loginCanvas');
 const loginCtx = loginCanvas.getContext('2d');
 loginCanvas.width = window.innerWidth;
 loginCanvas.height = window.innerHeight;
+context.loginCtx = loginCtx;
 
 const loginPlugin = new LoginPlugin({
   ctx: loginCtx,
@@ -235,7 +236,8 @@ function renderLogin() {
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
   loginCanvas.style.pointerEvents = 'auto';
 
-  loginPlugin.render({ ctx: loginCtx });
+  loginPlugin.render({ctx: loginCtx });
+  context.pipeline.add(loginPlugin);
 }
 
 renderLogin();
@@ -249,7 +251,18 @@ document.addEventListener('pointerdown', e => {
     y <= loginPlugin.bounds.y + loginPlugin.bounds.height
   );
 
+  const withinInput = (
+    x >= loginPlugin.inputBox.startPosition.x &&
+    x <= loginPlugin.inputBox.startPosition.x + loginPlugin.inputBox.size.width &&
+    y >= loginPlugin.inputBox.startPosition.y &&
+    y <= loginPlugin.inputBox.startPosition.y + loginPlugin.inputBox.size.height
+  );
+
   if (withinLogin && modeState.current !== 'admin') {
+    loginPlugin.handleClick(x, y);
+  }
+
+  if (withinInput && modeState.current !== 'admin') {
     loginPlugin.handleClick(x, y);
   }
 });
