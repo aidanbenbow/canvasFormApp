@@ -12,6 +12,7 @@ import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 import { FormListOverlay } from "./plugins/formListOverlay.js";
 import { LoginPlugin } from "./plugins/login.js";
+import { PopupKeyboardPlugin } from "./plugins/popUpKeyboard.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
 import { TextSizerPlugin } from "./plugins/textResizer.js";
 import { HitRouter } from "./routes/hitRouter.js";
@@ -211,6 +212,7 @@ console.log('Parsed forms:', parsedForms);
           context.pipeline.invalidate();
         }, formMeta.resultsTable || 'cscstudents');
       }
+     
     });
 
     adminOverlay.register(formListOverlay);
@@ -224,11 +226,15 @@ console.log('Parsed forms:', parsedForms);
 
     formListOverlay.render();
     context.pipeline.invalidate();
-  }
+  },
+  eventBus: system.eventBus,
+  editorController: context.textEditorController
 });
 
 function renderLogin() {
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
+  loginCanvas.style.pointerEvents = 'auto';
+
   loginPlugin.render({ ctx: loginCtx });
 }
 
@@ -309,6 +315,36 @@ system.eventBus.on('hitClick', ({hex}) => {
   system.eventBus.on('formResultsUpdated', () => {
     context.pipeline.invalidate();
   });
+
+  system.eventBus.on('showKeyboard', ({ box, field }) => {
+    adminCanvas.style.pointerEvents = 'auto';
+    const keyboard = new PopupKeyboardPlugin({
+      ctx: adminCtx,
+      editorController: context.textEditorController,
+      position: { x: 50, y: window.innerHeight - 250 }
+    });
+    adminOverlay.register(keyboard);
+    context.pipeline.invalidate();
+  });
+  
+  system.eventBus.on('hideKeyboard', () => {
+    if (modeState.current !== 'admin') {
+      adminCanvas.style.pointerEvents = 'none';
+    }
+  });
+  
+  system.eventBus.on('loginAttempt', ({ password }) => {
+    if (password === 'aa') {
+      loginPlugin.onLogin();
+    } else {
+      system.eventBus.emit('socketFeedback', {
+        text: 'Incorrect password ❌',
+        position: { x: 10, y: 100 },
+        duration: 2000
+      });
+    }
+  });
+  
 
 async function init(data) {
     const info = JSON.parse(data);

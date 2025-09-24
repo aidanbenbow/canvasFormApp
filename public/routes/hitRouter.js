@@ -37,7 +37,12 @@ if( type === 'loginButton') {
           }
         }
         return
-      }}
+      } // ✅ NEW: plugin fallback in fill mode
+      if (plugin?.handleClick) {
+        plugin.handleClick(pointerX, pointerY);
+      }
+      return;
+    }
   
        // Admin mode: editable regions
   if (this.modeState.current === 'admin') {
@@ -47,6 +52,12 @@ if( type === 'loginButton') {
       this.textEditorController.startEditing(box, editableField);
       return;
     }
+    // ✅ NEW: fallback to plugin click handler
+  const plugin = hitInfo.plugin;
+  if (plugin?.handleClick) {
+    plugin.handleClick(hitInfo.bounds.x, hitInfo.bounds.y); // or use actual pointer coords
+  }
+  return;
 
   }
     }

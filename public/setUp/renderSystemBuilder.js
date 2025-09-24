@@ -28,7 +28,7 @@ export class RenderSystemBuilder {
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
-        this.textEditorController = new TextEditorController(this.pipeline);
+        this.textEditorController = new TextEditorController(this.pipeline, this.eventBus);
         this.components = {};
         
         this.attachRendererHooks();
