@@ -46,11 +46,11 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
   
       // 🔽 Scroll Down Button
 ctx.fillStyle = '#555';
-ctx.fillRect(400, 140, 100, 30);
+ctx.fillRect(280, 140, 100, 30);
 ctx.fillStyle = '#fff';
-ctx.fillText('Scroll ↓', 420, 160 );
+ctx.fillText('Scroll ↓', 300, 160 );
 this.scrollDownButtonBounds = {
-  x: 400,
+  x: 280,
   y: 140,
   width: 100,
   height: 30
@@ -58,11 +58,11 @@ this.scrollDownButtonBounds = {
 
 // 🔼 Scroll Up Button
 ctx.fillStyle = '#555';
-ctx.fillRect(400, 60 , 100, 30);
+ctx.fillRect(280, 60 , 100, 30);
 ctx.fillStyle = '#fff';
-ctx.fillText('Scroll ↑', 420, 80);
+ctx.fillText('Scroll ↑', 300, 80);
 this.scrollUpButtonBounds = {
-  x: 400,
+  x: 280,
   y: 60,
   width: 100,
   height: 30
