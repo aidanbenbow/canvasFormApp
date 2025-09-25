@@ -9,6 +9,11 @@ export class FormResultsOverlay {
       this.isOverlay = true;
       this.randomName = '—';
 this.randomButtonBounds = null;
+this.scrollOffset = 0;
+this.scrollStep = 100; // pixels per scroll
+this.scrollDownButtonBounds = null;
+this.scrollUpButtonBounds = null;
+
 
 // 🔄 Listen for live updates
 eventBus.on('formResultsUpdated', ({ formId, results }) => {
@@ -20,9 +25,9 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
     }
     updateResponses(newResponses) {
         this.form.responses = newResponses;
-        const named = newResponses.filter(r => r.input0);
+        const named = newResponses.filter(r => r.name);
         const randomEntry = named[Math.floor(Math.random() * named.length)];
-        this.randomName = randomEntry?.input0 ?? '—';
+        this.randomName = randomEntry?.name ?? '—';
         this.ctx && this.render({ ctx: this.ctx });
       }
       
@@ -38,13 +43,38 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
       ctx.font = '16px Arial';
       ctx.fillText(`📊 Results for: ${this.form.title}`, 10, 25);
   
-      // 🔹 Render form results
+      // 🔽 Scroll Down Button
+ctx.fillStyle = '#555';
+ctx.fillRect(ctx.canvas.width - 320, ctx.canvas.height /2, 100, 30);
+ctx.fillStyle = '#fff';
+ctx.fillText('Scroll ↓', ctx.canvas.width - 300, ctx.canvas.height/2+20 );
+this.scrollDownButtonBounds = {
+  x: ctx.canvas.width - 320,
+  y: ctx.canvas.height/2,
+  width: 100,
+  height: 30
+};
+
+// 🔼 Scroll Up Button
+ctx.fillStyle = '#555';
+ctx.fillRect(ctx.canvas.width - 320, ctx.canvas.height/2 - 80, 100, 30);
+ctx.fillStyle = '#fff';
+ctx.fillText('Scroll ↑', ctx.canvas.width - 300, ctx.canvas.height/2 - 60);
+this.scrollUpButtonBounds = {
+  x: ctx.canvas.width - 320,
+  y: ctx.canvas.height/2 - 80,
+  width: 100,
+  height: 30
+};
+
+      
      // 🔹 Render names only
      const responses = this.form.responses || [];
      ctx.font = '14px Arial';
      ctx.fillStyle = '#000';
      
-     let yOffset = 60;
+     let yOffset = 60 - this.scrollOffset;
+
      
      // 🧮 Total count
      ctx.fillText(`Total submissions: ${responses.length}`, 20, yOffset);
@@ -84,11 +114,11 @@ yOffset += 40;
      ctx.fillText(`🎯 Randomly selected: ${this.randomName}`, 20, yOffset);
      yOffset += 40;
      
-     const named = responses.filter(r => r.input0);
+     const named = responses.filter(r => r.name);
 
      // 🧑‍💼 List of names
      named.forEach((entry, i) => {
-       ctx.fillText(`• ${entry.input0}`, 20, yOffset);
+       ctx.fillText(`• ${entry.name}`, 20, yOffset);
        yOffset += 24;
      });
   
@@ -137,12 +167,36 @@ const withinRandom =
   y >= b.y && y <= b.y + b.height;
 
 if (withinRandom) {
-  const named = this.form.responses?.filter(r => r.input0) || [];
+  const named = this.form.responses?.filter(r => r.name) || [];
   const randomEntry = named[Math.floor(Math.random() * named.length)];
-  this.randomName = randomEntry?.input0 ?? '—';
+  this.randomName = randomEntry?.name ?? '—';
   this.render({ ctx: this.ctx });
   return;
 }
+
+const down = this.scrollDownButtonBounds;
+const up = this.scrollUpButtonBounds;
+
+const clickedDown =
+  down && x >= down.x && x <= down.x + down.width &&
+  y >= down.y && y <= down.y + down.height;
+
+const clickedUp =
+  up && x >= up.x && x <= up.x + up.width &&
+  y >= up.y && y <= up.y + up.height;
+
+if (clickedDown) {
+  this.scrollOffset += this.scrollStep;
+  this.render({ ctx: this.ctx });
+  return;
+}
+
+if (clickedUp) {
+  this.scrollOffset = Math.max(0, this.scrollOffset - this.scrollStep);
+  this.render({ ctx: this.ctx });
+  return;
+}
+
 
     }
   
