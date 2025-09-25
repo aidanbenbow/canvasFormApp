@@ -9,6 +9,7 @@ export class FormResultsOverlay {
       this.isOverlay = true;
       this.randomName = '—';
 this.randomButtonBounds = null;
+this.backBounds = null;
 this.scrollOffset = 0;
 this.scrollStep = 100; // pixels per scroll
 this.scrollDownButtonBounds = null;
@@ -35,7 +36,7 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
     render({ ctx }) {
       ctx.save();
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  
+      
       // 🔶 Header
       ctx.fillStyle = '#f0f0f0';
       ctx.fillRect(0, 0, ctx.canvas.width, 40);
@@ -45,35 +46,35 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
   
       // 🔽 Scroll Down Button
 ctx.fillStyle = '#555';
-ctx.fillRect(ctx.canvas.width - 320, ctx.canvas.height /2, 100, 30);
+ctx.fillRect(400, 140, 100, 30);
 ctx.fillStyle = '#fff';
-ctx.fillText('Scroll ↓', ctx.canvas.width - 300, ctx.canvas.height/2+20 );
+ctx.fillText('Scroll ↓', 420, 160 );
 this.scrollDownButtonBounds = {
-  x: ctx.canvas.width - 320,
-  y: ctx.canvas.height/2,
+  x: 400,
+  y: 140,
   width: 100,
   height: 30
 };
 
 // 🔼 Scroll Up Button
 ctx.fillStyle = '#555';
-ctx.fillRect(ctx.canvas.width - 320, ctx.canvas.height/2 - 80, 100, 30);
+ctx.fillRect(400, 60 , 100, 30);
 ctx.fillStyle = '#fff';
-ctx.fillText('Scroll ↑', ctx.canvas.width - 300, ctx.canvas.height/2 - 60);
+ctx.fillText('Scroll ↑', 420, 80);
 this.scrollUpButtonBounds = {
-  x: ctx.canvas.width - 320,
-  y: ctx.canvas.height/2 - 80,
+  x: 400,
+  y: 60,
   width: 100,
   height: 30
 };
 
-      
+let yOffset = 60 - this.scrollOffset;
      // 🔹 Render names only
      const responses = this.form.responses || [];
      ctx.font = '14px Arial';
      ctx.fillStyle = '#000';
      
-     let yOffset = 60 - this.scrollOffset;
+     
 
      
      // 🧮 Total count
@@ -116,17 +117,26 @@ yOffset += 40;
      
      const named = responses.filter(r => r.name);
 
-     // 🧑‍💼 List of names
-     named.forEach((entry, i) => {
-       ctx.fillText(`• ${entry.name}`, 20, yOffset);
-       yOffset += 24;
-     });
+     
   
       // 🔙 Back button
       ctx.fillStyle = '#007bee';
-      ctx.fillRect(ctx.canvas.width - 400, 10, 80, 20);
+      ctx.fillRect(300, yOffset, 80, 20);
       ctx.fillStyle = '#fff';
-      ctx.fillText('← Back', ctx.canvas.width - 390, 25);
+      ctx.fillText('← Back', 310, yOffset + 15);
+
+      this.backBounds = {
+        x: 300,
+        y: yOffset,
+        width: 80,
+        height: 20
+      };
+
+      // 🧑‍💼 List of names
+     named.forEach((entry, i) => {
+      ctx.fillText(`• ${entry.name}`, 20, yOffset);
+      yOffset += 24;
+    });
   
       ctx.restore();
     }
@@ -152,13 +162,13 @@ yOffset += 40;
   
     handleClick(x, y) {
       const withinBack =
-        x >= this.ctx.canvas.width - 400 &&
-        x <= this.ctx.canvas.width - 380 &&
-        y >= 10 &&
-        y <= 30;
+        x >= this.backBounds.x &&
+        x <= this.backBounds.x + this.backBounds.width &&
+        y >= this.backBounds.y &&
+        y <= this.backBounds.y + this.backBounds.height;
   
       if (withinBack && typeof this.onBack === 'function') {
-        console.log('Back button clicked');
+        
         this.onBack();
       }
       const b = this.randomButtonBounds;
