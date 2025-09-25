@@ -18,6 +18,7 @@ export class RenderPipeline {
 
     remove(...drawables) {
         for (const d of drawables) {
+          
           this.drawables.delete(d);
         }
         this.invalidate();

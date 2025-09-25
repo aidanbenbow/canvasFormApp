@@ -169,9 +169,14 @@ const loginPlugin = new LoginPlugin({
   ctx: loginCtx,
   onLogin: () => {
     modeState.switchTo('admin');
-    console.log('Switched to admin mode');
+    
     adminCanvas.style.pointerEvents = 'auto';
     loginCanvas.style.pointerEvents = 'none';
+
+    // ✅ Remove loginPlugin from pipeline
+    context.pipeline.remove(loginPlugin);
+   // ✅ Clear the login canvas
+  loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
 
     setupAdminPlugins({
       adminOverlay,
@@ -183,12 +188,12 @@ const loginPlugin = new LoginPlugin({
     });
 
     const parsedForms = JSON.parse(data);
-console.log('Parsed forms:', parsedForms);
+
     const formListOverlay = new FormListOverlay({
       ctx: adminCtx,
       forms: parsedForms,
       onEdit: (form) => {
-        console.log('Editing form:', form);
+        
         boxEditor.formMeta = form;
         init(JSON.stringify([null, form]));
         adminOverlay.unregister(formListOverlay);
@@ -222,7 +227,7 @@ console.log('Parsed forms:', parsedForms);
     const removableBoxes = Array.from(context.pipeline.drawables).filter(d =>
       ['textBox', 'inputBox', 'imageBox'].includes(d.type)
     );
-    console.log('Removing boxes:', removableBoxes);
+   
     context.pipeline.remove(...removableBoxes);
 
     formListOverlay.render();
@@ -361,7 +366,7 @@ system.eventBus.on('hitClick', ({hex}) => {
 
 async function init(data) {
     const info = JSON.parse(data);
-    const form = info[2];
+    const form = info[1];
     if (!Array.isArray(info)) {
       console.error('Expected array, got:', info);
       return;

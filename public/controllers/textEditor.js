@@ -166,7 +166,7 @@ export class TextEditorController {
         if (typeof this.activeBox.updateText === 'function' && field === 'text') {
             this.activeBox.updateText(newText);
           }
-        console.log(this.pipeline.drawables);
+        
         this.pipeline.invalidate();
     }
 
