@@ -122,8 +122,8 @@ yOffset += 40;
   
     handleClick(x, y) {
       const withinBack =
-        x >= this.ctx.canvas.width - 100 &&
-        x <= this.ctx.canvas.width - 20 &&
+        x >= this.ctx.canvas.width - 400 &&
+        x <= this.ctx.canvas.width - 380 &&
         y >= 10 &&
         y <= 30;
   

@@ -178,14 +178,7 @@ const loginPlugin = new LoginPlugin({
    // ✅ Clear the login canvas
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
 
-    setupAdminPlugins({
-      adminOverlay,
-      hitRegistry: context.hitRegistry,
-      hitCtx: canvas.getHitContext('main'),
-      logicalWidth,
-      boxEditor,
-      renderer: context.pipeline
-    });
+   
 
     const parsedForms = JSON.parse(data);
 
@@ -193,7 +186,14 @@ const loginPlugin = new LoginPlugin({
       ctx: adminCtx,
       forms: parsedForms,
       onEdit: (form) => {
-        
+        setupAdminPlugins({
+          adminOverlay,
+          hitRegistry: context.hitRegistry,
+          hitCtx: canvas.getHitContext('main'),
+          logicalWidth,
+          boxEditor,
+          renderer: context.pipeline
+        });
         boxEditor.formMeta = form;
         init(JSON.stringify([null, form]));
         adminOverlay.unregister(formListOverlay);
