@@ -36,67 +36,6 @@ export class TextEditorController {
         this.caretIndex = value.length;
         this.selectionStart = this.selectionEnd = this.caretIndex;
       
-        // const input = document.getElementById('canvasTextInput');
-        // if (input) {
-        //   // Position input offscreen to avoid scroll jump
-        //   input.style.position = 'fixed';
-        //   input.style.left = '-1000px';
-        //   input.style.top = '0px';
-        //   input.style.width = '1px';
-        //   input.style.height = '1px';
-        //   input.style.opacity = '0';
-        //   input.style.pointerEvents = 'none';
-        //   input.style.zIndex = '1000';
-      
-        //   input.value = value;
-      
-        //   // Focus without scroll
-        //   try {
-        //     input.focus({ preventScroll: true });
-        //   } catch {
-        //     input.focus(); // fallback for older browsers
-        //   }
-      
-        //   input.setSelectionRange(value.length, value.length);
-      
-        //   // Replace previous listener to avoid stacking
-        //   input.oninput = () => {
-        //     const newText = input.value;
-        //     this.activeBox[this.activeField] = newText;
-      
-        //     if (typeof this.activeBox.updateText === 'function' && this.activeField === 'text') {
-        //       this.activeBox.updateText(newText);
-        //     }
-      
-        //     this.caretIndex = newText.length;
-        //     this.selectionStart = this.selectionEnd = this.caretIndex;
-        //     this.pipeline.invalidate();
-        //   };
-        //   input.onpaste = (e) => {
-        //     e.preventDefault();
-        //     const pasteText = e.clipboardData.getData('text');
-        //     console.log('Pasting text:', pasteText);
-        //     this.insertText(pasteText);
-        //   };
-        //   input.addEventListener('paste', (e) => {
-        //     console.log('Paste event triggered');
-        //   });
-          
-        //   input.oncopy = (e) => {
-        //     if (!this.activeBox || !this.activeField) return;
-        //     const selectedText = this.activeBox[this.activeField].slice(this.selectionStart, this.selectionEnd);
-        //     e.clipboardData.setData('text/plain', selectedText);
-        //     e.preventDefault();
-        //   };
-          
-        //   input.oncut = (e) => {
-        //     if (!this.activeBox || !this.activeField) return;
-        //     const selectedText = this.activeBox[this.activeField].slice(this.selectionStart, this.selectionEnd);
-        //     e.clipboardData.setData('text/plain', selectedText);
-        //     this.deleteSelection();
-        //     e.preventDefault();
-        //   };
-        // }
         this.eventBus.emit('showKeyboard', { box, field });
 
         this.pipeline.invalidate();

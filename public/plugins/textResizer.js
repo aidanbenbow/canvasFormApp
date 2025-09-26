@@ -15,8 +15,11 @@ export class TextSizerPlugin {
   
       const maxWidth = box.size.width * 0.8;
       const fontSize = box.fontSize;
-  
+      const minWidth = 150;
+      const minHeight = 40;
       const newSize = renderer.measureTextSize(newText, fontSize, maxWidth);
+      newSize.width = Math.max(newSize.width, minWidth);
+newSize.height = Math.max(newSize.height, minHeight);
       box.resizeTo(newSize);
     }
   }

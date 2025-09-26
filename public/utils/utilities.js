@@ -31,15 +31,38 @@ export function getHitHex(ctx, pos) {
 }
 
 export function measureTextSize(text, fontSize, maxWidth = Infinity) {
+  if (typeof text !== 'string') text = ''; // ✅ fallback to empty string
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     ctx.font = `${fontSize}px Arial`;
-    const metrics = ctx.measureText(text);
-    const padding = 20; // Optional padding
-    return {
-      width: Math.min(metrics.width + padding, maxWidth),
-      height: fontSize + padding
-    };
+    const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = ctx.measureText(testLine).width;
+
+    if (testWidth > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+
+  if (currentLine) lines.push(currentLine);
+
+  const lineHeight = fontSize * 1.2;
+  const padding = 20;
+
+  const width = Math.min(
+    Math.max(...lines.map(line => ctx.measureText(line).width)) + padding,
+    maxWidth
+  );
+  const height = lines.length * lineHeight + padding;
+
+  return { width, height };
   }
 
   export function createBoxFromFormItem(item, renderer) {
