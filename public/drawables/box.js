@@ -93,7 +93,7 @@ export class Box {
     }
 
     moveTo(pos) {
-        this.setPosition(pos, false);
+        this.startPosition = pos;
        // this.Gizmo.updateCentre(this.getCentre());
     }
 

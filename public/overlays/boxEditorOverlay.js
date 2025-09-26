@@ -32,6 +32,20 @@ export class BoxEditorOverlay {
         const deleteSize = 16;
         const deleteX = x + box.size.width - deleteSize - 4;
         const deleteY = y + 4;
+
+        const resizeSize = 12;
+const resizeX = x + width - resizeSize;
+const resizeY = y + height - resizeSize;
+
+ctx.fillStyle = 'green';
+ctx.fillRect(resizeX, resizeY, resizeSize, resizeSize);
+box._resizeBounds = {
+  x: resizeX,
+  y: resizeY,
+  width: resizeSize,
+  height: resizeSize
+};
+
       
         ctx.fillStyle = 'red';
         ctx.beginPath();
@@ -76,7 +90,18 @@ export class BoxEditorOverlay {
     return;
   }
 
-
+  const r = box._resizeBounds;
+  const withinResize =
+    r && x >= r.x && x <= r.x + r.width &&
+    y >= r.y && y <= r.y + r.height;
+  
+  if (withinResize) {
+    this.selectedBox = box;
+    this.resizing = true;
+    this.dragOffset = { x, y }; // starting point
+    return;
+  }
+  
   
         if (x >= bx && x <= bx + width && y >= by && y <= by + height) {
           this.selectedBox = box;
@@ -93,11 +118,24 @@ export class BoxEditorOverlay {
         const newY = y - this.dragOffset.y;
         this.selectedBox.moveTo({ x: newX, y: newY });
       }
+
+      if (this.selectedBox && this.resizing) {
+        const dx = x - this.dragOffset.x;
+        const dy = y - this.dragOffset.y;
+      
+        const newWidth = this.selectedBox.size.width + dx;
+        const newHeight = this.selectedBox.size.height + dy;
+      
+        this.selectedBox.resizeTo({ width: newWidth, height: newHeight });
+        this.dragOffset = { x, y }; // update for smooth resizing
+      }
+      
     }
   
     handleMouseUp() {
         if(!this.editable) return;
       this.selectedBox = null;
       this.dragOffset = null;
+      this.resizing = false;
     }
   }
