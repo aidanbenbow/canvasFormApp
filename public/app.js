@@ -53,7 +53,7 @@ utilsRegister.on('onRegister', (ns, name, fn) => {
   
   utilsRegister.registerPlugin(coreUtilsPlugin(context))
 context.interactionManager = new interactionManager(canvas, context.hitManager);
-context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHex'));
+context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
 
 const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
  textEditorController: context.textEditorController });
@@ -70,7 +70,7 @@ context.pipeline.setRendererContext(context)
 
 const adminCtx = canvas.getContext('overlay');
 const adminOverlay = new AdminOverlay(adminCtx);
-const boxEditor = new BoxEditorOverlay(); // allBoxes = array of Box instances
+const boxEditor = new BoxEditorOverlay(system.eventBus); // allBoxes = array of Box instances
 adminOverlay.register(boxEditor);
 adminOverlay.setMode(modeState.current)
 
@@ -379,6 +379,12 @@ system.eventBus.on('hitClick', ({hex}) => {
     }
   });
   
+  system.eventBus.on('boxDeleted', (id) => {
+    context.pipeline.remove(activeKeyboard);
+    activeKeyboard = null;
+    context.pipeline.remove(...Array.from(context.pipeline.drawables).filter(d => d.id === id));
+    context.pipeline.invalidate();
+  });
 
 async function init(data) {
     const info = JSON.parse(data);
@@ -395,7 +401,7 @@ async function init(data) {
       
       for (const item of form.formStructure) {
         
-        item.id = `${form.id}`;
+        item.id = item.id || `box-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       
         const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
         const renderer = context.pipeline.renderManager

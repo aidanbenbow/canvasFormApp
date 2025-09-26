@@ -1,10 +1,32 @@
+import { utilsRegister } from "../utils/register.js";
+
+
 export class PopupKeyboardPlugin {
     constructor({ ctx, editorController, position = { x: 50, y: 300 } }) {
       this.type = 'popupKeyboard';
       this.ctx = ctx;
       this.editorController = editorController;
-      this.position = position;
-      this.keySize = { width: 40, height: 40 };
+      
+      const getLogicalDimensions = utilsRegister.get('layout', 'getLogicalDimensions');
+const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
+
+this.position = {
+  x: logicalWidth * 0.1,  // 10% from left
+  y: logicalHeight * 0.7  // 70% down the screen
+};
+
+const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
+const getCanvasSize = utilsRegister.get('canvas', 'getCanvasSize');
+const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
+
+this.canvasPosition = scaleToCanvas(this.position, canvasWidth, canvasHeight);
+
+this.keySize = {
+  width: canvasWidth * 0.04,
+  height: canvasHeight * 0.06
+};
+
+
       this.layout = [
         ['Q','W','E','R','T','Y','U','I','O','P'],
         ['a','S','D','F','G','H','J','K','L'],
@@ -18,13 +40,19 @@ export class PopupKeyboardPlugin {
       ctx.font = '16px Arial';
       ctx.fillStyle = '#ddd';
   
-      let y = this.position.y;
+      let y = this.canvasPosition.y;
+
       this.keyBounds = [];
   
       this.layout.forEach((row) => {
         let x = this.position.x;
         row.forEach((key) => {
-          const w = key === 'Space' ? 200 : (key === '↵' ? 60 : this.keySize.width);
+          const w = key === 'Space'
+          ? this.keySize.width * 5
+          : key === '↵'
+          ? this.keySize.width * 1.5
+          : this.keySize.width;
+        
           ctx.fillStyle = '#007bff';
           ctx.fillRect(x, y, w, this.keySize.height);
           ctx.fillStyle = '#fff';

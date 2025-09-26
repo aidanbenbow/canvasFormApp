@@ -43,7 +43,14 @@ export class AddBoxPlugin {
         const canvasSize = utilsRegister.get('canvas', 'getCanvasSize')();
 const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
 
-const logicalPos = { x: 100, y: 100 };
+const getLogicalDimensions = utilsRegister.get('layout', 'getLogicalDimensions');
+const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
+
+const logicalPos = {
+  x: logicalWidth / 2 - 60,  // center minus half box width
+  y: logicalHeight / 2 - 20  // center minus half box height
+};
+
 const scaledPos = scaleToCanvas(logicalPos, canvasSize.width, canvasSize.height);
 
 const boxConfig = {

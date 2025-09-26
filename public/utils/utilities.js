@@ -7,6 +7,10 @@ export function generateHitHex() {
 }
 
 export function getMousePosition(canvas,event) {
+  if (!canvas || typeof canvas.getBoundingClientRect !== 'function') {
+    console.warn('Invalid canvas passed to getMousePosition:', canvas);
+    return { x: 0, y: 0 };
+  }
     const rect = canvas.getBoundingClientRect();
     return {
         x: event.clientX - rect.left,
@@ -14,21 +18,40 @@ export function getMousePosition(canvas,event) {
     };
 }
 
-export function normalizePos(canvas, pos) {
-  const rect = canvas.getBoundingClientRect();
+export function getLogicalMousePosition(canvas, event) {
+  const canvasPos = getMousePosition(canvas, event);
+  return scaleFromCanvas(canvasPos, canvas.width, canvas.height);
+}
+
+
+export function normalizePos(canvasPos) {
+
   const dpr = window.devicePixelRatio || 1;
 
   return {
-    x: Math.floor((pos.x - rect.left) * dpr),
-    y: Math.floor((pos.y - rect.top) * dpr),
+    x: Math.floor(canvasPos.x * dpr),
+    y: Math.floor(canvasPos.y * dpr)
   };
 }
 
 export function getHitHex(ctx, pos) {
+  if (!Number.isInteger(pos.x) || !Number.isInteger(pos.y)) {
+    console.warn('Invalid pixel coordinates for getImageData:', pos);
+    return '#000000'; // fallback
+  }
      const hitHex = ctx.getImageData(pos.x, pos.y, 1, 1).data;
     const hex = ((hitHex[0] << 16) | (hitHex[1] << 8) | hitHex[2]).toString(16).padStart(6, '0');
     return `#${hex}`;
 }
+
+export function getHitHexFromEvent(canvas, ctx, event) {
+  const canvasPos = getMousePosition(canvas, event);
+  const normPos = normalizePos( canvasPos);
+  
+
+  return getHitHex(ctx, normPos);
+}
+
 
 export function measureTextSize(text, fontSize, maxWidth = Infinity) {
   if (typeof text !== 'string') text = ''; // ✅ fallback to empty string

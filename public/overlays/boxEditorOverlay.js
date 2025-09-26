@@ -1,7 +1,8 @@
 export class BoxEditorOverlay {
-    constructor(boxes = []) {
+    constructor(eventBus,boxes = []) {
       this.type = 'boxEditorOverlay';
       this.boxes = boxes;
+      this.eventBus = eventBus;
       this.selectedBox = null;
       this.dragOffset = null;
       this.editable = false
@@ -87,6 +88,7 @@ box._resizeBounds = {
   if (withinDelete) {
     this.boxes = this.boxes.filter(b => b !== box);
     this.selectedBox = null;
+    this.eventBus.emit('boxDeleted', box.id);
     return;
   }
 

@@ -16,9 +16,9 @@ export class HitManager {
       const hex = this.getHitHex(this.hitCtx, pos);
       return this.hitRegistry.get(hex);
     }
-    handleClick(pos) {
+    handleClick(canvas,pos) {
       
-      const hex = this.getHitHex(this.hitCtx, pos);
+      const hex = this.getHitHex(canvas,this.hitCtx, pos);
       const hitObject = this.hitRegistry.get(hex);
      
     
@@ -26,8 +26,8 @@ export class HitManager {
         this.eventBus.emit('hitClick', {hex,hitObject});
    
     }}
-    handleMouseMove(pos) {
-      const hex = this.getHitHex(this.hitCtx,pos);
+    handleMouseMove(canvas,pos) {
+      const hex = this.getHitHex(canvas,this.hitCtx,pos);
       const hitObject = this.hitRegistry.get(hex);
        
     }
