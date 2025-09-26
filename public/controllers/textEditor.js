@@ -151,7 +151,7 @@ export class TextEditorController {
     }
 
     insertChar(char) {
-     
+    
         if (!this.activeBox||!this.activeField) return;
 
         const field = this.activeField; // Use the active field for text insertion

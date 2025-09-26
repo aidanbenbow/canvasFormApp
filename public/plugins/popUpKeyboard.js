@@ -40,6 +40,8 @@ export class PopupKeyboardPlugin {
     }
   
     handleClick(x, y) {
+   
+
         const hit = this.keyBounds.find(k =>
           x >= k.x && x <= k.x + k.width &&
           y >= k.y && y <= k.y + k.height
@@ -48,7 +50,7 @@ export class PopupKeyboardPlugin {
         if (!hit) return;
       
         const key = hit.key;
-      console.log('Key pressed:', key);
+      
         if (key === 'Space') {
           this.editorController.insertChar(' ');
           return;
@@ -66,7 +68,7 @@ export class PopupKeyboardPlugin {
           }
           return; // ✅ Prevent newline insertion
         }
-        console.log('Active box:', this.editorController.activeBox);
+        
 
         this.editorController.insertChar(key);
       }

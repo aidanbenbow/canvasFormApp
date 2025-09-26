@@ -334,21 +334,37 @@ system.eventBus.on('hitClick', ({hex}) => {
     context.pipeline.invalidate();
   });
 
+  let activeKeyboard = null;
+
+
   system.eventBus.on('showKeyboard', ({ box, field }) => {
     adminCanvas.style.pointerEvents = 'auto';
+    // ✅ Remove previous keyboard if it exists
+  if (activeKeyboard) {
+    adminOverlay.unregister(activeKeyboard);
+    context.pipeline.remove(activeKeyboard);
+    activeKeyboard = null;
+  }
     const keyboard = new PopupKeyboardPlugin({
       ctx: adminCtx,
       editorController: context.textEditorController,
       position: { x: 50, y: window.innerHeight - 250 }
     });
     adminOverlay.register(keyboard);
+    activeKeyboard = keyboard;
     context.pipeline.invalidate();
   });
   
   system.eventBus.on('hideKeyboard', () => {
+    if (activeKeyboard) {
+      adminOverlay.unregister(activeKeyboard);
+      context.pipeline.remove(activeKeyboard);
+      activeKeyboard = null;
+    }
     if (modeState.current !== 'admin') {
       adminCanvas.style.pointerEvents = 'none';
     }
+    context.pipeline.invalidate();
   });
   
   system.eventBus.on('loginAttempt', ({ password }) => {
