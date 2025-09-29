@@ -1,5 +1,5 @@
 
-import { generateHitHex, getHitHex, getMousePosition, measureTextSize, createBoxFromFormItem, loadImage, normalizePos, scaleToCanvas, scaleFromCanvas, getLogicalMousePosition, getHitHexFromEvent } from "../utils/utilities.js";
+import { generateHitHex, getHitHex, getMousePosition, measureTextSize, createBoxFromFormItem, loadImage, normalizePos, scaleToCanvas, scaleFromCanvas, getLogicalMousePosition, getHitHexFromEvent, scaleRectToCanvas, getLogicalFontSize } from "../utils/utilities.js";
 
 
 // plugins/coreUtilsPlugin.js
@@ -25,6 +25,8 @@ export function coreUtilsPlugin(context) {
         return { width:1000, height:1000 };
       });
       registry.register('canvas', 'getCanvasSize', context.canvasManager.getCanvasSize.bind(context.canvasManager));
-    }
-  };
+      registry.register('layout', 'scaleRectToCanvas', scaleRectToCanvas);
+      registry.register('layout', 'getLogicalFontSize', getLogicalFontSize);
+  }
+}
 }

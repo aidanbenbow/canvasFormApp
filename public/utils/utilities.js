@@ -128,3 +128,20 @@ export function measureTextSize(text, fontSize, maxWidth = Infinity) {
       y: (pos.y / canvasHeight) * LOGICAL_HEIGHT
     };
   }
+
+  export function scaleRectToCanvas(rect, canvasWidth, canvasHeight) {
+    const { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT } = utilsRegister.get('layout', 'getLogicalDimensions')();
+    return {
+      x: (rect.x / LOGICAL_WIDTH) * canvasWidth,
+      y: (rect.y / LOGICAL_HEIGHT) * canvasHeight,
+      width: (rect.width / LOGICAL_WIDTH) * canvasWidth,
+      height: (rect.height / LOGICAL_HEIGHT) * canvasHeight
+    };
+  }
+
+  export function getLogicalFontSize(logicalSize, canvasHeight) {
+    const { height: LOGICAL_HEIGHT } = utilsRegister.get('layout', 'getLogicalDimensions')();
+    return `${Math.round((logicalSize / LOGICAL_HEIGHT) * canvasHeight)}px Arial`;
+  }
+  
+  
