@@ -36,39 +36,81 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
     render({ ctx }) {
       ctx.save();
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      
-      // 🔶 Header
-      ctx.fillStyle = '#f0f0f0';
-      ctx.fillRect(0, 0, ctx.canvas.width, 40);
-      ctx.fillStyle = '#333';
-      ctx.font = '16px Arial';
-      ctx.fillText(`📊 Results for: ${this.form.title}`, 10, 25);
-  
-      // 🔽 Scroll Down Button
+
+// 🔶 Header
+ctx.fillStyle = '#f0f0f0';
+ctx.fillRect(0, 0, ctx.canvas.width, 40);
+ctx.fillStyle = '#333';
+ctx.font = '16px Arial';
+ctx.fillText(`📊 Results for: ${this.form.title}`, 10, 25);
+
+// 🔽 Scroll Down Button
 ctx.fillStyle = '#555';
-ctx.fillRect(280, 140, 100, 30);
+ctx.fillRect(320, 120, 100, 30);
 ctx.fillStyle = '#fff';
-ctx.fillText('Scroll ↓', 300, 160 );
+ctx.fillText('Scroll ↓', 340, 140 );
 this.scrollDownButtonBounds = {
-  x: 280,
-  y: 140,
-  width: 100,
-  height: 30
+x: 320,
+y: 120,
+width: 100,
+height: 30
 };
 
 // 🔼 Scroll Up Button
 ctx.fillStyle = '#555';
-ctx.fillRect(280, 60 , 100, 30);
+ctx.fillRect(320, 60 , 100, 30);
 ctx.fillStyle = '#fff';
-ctx.fillText('Scroll ↑', 300, 80);
+ctx.fillText('Scroll ↑', 340, 80);
 this.scrollUpButtonBounds = {
-  x: 280,
+x: 320,
+y: 60,
+width: 100,
+height: 30
+};
+
+// 🎲 Pick Random Name button
+ctx.fillStyle = '#28a745';
+ctx.fillRect(20, 60, 180, 30);
+ctx.fillStyle = '#fff';
+ctx.font = '14px Arial';
+ctx.fillText('🎲 Pick Random Name', 30, 80);
+
+this.randomButtonBounds = {
+  x: 20,
   y: 60,
-  width: 100,
+  width: 180,
   height: 30
 };
 
-let yOffset = 60 - this.scrollOffset;
+// 🔙 Back button
+ctx.fillStyle = '#007bee';
+ctx.fillRect(220, 60, 80, 20);
+ctx.fillStyle = '#fff';
+ctx.fillText('← Back', 230, 80);
+
+this.backBounds = {
+  x: 220,
+  y: 60,
+  width: 80,
+  height: 20
+};
+// 🎲 Random selection
+     
+ctx.fillText(`🎯 Randomly selected: ${this.randomName}`, 20, 100);
+//yOffset += 40;
+
+
+
+      const scrollAreaTop = 200;
+      const scrollAreaBottom = ctx.canvas.height - 40;
+      const maxVisibleHeight = scrollAreaBottom - scrollAreaTop;
+ctx.beginPath();
+ctx.rect(0, scrollAreaTop, ctx.canvas.width, maxVisibleHeight);
+ctx.clip();
+
+      
+      
+let yOffset = scrollAreaTop - this.scrollOffset;
      // 🔹 Render names only
      const responses = this.form.responses || [];
      ctx.font = '14px Arial';
@@ -93,50 +135,39 @@ if (this.form.resultsTable === 'progressreports') {
   yOffset += 30;
 }
 
-// 🎲 Pick Random Name button
-ctx.fillStyle = '#28a745';
-ctx.fillRect(20, yOffset, 180, 30);
-ctx.fillStyle = '#fff';
-ctx.font = '14px Arial';
-ctx.fillText('🎲 Pick Random Name', 30, yOffset + 20);
-
-this.randomButtonBounds = {
-  x: 20,
-  y: yOffset,
-  width: 180,
-  height: 30
-};
-
 yOffset += 40;
 
      
-     // 🎲 Random selection
      
-     ctx.fillText(`🎯 Randomly selected: ${this.randomName}`, 20, yOffset);
-     yOffset += 40;
-     
-     const named = responses.filter(r => r.name);
+    // const named = responses.filter(r => r.name);
 
      
-  
-      // 🔙 Back button
-      ctx.fillStyle = '#007bee';
-      ctx.fillRect(300, yOffset, 80, 20);
-      ctx.fillStyle = '#fff';
-      ctx.fillText('← Back', 310, yOffset + 15);
-
-      this.backBounds = {
-        x: 300,
-        y: yOffset,
-        width: 80,
-        height: 20
-      };
-
       // 🧑‍💼 List of names
-     named.forEach((entry, i) => {
-      ctx.fillText(`• ${entry.name}`, 20, yOffset);
-      yOffset += 24;
-    });
+      responses.forEach((entry, i) => {
+        const blockY = yOffset;
+        if (i % 2 === 0) {
+          ctx.fillStyle = '#f9f9f9';
+          ctx.fillRect(10, blockY - 10, ctx.canvas.width - 20, 80);
+        }
+         
+        ctx.fillStyle = '#222';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, 20, blockY);
+        yOffset += 20;
+      
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#000';
+        ctx.fillText(`👍 Good: ${entry.good || '—'}`, 30, yOffset);
+        yOffset += 18;
+      
+        ctx.fillText(`💡 Better: ${entry.better || '—'}`, 30, yOffset);
+        yOffset += 18;
+      
+        ctx.fillText(`📘 Learnt: ${entry.learnt || '—'}`, 30, yOffset);
+        yOffset += 30;
+      
+      });
+      
   
       ctx.restore();
     }
