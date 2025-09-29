@@ -211,15 +211,12 @@ const clickedUp =
   y >= up.y && y <= up.y + up.height;
   const totalLogicalHeight = (this.form.responses?.length || 0) * (this.logicalBlockHeight + 10);
 
-  const { canvasW, canvasH, maxVisibleHeight } = this.getScrollMetrics();
+  const { canvasW, canvasH, maxVisibleHeight, visibleLogicalHeight } = this.getScrollMetrics();
 
-  const buffer = this.scaleToCanvas({ x: 0, y: this.logicalBlockHeight }, canvasW, canvasH).y;
-  const maxScroll = Math.max(
-    0,
-    this.scaleToCanvas({ x: 0, y: totalLogicalHeight }, canvasW, canvasH).y - maxVisibleHeight + buffer
-  );
-  
-  
+  const blockHeightPx = this.scaleToCanvas({ x: 0, y: this.logicalBlockHeight }, canvasW, canvasH).y;
+
+  const maxScroll = Math.max(0, totalLogicalHeight - visibleLogicalHeight);
+
   if (clickedDown) {
     this.scrollOffset = Math.min(this.scrollOffset + this.scrollStep, maxScroll);
     this.render({ ctx: this.ctx });
@@ -240,7 +237,8 @@ const clickedUp =
       const scrollAreaTop = this.scaleToCanvas({ x: 0, y: 200 }, canvasW, canvasH).y;
       const scrollAreaBottom = canvasH - this.scaleToCanvas({ x: 0, y: 40 }, canvasW, canvasH).y;
       const maxVisibleHeight = scrollAreaBottom - scrollAreaTop;
-      return { canvasW, canvasH, scrollAreaTop, scrollAreaBottom, maxVisibleHeight };
+      const visibleLogicalHeight = (maxVisibleHeight / canvasH) * 1000;
+      return { canvasW, canvasH, scrollAreaTop, scrollAreaBottom, maxVisibleHeight, visibleLogicalHeight };
     }
     
   
