@@ -15,6 +15,8 @@ this.scrollOffset = 0;
 this.scrollStep = 100; // pixels per scroll
 this.scrollDownButtonBounds = null;
 this.scrollUpButtonBounds = null;
+this.logicalBlockHeight = 100;
+
 
 const get = utilsRegister.get.bind(utilsRegister);
   this.getCanvasSize = get('canvas', 'getCanvasSize');
@@ -55,10 +57,10 @@ ctx.fillText(`📊 Results for: ${this.form.title}`, 10, 25);
 
 // 🔘 Buttons
 const buttons = [
-  { label: 'Scroll ↑', x: 800, y: 60, width: 100, height: 30, ref: 'scrollUpButtonBounds', color: '#555' },
-  { label: 'Scroll ↓', x: 800, y: 100, width: 100, height: 30, ref: 'scrollDownButtonBounds', color: '#555' },
-  { label: '🎲 Pick Random Name', x: 20, y: 60, width: 180, height: 30, ref: 'randomButtonBounds', color: '#28a745' },
-  { label: '← Back', x: 220, y: 60, width: 80, height: 30, ref: 'backBounds', color: '#007bee' }
+  { label: 'Scroll ↑', x: 800, y: 60, width: 140, height: 40, ref: 'scrollUpButtonBounds', color: '#555' },
+  { label: 'Scroll ↓', x: 800, y: 100, width: 140, height: 40, ref: 'scrollDownButtonBounds', color: '#555' },
+  { label: '🎲 Pick Random Name', x: 20, y: 60, width: 200, height: 40, ref: 'randomButtonBounds', color: '#28a745' },
+  { label: '← Back', x: 220, y: 60, width: 100, height: 40, ref: 'backBounds', color: '#007bee' }
 ];
 
 buttons.forEach(btn => {
@@ -67,7 +69,7 @@ buttons.forEach(btn => {
   
   ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
   ctx.fillStyle = '#fff';
-  ctx.font = this.getLogicalFontSize(14, canvasH);
+  ctx.font = this.getLogicalFontSize(16, canvasH);
   ctx.fillText(btn.label, rect.x + 10, rect.y + rect.height / 1.5);
   this[btn.ref] = rect;
 });
@@ -98,36 +100,58 @@ ctx.rect(0, scrollAreaTop, ctx.canvas.width, maxVisibleHeight);
 
 ctx.clip();
  
-let yOffset = scrollAreaTop - this.scrollOffset;
-     // 🔹 Render names only
- 
-     ctx.font = ctx.font = this.getLogicalFontSize(14, canvasH);
+const logicalTopMargin = 10;
+let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: logicalTopMargin }, canvasW, canvasH).y;
 
+     ctx.font = ctx.font = this.getLogicalFontSize(14, canvasH)
      ctx.fillStyle = '#000';
-    
-  
-    yOffset += 20;
+   
     
       // 🧑‍💼 Responses
+      const lineOffsets = [20, 38, 56, 74]; // logical Y offsets within block
+      
+     
   responses.forEach((entry, i) => {
-    const blockHeight = 80;
-    const blockRect = this.scaleRectToCanvas({ x: 10, y: yOffset, width: 980, height: blockHeight }, canvasW, canvasH);
+    const logicalBlockY = (i * (this.logicalBlockHeight + 10)) + logicalTopMargin 
+    const scaledY = this.scaleToCanvas({ x: 0, y: logicalBlockY }, canvasW, canvasH).y;
+    const scrollOffsetPx = this.scaleToCanvas({ x: 0, y: this.scrollOffset }, canvasW, canvasH).y;
+    const blockRect = {
+      x: this.scaleToCanvas({ x: 10, y: 0 }, canvasW, canvasH).x,
+      y: scaledY - scrollOffsetPx + scrollAreaTop,
+      width: this.scaleToCanvas({ x: 980, y: 0 }, canvasW, canvasH).x,
+      height: this.scaleToCanvas({ x: 0, y: this.logicalBlockHeight }, canvasW, canvasH).y
+    };
+  
     if (i % 2 === 0) {
       ctx.fillStyle = '#f9f9f9';
       ctx.fillRect(blockRect.x, blockRect.y, blockRect.width, blockRect.height);
     }
-
+  
     ctx.fillStyle = '#222';
-    ctx.font = this.getLogicalFontSize(14, canvasH);
-    ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, blockRect.x + 10, blockRect.y + 20);
-
+    ctx.font = this.getLogicalFontSize(16, canvasH);
+    ctx.fillText(
+      `${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`,
+      blockRect.x + 10,
+      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[0] }, canvasW, canvasH).y
+    );
+  
     ctx.font = this.getLogicalFontSize(12, canvasH);
     ctx.fillStyle = '#000';
-    ctx.fillText(`👍 Good: ${entry.good || '—'}`, blockRect.x + 20, blockRect.y + 38);
-    ctx.fillText(`💡 Better: ${entry.better || '—'}`, blockRect.x + 20, blockRect.y + 56);
-    ctx.fillText(`📘 Learnt: ${entry.learnt || '—'}`, blockRect.x + 20, blockRect.y + 74);
-
-    yOffset += blockHeight + 10;
+    ctx.fillText(
+      `👍 Good: ${entry.good || '—'}`,
+      blockRect.x + 20,
+      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[1] }, canvasW, canvasH).y
+    );
+    ctx.fillText(
+      `💡 Better: ${entry.better || '—'}`,
+      blockRect.x + 20,
+      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[2] }, canvasW, canvasH).y
+    );
+    ctx.fillText(
+      `📘 Learnt: ${entry.learnt || '—'}`,
+      blockRect.x + 20,
+      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[3] }, canvasW, canvasH).y
+    );
   });
       ctx.restore();
     }
@@ -185,21 +209,40 @@ const clickedDown =
 const clickedUp =
   up && x >= up.x && x <= up.x + up.width &&
   y >= up.y && y <= up.y + up.height;
+  const totalLogicalHeight = (this.form.responses?.length || 0) * (this.logicalBlockHeight + 10);
 
-if (clickedDown) {
-  this.scrollOffset += this.scrollStep;
-  this.render({ ctx: this.ctx });
-  return;
-}
+  const { canvasW, canvasH, maxVisibleHeight } = this.getScrollMetrics();
 
-if (clickedUp) {
-  this.scrollOffset = Math.max(0, this.scrollOffset - this.scrollStep);
-  this.render({ ctx: this.ctx });
-  return;
-}
+  const buffer = this.scaleToCanvas({ x: 0, y: this.logicalBlockHeight }, canvasW, canvasH).y;
+  const maxScroll = Math.max(
+    0,
+    this.scaleToCanvas({ x: 0, y: totalLogicalHeight }, canvasW, canvasH).y - maxVisibleHeight + buffer
+  );
+  
+  
+  if (clickedDown) {
+    this.scrollOffset = Math.min(this.scrollOffset + this.scrollStep, maxScroll);
+    this.render({ ctx: this.ctx });
+    return;
+  }
+  
+  if (clickedUp) {
+    this.scrollOffset = Math.max(0, this.scrollOffset - this.scrollStep);
+    this.render({ ctx: this.ctx });
+    return;
+  }
+  
 
 
     }
+    getScrollMetrics() {
+      const { width: canvasW, height: canvasH } = this.getCanvasSize();
+      const scrollAreaTop = this.scaleToCanvas({ x: 0, y: 200 }, canvasW, canvasH).y;
+      const scrollAreaBottom = canvasH - this.scaleToCanvas({ x: 0, y: 40 }, canvasW, canvasH).y;
+      const maxVisibleHeight = scrollAreaBottom - scrollAreaTop;
+      return { canvasW, canvasH, scrollAreaTop, scrollAreaBottom, maxVisibleHeight };
+    }
+    
   
     getHitHex() {
       return 'form-results-001';
