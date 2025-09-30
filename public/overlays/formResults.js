@@ -16,7 +16,9 @@ this.scrollStep = 100; // pixels per scroll
 this.scrollDownButtonBounds = null;
 this.scrollUpButtonBounds = null;
 this.logicalBlockHeight = 100;
-
+this.lastTouchY = null;
+this.isTouchScrolling = false;
+this.eventsBound = false;
 
 const get = utilsRegister.get.bind(utilsRegister);
   this.getCanvasSize = get('canvas', 'getCanvasSize');
@@ -40,6 +42,45 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
         this.randomName = randomEntry?.name ?? '—';
         this.ctx && this.render({ ctx: this.ctx });
       }
+
+      // ✅ Arrow function class properties
+  handlePointerDown = (e) => {
+    this.lastTouchY = e.clientY;
+    this.ctx.canvas.setPointerCapture(e.pointerId);
+  };
+
+  handlePointerMove = (e) => {
+    if (e.pressure > 0 || e.buttons) {
+      const deltaY = this.lastTouchY - e.clientY;
+      this.lastTouchY = e.clientY;
+      this.scrollOffset = Math.max(0, this.scrollOffset + deltaY);
+      this.render({ ctx: this.ctx });
+    }
+  };
+
+  handlePointerUp = () => {
+    this.lastTouchY = null;
+  };
+      bindEvents() {
+        if(this.eventsBound) return;
+        const canvas = this.ctx.canvas;
+      
+        canvas.addEventListener('pointerdown', this.handlePointerDown);
+        canvas.addEventListener('pointermove', this.handlePointerMove);
+        canvas.addEventListener('pointerup', this.handlePointerUp);
+        this.eventsBound = true;
+      }
+      
+      unbindEvents() {
+        if(!this.eventsBound) return;
+        const canvas = this.ctx.canvas;
+      
+        canvas.removeEventListener('pointerdown', this.handlePointerDown);
+        canvas.removeEventListener('pointermove', this.handlePointerMove);
+        canvas.removeEventListener('pointerup', this.handlePointerUp);
+        this.eventsBound = false;
+      }
+      
       
   
     render({ ctx }) {
@@ -76,7 +117,10 @@ buttons.forEach(btn => {
 const responses = this.form.responses || [];
 
 // 🎲 Random selection
-const summaryY = this.scaleToCanvas({ x: 0, y: 100 }, canvasW, canvasH).y;
+ctx.font = `bold ${this.getLogicalFontSize(20, canvasH)}`;
+const buttonBottomY = this.scaleToCanvas({ x: 0, y: 110 }, canvasW, canvasH).y; // last button's bottom
+const summaryY = buttonBottomY + this.scaleToCanvas({ x: 0, y: 20 }, canvasW, canvasH).y; // add margin
+
 ctx.fillText(`🎯 Randomly selected: ${this.randomName}`, 20, summaryY);
 ctx.fillText(`Total submissions: ${responses.length}`, 20, summaryY + 20);
 

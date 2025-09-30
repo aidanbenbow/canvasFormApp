@@ -207,6 +207,7 @@ const loginPlugin = new LoginPlugin({
             ctx: adminCtx,
             form: { ...formMeta, responses: results },
             onBack: () => {
+              resultsOverlay.unbindEvents();
               adminOverlay.unregister(resultsOverlay);
               adminOverlay.register(formListOverlay);
               context.pipeline.invalidate();
@@ -214,6 +215,7 @@ const loginPlugin = new LoginPlugin({
             
           });
           resultsOverlay.registerHitRegion(context.hitRegistry);
+          resultsOverlay.bindEvents();
           adminOverlay.register(resultsOverlay);
           context.pipeline.invalidate();
         }, formMeta.resultsTable || 'cscstudents');
