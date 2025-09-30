@@ -19,6 +19,8 @@ this.logicalBlockHeight = 100;
 this.lastTouchY = null;
 this.isTouchScrolling = false;
 this.eventsBound = false;
+this.scrollVelocity = 0;
+this.isDragging = false;
 
 const get = utilsRegister.get.bind(utilsRegister);
   this.getCanvasSize = get('canvas', 'getCanvasSize');
@@ -46,20 +48,44 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
       // ✅ Arrow function class properties
   handlePointerDown = (e) => {
     this.lastTouchY = e.clientY;
+    this.isDragging = true;
     this.ctx.canvas.setPointerCapture(e.pointerId);
+    requestAnimationFrame(this.tickScroll);
   };
 
+  // handlePointerMove = (e) => {
+  //   if (e.pressure > 0 || e.buttons) {
+  //     const deltaY = this.lastTouchY - e.clientY;
+  //     this.lastTouchY = e.clientY;
+  
+  //     this.scrollOffset += deltaY;
+  //     this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.getMaxScroll()));
+  //     this.render({ ctx: this.ctx });
+  //   }
+  // };
+
   handlePointerMove = (e) => {
-    if (e.pressure > 0 || e.buttons) {
-      const deltaY = this.lastTouchY - e.clientY;
-      this.lastTouchY = e.clientY;
-      this.scrollOffset = Math.max(0, this.scrollOffset + deltaY);
-      this.render({ ctx: this.ctx });
+    if(!this.isDragging) return;
+    const deltaY = this.lastTouchY - e.clientY;
+    this.lastTouchY = e.clientY;
+    this.scrollVelocity = deltaY;
+  };
+  
+  tickScroll = () => {
+    if (Math.abs(this.scrollVelocity) > 0.1|| this.isDragging) {
+      this.scrollOffset += this.scrollVelocity;
+      this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.getMaxScroll()));
+      this.scrollVelocity *= 1.2; // decay
+    this.ctx &&  this.render({ ctx: this.ctx });
+      requestAnimationFrame(this.tickScroll);
     }
   };
+  
 
   handlePointerUp = () => {
     this.lastTouchY = null;
+    this.isDragging = false;
+    requestAnimationFrame(this.tickScroll);
   };
       bindEvents() {
         if(this.eventsBound) return;
@@ -165,6 +191,11 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
       width: this.scaleToCanvas({ x: 980, y: 0 }, canvasW, canvasH).x,
       height: this.scaleToCanvas({ x: 0, y: this.logicalBlockHeight }, canvasW, canvasH).y
     };
+
+    // Skip rendering if block is outside visible scroll area
+    if (blockRect.y + blockRect.height < scrollAreaTop || blockRect.y > scrollAreaBottom) {
+      return;
+    }
   
     if (i % 2 === 0) {
       ctx.fillStyle = '#f9f9f9';
@@ -218,6 +249,12 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
       hitCtx.fillStyle = '#0000ff';
       hitCtx.fillRect(this.ctx.canvas.width - 100, 10, 80, 20);
     }
+    getMaxScroll() {
+      const totalLogicalHeight = (this.form.responses?.length || 0) * (this.logicalBlockHeight + 10);
+      const { visibleLogicalHeight } = this.getScrollMetrics();
+      return Math.max(0, totalLogicalHeight - visibleLogicalHeight);
+    }
+    
   
     handleClick(x, y) {
       const withinBack =
@@ -259,7 +296,7 @@ const clickedUp =
 
   const blockHeightPx = this.scaleToCanvas({ x: 0, y: this.logicalBlockHeight }, canvasW, canvasH).y;
 
-  const maxScroll = Math.max(0, totalLogicalHeight - visibleLogicalHeight);
+  const maxScroll = this.getMaxScroll();
 
   if (clickedDown) {
     this.scrollOffset = Math.min(this.scrollOffset + this.scrollStep, maxScroll);
