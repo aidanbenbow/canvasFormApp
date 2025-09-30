@@ -75,9 +75,13 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
     if (Math.abs(this.scrollVelocity) > 0.1|| this.isDragging) {
       this.scrollOffset += this.scrollVelocity;
       this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.getMaxScroll()));
-      this.scrollVelocity *= 1.2; // decay
+      this.scrollVelocity *= 0.9; // decay
     this.ctx &&  this.render({ ctx: this.ctx });
       requestAnimationFrame(this.tickScroll);
+    }
+    if (Math.abs(this.scrollVelocity) < 0.1 && !this.isDragging) {
+      this.scrollVelocity = 0;
+      return; // ✅ Stop loop
     }
   };
   
@@ -279,7 +283,7 @@ if (withinRandom) {
   this.render({ ctx: this.ctx });
   return;
 }
-
+this.scrollVelocity = 0; // stop any ongoing scroll momentum
 const down = this.scrollDownButtonBounds;
 const up = this.scrollUpButtonBounds;
 
