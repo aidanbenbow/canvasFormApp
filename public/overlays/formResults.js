@@ -11,8 +11,8 @@ export class FormResultsOverlay {
       this.randomName = '—';
 this.randomButtonBounds = null;
 this.backBounds = null;
-this.scrollOffset = 0;
-this.scrollStep = 100; // pixels per scroll
+this.scrollOffset = 100;
+this.scrollStep = 50; // logical units
 this.scrollDownButtonBounds = null;
 this.scrollUpButtonBounds = null;
 this.logicalBlockHeight = 100;
@@ -27,6 +27,9 @@ const get = utilsRegister.get.bind(utilsRegister);
   this.scaleToCanvas = get('layout', 'scaleToCanvas');
   this.scaleRectToCanvas = get('layout', 'scaleRectToCanvas');
   this.getLogicalFontSize = get('layout', 'getLogicalFontSize');
+
+  const { width: canvasW, height: canvasH } = this.getCanvasSize();
+  this.scrollStepPx = this.scaleToCanvas({ x: 0, y: this.scrollStep }, canvasW, canvasH).y;
 
 
 // 🔄 Listen for live updates
@@ -47,22 +50,12 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
 
       // ✅ Arrow function class properties
   handlePointerDown = (e) => {
+    console.log('Pointer down at', e.clientX, e.clientY);
     this.lastTouchY = e.clientY;
     this.isDragging = true;
     this.ctx.canvas.setPointerCapture(e.pointerId);
     requestAnimationFrame(this.tickScroll);
   };
-
-  // handlePointerMove = (e) => {
-  //   if (e.pressure > 0 || e.buttons) {
-  //     const deltaY = this.lastTouchY - e.clientY;
-  //     this.lastTouchY = e.clientY;
-  
-  //     this.scrollOffset += deltaY;
-  //     this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.getMaxScroll()));
-  //     this.render({ ctx: this.ctx });
-  //   }
-  // };
 
   handlePointerMove = (e) => {
     if(!this.isDragging) return;
@@ -72,6 +65,8 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
   };
   
   tickScroll = () => {
+  
+
     if (Math.abs(this.scrollVelocity) > 0.1|| this.isDragging) {
       this.scrollOffset += this.scrollVelocity;
       this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.getMaxScroll()));
@@ -175,8 +170,6 @@ ctx.rect(0, scrollAreaTop, ctx.canvas.width, maxVisibleHeight);
 ctx.clip();
  
 const logicalTopMargin = 10;
-let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: logicalTopMargin }, canvasW, canvasH).y;
-
      ctx.font = ctx.font = this.getLogicalFontSize(14, canvasH)
      ctx.fillStyle = '#000';
    
@@ -184,36 +177,46 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
       // 🧑‍💼 Responses
       const lineOffsets = [20, 38, 56, 74]; // logical Y offsets within block
       
-      let logicalY = logicalTopMargin;
+      let logicalY = logicalTopMargin - this.scrollOffset;
+
  
   responses.forEach((entry, i) => {
-    const logicalBlockY = logicalY
-    const scaledY = this.scaleToCanvas({ x: 0, y: logicalBlockY }, canvasW, canvasH).y;
-    const scrollOffsetPx = this.scaleToCanvas({ x: 0, y: this.scrollOffset }, canvasW, canvasH).y;
+
+    const logicalBlockY = logicalY 
+const scaledY = this.scaleToCanvas({ x: 0, y: logicalBlockY }, canvasW, canvasH).y;
+const blockRectY = scaledY + scrollAreaTop;
+
+const logicalLineHeight = 18;
+const fontSize = this.getLogicalFontSize(logicalLineHeight, canvasH); // canvas font string
+
+const blockWidth = this.scaleToCanvas({ x: 980, y: 0 }, canvasW, canvasH).x;
+const maxWidth = blockWidth - 40;
+
+
+// Measure logical height
+const goodHeight = this.measureWrappedHeight(ctx, `👍 Good: ${entry.good || '—'}`, maxWidth, logicalLineHeight);
+const betterHeight = this.measureWrappedHeight(ctx, `💡 Better: ${entry.better || '—'}`, maxWidth, logicalLineHeight);
+const learntHeight = this.measureWrappedHeight(ctx, `📘 Learnt: ${entry.learnt || '—'}`, maxWidth, logicalLineHeight);
+
+
+const logicalHeight = lineOffsets[0] + 18 + goodHeight + betterHeight + learntHeight;
+
+  
+const blockHeight = this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canvasH).y;
+
     const blockRect = {
       x: this.scaleToCanvas({ x: 10, y: 0 }, canvasW, canvasH).x,
-      y: scaledY - scrollOffsetPx + scrollAreaTop,
-      width: this.scaleToCanvas({ x: 980, y: 0 }, canvasW, canvasH).x,
-      height: this.scaleToCanvas({ x: 0, y: this.logicalBlockHeight }, canvasW, canvasH).y
+      y: blockRectY,
+      width: blockWidth,
+      height: this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canvasH).y
+
     };
 
     // Skip rendering if block is outside visible scroll area
     if (blockRect.y + blockRect.height < scrollAreaTop || blockRect.y > scrollAreaBottom) {
       return;
     }
-    const logicalLineHeight = 18;
-    const fontSize = this.getLogicalFontSize(logicalLineHeight, canvasH); // canvas font string
-    
-    const maxWidth = blockRect.width - 40;
-    
-    // Measure logical height
-    const goodHeight = this.measureWrappedHeight(ctx, `👍 Good: ${entry.good || '—'}`, maxWidth, logicalLineHeight);
-const betterHeight = this.measureWrappedHeight(ctx, `💡 Better: ${entry.better || '—'}`, maxWidth, logicalLineHeight);
-const learntHeight = this.measureWrappedHeight(ctx, `📘 Learnt: ${entry.learnt || '—'}`, maxWidth, logicalLineHeight);
-
-    
-const logicalHeight = lineOffsets[0] + 18 + goodHeight + betterHeight + learntHeight;
-const blockHeight = this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canvasH).y;
+ 
 
 if (i % 2 === 0) {
   ctx.fillStyle = 'rgba(249, 249, 249, 0.5)';
@@ -305,9 +308,26 @@ ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, bl
       hitCtx.fillRect(this.ctx.canvas.width - 100, 10, 80, 20);
     }
     getMaxScroll() {
-      const totalLogicalHeight = (this.form.responses?.length || 0) * (this.logicalBlockHeight + 10);
-      const { visibleLogicalHeight } = this.getScrollMetrics();
-      return Math.max(0, totalLogicalHeight - visibleLogicalHeight);
+      const lineOffsets = [20, 38, 56, 74]; // make sure this is accessible here
+      const totalLogicalHeight = this.form.responses.reduce((sum, entry) => {
+        const blockWidth = 980;
+const maxWidth = blockWidth - 40;
+
+        const lineHeight = 18;
+    
+        const good = this.measureWrappedHeight(this.ctx, `👍 Good: ${entry.good || '—'}`, maxWidth, lineHeight);
+        const better = this.measureWrappedHeight(this.ctx, `💡 Better: ${entry.better || '—'}`, maxWidth, lineHeight);
+        const learnt = this.measureWrappedHeight(this.ctx, `📘 Learnt: ${entry.learnt || '—'}`, maxWidth, lineHeight);
+    
+        const logicalHeight = lineOffsets[0] + 18 + good + better + learnt;
+        return sum + logicalHeight + 10;
+      }, 0);
+    
+      const { canvasW, canvasH, maxVisibleHeight } = this.getScrollMetrics();
+      const totalHeightPx = this.scaleToCanvas({ x: 0, y: totalLogicalHeight }, canvasW, canvasH).y;
+      
+
+      return Math.max(0, totalHeightPx - maxVisibleHeight+20);
     }
     
   
@@ -354,7 +374,6 @@ const clickedDown =
 const clickedUp =
   up && x >= up.x && x <= up.x + up.width &&
   y >= up.y && y <= up.y + up.height;
-  const totalLogicalHeight = (this.form.responses?.length || 0) * (this.logicalBlockHeight + 10);
 
   const { canvasW, canvasH, maxVisibleHeight, visibleLogicalHeight } = this.getScrollMetrics();
 
@@ -363,13 +382,16 @@ const clickedUp =
   const maxScroll = this.getMaxScroll();
 
   if (clickedDown) {
-    this.scrollOffset = Math.min(this.scrollOffset + this.scrollStep, maxScroll);
+    
+    this.scrollOffset = Math.min(this.scrollOffset + this.scrollStepPx, maxScroll);
+
     this.render({ ctx: this.ctx });
     return;
   }
   
   if (clickedUp) {
-    this.scrollOffset = Math.max(0, this.scrollOffset - this.scrollStep);
+    this.scrollOffset = Math.min(this.scrollOffset + this.scrollStepPx, maxScroll);
+
     this.render({ ctx: this.ctx });
     return;
   }
@@ -379,8 +401,10 @@ const clickedUp =
     }
     getScrollMetrics() {
       const { width: canvasW, height: canvasH } = this.getCanvasSize();
-      const scrollAreaTop = this.scaleToCanvas({ x: 0, y: 200 }, canvasW, canvasH).y;
+      const scrollAreaTop = this.scaleToCanvas({ x: 0, y: 420 }, canvasW, canvasH).y;
       const scrollAreaBottom = canvasH - this.scaleToCanvas({ x: 0, y: 40 }, canvasW, canvasH).y;
+     
+
       const maxVisibleHeight = scrollAreaBottom - scrollAreaTop;
       const visibleLogicalHeight = (maxVisibleHeight / canvasH) * 1000;
       return { canvasW, canvasH, scrollAreaTop, scrollAreaBottom, maxVisibleHeight, visibleLogicalHeight };
