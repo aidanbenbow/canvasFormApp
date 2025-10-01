@@ -200,37 +200,43 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
     if (blockRect.y + blockRect.height < scrollAreaTop || blockRect.y > scrollAreaBottom) {
       return;
     }
-  
+    const logicalLineHeight = 14;
+    const fontSize = this.getLogicalFontSize(logicalLineHeight, canvasH); // canvas font string
+    
+    const maxWidth = blockRect.width - 40;
+    
+    // Measure logical height
+    const goodHeight = this.measureWrappedHeight(ctx, `👍 Good: ${entry.good || '—'}`, maxWidth, logicalLineHeight);
+const betterHeight = this.measureWrappedHeight(ctx, `💡 Better: ${entry.better || '—'}`, maxWidth, logicalLineHeight);
+const learntHeight = this.measureWrappedHeight(ctx, `📘 Learnt: ${entry.learnt || '—'}`, maxWidth, logicalLineHeight);
+
+    
+const logicalHeight = lineOffsets[0] + 18 + goodHeight + betterHeight + learntHeight;
+const blockHeight = this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canvasH).y;
+
+    
+    // ✅ Draw background first
     if (i % 2 === 0) {
       ctx.fillStyle = '#f9f9f9';
-      ctx.fillRect(blockRect.x, blockRect.y, blockRect.width, blockRect.height);
+      ctx.fillRect(blockRect.x, blockRect.y, blockRect.width, blockHeight);
     }
-  
+    
+    // ✅ Draw text
     ctx.fillStyle = '#222';
     ctx.font = this.getLogicalFontSize(16, canvasH);
-    ctx.fillText(
-      `${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`,
-      blockRect.x + 10,
-      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[0] }, canvasW, canvasH).y
-    );
-  
-    ctx.font = this.getLogicalFontSize(12, canvasH);
-    ctx.fillStyle = '#000';
-    ctx.fillText(
-      `👍 Good: ${entry.good || '—'}`,
-      blockRect.x + 20,
-      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[1] }, canvasW, canvasH).y
-    );
-    ctx.fillText(
-      `💡 Better: ${entry.better || '—'}`,
-      blockRect.x + 20,
-      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[2] }, canvasW, canvasH).y
-    );
-    ctx.fillText(
-      `📘 Learnt: ${entry.learnt || '—'}`,
-      blockRect.x + 20,
-      blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[3] }, canvasW, canvasH).y
-    );
+    ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, blockRect.x + 10, blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[0] }, canvasW, canvasH).y);
+    
+    ctx.font = fontSize;
+ctx.fillStyle = '#000';
+
+let currentY = blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[0] + 18 }, canvasW, canvasH).y;
+
+currentY = this.wrapText(ctx, `👍 Good: ${entry.good || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
+currentY = this.wrapText(ctx, `💡 Better: ${entry.better || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
+currentY = this.wrapText(ctx, `📘 Learnt: ${entry.learnt || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
+
+    
+    
   });
       ctx.restore();
     }
@@ -248,6 +254,48 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
         }
       });
     }
+
+    measureWrappedHeight(ctx, text, maxWidth, logicalLineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      let lines = 0;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          lines++;
+          line = words[n] + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      lines++; // final line
+      return lines * logicalLineHeight; // ✅ still logical units
+    }
+    
+    
+
+    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+      return y + lineHeight; // ✅ Return final y position
+    }
+    
+    
   
     drawHitRegion(hitCtx) {
       hitCtx.fillStyle = '#0000ff';
