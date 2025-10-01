@@ -272,17 +272,26 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
         this.onBack();
       }
       const b = this.randomButtonBounds;
-const withinRandom =
-  b && x >= b.x && x <= b.x + b.width &&
-  y >= b.y && y <= b.y + b.height;
+      const withinRandom =
+        b && x >= b.x && x <= b.x + b.width &&
+        y >= b.y && y <= b.y + b.height;
+      
+      if (withinRandom) {
+        const now = Date.now();
+        const twentyMinutesAgo = now - 20 * 60 * 1000;
+      
+        const recentNamed = (this.form.responses || []).filter(r =>
+          r.name && r.timestamp && r.timestamp >= twentyMinutesAgo
+        );
+      
+        const randomEntry = recentNamed[Math.floor(Math.random() * recentNamed.length)];
+        this.randomName = randomEntry?.name ?? '—';
+        this.render({ ctx: this.ctx });
+        return;
 
-if (withinRandom) {
-  const named = this.form.responses?.filter(r => r.name) || [];
-  const randomEntry = named[Math.floor(Math.random() * named.length)];
-  this.randomName = randomEntry?.name ?? '—';
-  this.render({ ctx: this.ctx });
-  return;
-}
+        
+      }
+      
 this.scrollVelocity = 0; // stop any ongoing scroll momentum
 const down = this.scrollDownButtonBounds;
 const up = this.scrollUpButtonBounds;
