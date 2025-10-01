@@ -184,9 +184,10 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
       // 🧑‍💼 Responses
       const lineOffsets = [20, 38, 56, 74]; // logical Y offsets within block
       
-     
+      let logicalY = logicalTopMargin;
+ 
   responses.forEach((entry, i) => {
-    const logicalBlockY = (i * (this.logicalBlockHeight + 10)) + logicalTopMargin 
+    const logicalBlockY = logicalY
     const scaledY = this.scaleToCanvas({ x: 0, y: logicalBlockY }, canvasW, canvasH).y;
     const scrollOffsetPx = this.scaleToCanvas({ x: 0, y: this.scrollOffset }, canvasW, canvasH).y;
     const blockRect = {
@@ -200,7 +201,7 @@ let yOffset = scrollAreaTop - this.scrollOffset + this.scaleToCanvas({ x: 0, y: 
     if (blockRect.y + blockRect.height < scrollAreaTop || blockRect.y > scrollAreaBottom) {
       return;
     }
-    const logicalLineHeight = 14;
+    const logicalLineHeight = 18;
     const fontSize = this.getLogicalFontSize(logicalLineHeight, canvasH); // canvas font string
     
     const maxWidth = blockRect.width - 40;
@@ -214,28 +215,30 @@ const learntHeight = this.measureWrappedHeight(ctx, `📘 Learnt: ${entry.learnt
 const logicalHeight = lineOffsets[0] + 18 + goodHeight + betterHeight + learntHeight;
 const blockHeight = this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canvasH).y;
 
-    
-    // ✅ Draw background first
-    if (i % 2 === 0) {
-      ctx.fillStyle = '#f9f9f9';
-      ctx.fillRect(blockRect.x, blockRect.y, blockRect.width, blockHeight);
-    }
-    
-    // ✅ Draw text
-    ctx.fillStyle = '#222';
-    ctx.font = this.getLogicalFontSize(16, canvasH);
-    ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, blockRect.x + 10, blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[0] }, canvasW, canvasH).y);
-    
+if (i % 2 === 0) {
+  ctx.fillStyle = 'rgba(249, 249, 249, 0.5)';
+  ctx.fillRect(blockRect.x, blockRect.y, blockRect.width, blockHeight);
+}
+
+// ✅ Draw text
+ctx.fillStyle = '#222';
+ctx.font = this.getLogicalFontSize(20, canvasH);
+ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, blockRect.x + 10, blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[0] }, canvasW, canvasH).y);
+
+    const startY = blockRect.y;
+    let currentY = startY + this.scaleToCanvas({ x: 0, y: lineOffsets[0] + 18 }, canvasW, canvasH).y;
+  
+
     ctx.font = fontSize;
-ctx.fillStyle = '#000';
-
-let currentY = blockRect.y + this.scaleToCanvas({ x: 0, y: lineOffsets[0] + 18 }, canvasW, canvasH).y;
-
-currentY = this.wrapText(ctx, `👍 Good: ${entry.good || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
-currentY = this.wrapText(ctx, `💡 Better: ${entry.better || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
-currentY = this.wrapText(ctx, `📘 Learnt: ${entry.learnt || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
-
+    ctx.fillStyle = '#000';
     
+    currentY = this.wrapText(ctx, `👍 Good: ${entry.good || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
+    currentY = this.wrapText(ctx, `💡 Better: ${entry.better || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
+    currentY = this.wrapText(ctx, `📘 Learnt: ${entry.learnt || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
+    
+    logicalY += logicalHeight + 10; // 10 is your vertical spacing between blocks
+
+   
     
   });
       ctx.restore();
