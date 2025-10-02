@@ -22,6 +22,7 @@ this.eventsBound = false;
 this.scrollVelocity = 0;
 this.isDragging = false;
 
+this.lastBlockBottom = 0; // track bottom of last rendered block
 const get = utilsRegister.get.bind(utilsRegister);
   this.getCanvasSize = get('canvas', 'getCanvasSize');
   this.scaleToCanvas = get('layout', 'scaleToCanvas');
@@ -50,7 +51,7 @@ eventBus.on('formResultsUpdated', ({ formId, results }) => {
 
       // ✅ Arrow function class properties
   handlePointerDown = (e) => {
-    console.log('Pointer down at', e.clientX, e.clientY);
+  
     this.lastTouchY = e.clientY;
     this.isDragging = true;
     this.ctx.canvas.setPointerCapture(e.pointerId);
@@ -184,7 +185,7 @@ const logicalTopMargin = 10;
 
     const logicalBlockY = logicalY 
 const scaledY = this.scaleToCanvas({ x: 0, y: logicalBlockY }, canvasW, canvasH).y;
-const blockRectY = scaledY + scrollAreaTop;
+const blockRectY = scaledY 
 
 const logicalLineHeight = 18;
 const fontSize = this.getLogicalFontSize(logicalLineHeight, canvasH); // canvas font string
@@ -204,6 +205,11 @@ const logicalHeight = lineOffsets[0] + 18 + goodHeight + betterHeight + learntHe
   
 const blockHeight = this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canvasH).y;
 
+ctx.strokeStyle = '#00f';
+ctx.strokeRect(0, scrollAreaTop, canvasW, maxVisibleHeight);
+
+
+
     const blockRect = {
       x: this.scaleToCanvas({ x: 10, y: 0 }, canvasW, canvasH).x,
       y: blockRectY,
@@ -211,13 +217,14 @@ const blockHeight = this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canv
       height: this.scaleToCanvas({ x: 0, y: logicalHeight }, canvasW, canvasH).y
 
     };
+   
+   
+    const isVisible = blockRect.y + blockRect.height >= scrollAreaTop && blockRect.y <= scrollAreaBottom;
 
-    // Skip rendering if block is outside visible scroll area
-    if (blockRect.y + blockRect.height < scrollAreaTop || blockRect.y > scrollAreaBottom) {
+    if (!isVisible) {
+      logicalY += logicalHeight + 10; // still advance logicalY
       return;
     }
- 
-
 if (i % 2 === 0) {
   ctx.fillStyle = 'rgba(249, 249, 249, 0.5)';
   ctx.fillRect(blockRect.x, blockRect.y, blockRect.width, blockHeight);
@@ -238,7 +245,8 @@ ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, bl
     currentY = this.wrapText(ctx, `👍 Good: ${entry.good || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
     currentY = this.wrapText(ctx, `💡 Better: ${entry.better || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
     currentY = this.wrapText(ctx, `📘 Learnt: ${entry.learnt || '—'}`, blockRect.x + 20, currentY, maxWidth, this.scaleToCanvas({ x: 0, y: logicalLineHeight }, canvasW, canvasH).y);
-    
+
+    this.lastBlockBottom = scaledY + blockHeight;
     logicalY += logicalHeight + 10; // 10 is your vertical spacing between blocks
 
    
@@ -308,27 +316,26 @@ ctx.fillText(`${i + 1}. ${entry.name || '—'} (${entry.ocupatie || '—'})`, bl
       hitCtx.fillRect(this.ctx.canvas.width - 100, 10, 80, 20);
     }
     getMaxScroll() {
-      const lineOffsets = [20, 38, 56, 74]; // make sure this is accessible here
-      const totalLogicalHeight = this.form.responses.reduce((sum, entry) => {
-        const blockWidth = 980;
+let logicalY = 10; // starting top margin
+const lineOffsets = [20, 38, 56, 74];
+const blockWidth = 980;
 const maxWidth = blockWidth - 40;
+const lineHeight = 18;
 
-        const lineHeight = 18;
-    
-        const good = this.measureWrappedHeight(this.ctx, `👍 Good: ${entry.good || '—'}`, maxWidth, lineHeight);
-        const better = this.measureWrappedHeight(this.ctx, `💡 Better: ${entry.better || '—'}`, maxWidth, lineHeight);
-        const learnt = this.measureWrappedHeight(this.ctx, `📘 Learnt: ${entry.learnt || '—'}`, maxWidth, lineHeight);
-    
-        const logicalHeight = lineOffsets[0] + 18 + good + better + learnt;
-        return sum + logicalHeight + 10;
-      }, 0);
-    
-      const { canvasW, canvasH, maxVisibleHeight } = this.getScrollMetrics();
-      const totalHeightPx = this.scaleToCanvas({ x: 0, y: totalLogicalHeight }, canvasW, canvasH).y;
-      
+(this.form.responses || []).forEach(entry => {
+  const good = this.measureWrappedHeight(this.ctx, `👍 Good: ${entry.good || '—'}`, maxWidth, lineHeight);
+  const better = this.measureWrappedHeight(this.ctx, `💡 Better: ${entry.better || '—'}`, maxWidth, lineHeight);
+  const learnt = this.measureWrappedHeight(this.ctx, `📘 Learnt: ${entry.learnt || '—'}`, maxWidth, lineHeight);
 
-      return Math.max(0, totalHeightPx - maxVisibleHeight+20);
-    }
+  const logicalHeight = lineOffsets[0] + 18 + good + better + learnt;
+  logicalY += logicalHeight + 10; // vertical spacing
+});
+const { canvasW, canvasH, maxVisibleHeight } = this.getScrollMetrics();
+const totalHeightPx = this.scaleToCanvas({ x: 0, y: logicalY }, canvasW, canvasH).y;
+
+return Math.max(0, totalHeightPx- maxVisibleHeight);
+
+}
     
   
     handleClick(x, y) {
@@ -390,8 +397,9 @@ const clickedUp =
   }
   
   if (clickedUp) {
-    this.scrollOffset = Math.min(this.scrollOffset + this.scrollStepPx, maxScroll);
+    console.log('scrollStepPx:', this.scrollStepPx);
 
+    this.scrollOffset = Math.max(this.scrollOffset - this.scrollStepPx, 0);
     this.render({ ctx: this.ctx });
     return;
   }
@@ -401,7 +409,7 @@ const clickedUp =
     }
     getScrollMetrics() {
       const { width: canvasW, height: canvasH } = this.getCanvasSize();
-      const scrollAreaTop = this.scaleToCanvas({ x: 0, y: 420 }, canvasW, canvasH).y;
+      const scrollAreaTop = this.scaleToCanvas({ x: 0, y: 120 }, canvasW, canvasH).y;
       const scrollAreaBottom = canvasH - this.scaleToCanvas({ x: 0, y: 40 }, canvasW, canvasH).y;
      
 
