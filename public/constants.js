@@ -16,16 +16,12 @@ export const canvasConfig = {
         hitId: '#mainHitCanvas',
         bg: 'grey',
         hitBg: 'red',
-        width: window.innerWidth,
-        height: window.innerHeight - 4,
     },
     overlay: {
         mainId: '#adminOverlayCanvas',
         hitId: '#adminOverlayHitCanvas',
         bg: 'transparent',
         hitBg: 'transparent',
-        width: window.innerWidth,
-        height: window.innerHeight - 4,
     }
 }
 

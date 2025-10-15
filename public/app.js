@@ -7,6 +7,7 @@ import { AdminOverlay } from "./overlays/adminOverlay.js";
 import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { FormResultsOverlay } from "./overlays/formResults.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
+import { WelcomeOverlay } from "./overlays/welcomeOverlay.js";
 import { AddBoxPlugin } from "./plugins/addInputBox.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
@@ -175,6 +176,7 @@ const loginPlugin = new LoginPlugin({
 
     // ✅ Remove loginPlugin from pipeline
     context.pipeline.remove(loginPlugin);
+    context.pipeline.remove(welcomeOverlay); // Ensure admin overlay is not rendered
    // ✅ Clear the login canvas
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
 
@@ -239,12 +241,17 @@ const loginPlugin = new LoginPlugin({
   editorController: context.textEditorController
 });
 
+const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx });
+context.pipeline.add(welcomeOverlay);
+
+
 function renderLogin() {
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
   loginCanvas.style.pointerEvents = 'auto';
 
   loginPlugin.render({ctx: loginCtx });
   context.pipeline.add(loginPlugin);
+  
 }
 
 renderLogin();
@@ -420,4 +427,4 @@ async function init(data) {
     context.textEditorController.setBoxes(boxEditor.getBoxes());
   }
 
- await init(data);
+ //await init(data);
