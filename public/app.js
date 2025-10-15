@@ -266,10 +266,10 @@ document.addEventListener('pointerdown', e => {
   );
 
   const withinInput = (
-    x >= loginPlugin.inputBox.startPosition.x &&
-    x <= loginPlugin.inputBox.startPosition.x + loginPlugin.inputBox.size.width &&
-    y >= loginPlugin.inputBox.startPosition.y &&
-    y <= loginPlugin.inputBox.startPosition.y + loginPlugin.inputBox.size.height
+    x >= loginPlugin.logicalInputBox.startPosition.x &&
+    x <= loginPlugin.logicalInputBox.startPosition.x + loginPlugin.logicalInputBox.size.width &&
+    y >= loginPlugin.logicalInputBox.startPosition.y &&
+    y <= loginPlugin.logicalInputBox.startPosition.y + loginPlugin.logicalInputBox.size.height
   );
 
   if (withinLogin && modeState.current !== 'admin') {
