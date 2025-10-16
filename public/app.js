@@ -3,6 +3,7 @@ import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
+import { LayoutManager } from "./managers/layOut.js";
 import { AdminOverlay } from "./overlays/adminOverlay.js";
 import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
 import { FormResultsOverlay } from "./overlays/formResults.js";
@@ -56,9 +57,13 @@ utilsRegister.on('onRegister', (ns, name, fn) => {
 context.interactionManager = new interactionManager(canvas, context.hitManager);
 context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
 
+const layoutManager = new LayoutManager({ logicalWidth: 1000, logicalHeight: 1000 });
+const mainCanvas = canvas.layers['main'].canvas;
+
 const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
- textEditorController: context.textEditorController });
- 
+ textEditorController: context.textEditorController,
+ layoutManager,canvas: mainCanvas });
+
 renderBuild.registerFromManifest(myPluginManifest)
 renderBuild.usePlugin(formIconPlugin)
 
@@ -179,9 +184,6 @@ const loginPlugin = new LoginPlugin({
     context.pipeline.remove(welcomeOverlay); // Ensure admin overlay is not rendered
    // ✅ Clear the login canvas
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
-
-   
-
     const parsedForms = JSON.parse(data);
 
     const formListOverlay = new FormListOverlay({
@@ -238,10 +240,11 @@ const loginPlugin = new LoginPlugin({
     context.pipeline.invalidate();
   },
   eventBus: system.eventBus,
-  editorController: context.textEditorController
+  editorController: context.textEditorController,
+  layoutManager
 });
 
-const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx });
+const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx, layoutManager });
 context.pipeline.add(welcomeOverlay);
 
 
@@ -258,28 +261,12 @@ renderLogin();
 
 document.addEventListener('pointerdown', e => {
   const { x, y } = utilsRegister.get('mouse', 'getMousePosition')(loginCanvas, e);
-  const withinLogin = (
-    x >= loginPlugin.bounds.x &&
-    x <= loginPlugin.bounds.x + loginPlugin.bounds.width &&
-    y >= loginPlugin.bounds.y &&
-    y <= loginPlugin.bounds.y + loginPlugin.bounds.height
-  );
 
-  const withinInput = (
-    x >= loginPlugin.logicalInputBox.startPosition.x &&
-    x <= loginPlugin.logicalInputBox.startPosition.x + loginPlugin.logicalInputBox.size.width &&
-    y >= loginPlugin.logicalInputBox.startPosition.y &&
-    y <= loginPlugin.logicalInputBox.startPosition.y + loginPlugin.logicalInputBox.size.height
-  );
-
-  if (withinLogin && modeState.current !== 'admin') {
-    loginPlugin.handleClick(x, y);
-  }
-
-  if (withinInput && modeState.current !== 'admin') {
+  if (modeState.current !== 'admin') {
     loginPlugin.handleClick(x, y);
   }
 });
+
 
 const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')

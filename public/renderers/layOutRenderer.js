@@ -2,6 +2,7 @@ export class LayoutRenderer {
     constructor(layoutManager, canvas) {
       this.layout = layoutManager;
       this.canvas = canvas;
+     
       this.ctx = canvas.getContext('2d');
     }
   

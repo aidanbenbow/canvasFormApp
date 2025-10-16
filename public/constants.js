@@ -71,7 +71,7 @@ export const myPluginManifest = {
   
   };
 
-  export function createPluginManifest({ eventBus, textEditorController }) {
+  export function createPluginManifest({ eventBus, textEditorController, layoutManager, canvas }) {
     return {
       renderers: [
         { id: 'textBox', class: TextBoxRenderer },
@@ -79,7 +79,10 @@ export const myPluginManifest = {
         { id: 'imageBox', class: ImageBoxRenderer },
         { id: 'adminOverlay', class: AdminOverlayRenderer },
         { id: 'loginPlugin', class: LoginRenderer },
-        {id: 'layout', class: LayoutRenderer}
+        {
+          id: 'layout',
+          factory: () => new LayoutRenderer(layoutManager, canvas)
+        }
       ],
       images: {
         "button-unpushed": "/images/button_unpushed.png",

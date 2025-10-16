@@ -60,8 +60,10 @@ export class RenderSystemBuilder {
       }
 
       registerFromManifest(manifest) {
-        manifest.renderers.forEach(({ id, class: RendererClass }) => {
-          const instance = new RendererClass();
+        manifest.renderers.forEach(({ id, class: RendererClass, factory }) => {
+        
+          const instance = factory ? factory(): new RendererClass();
+          
           this.rendererRegistry.register(id, instance);
         });
         const loadImage = utilsRegister.get('asset', 'loadImage');

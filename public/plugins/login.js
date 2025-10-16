@@ -1,7 +1,7 @@
 import { utilsRegister } from "../utils/register.js";
 
 export class LoginPlugin {
-  constructor({ ctx, onLogin, eventBus, editorController }) {
+  constructor({ ctx, onLogin, eventBus, editorController, layoutManager }) {
     this.ctx = ctx;
     this.canvasWidth = this.ctx.canvas.width;
     this.canvasHeight = this.ctx.canvas.height;
@@ -11,57 +11,60 @@ export class LoginPlugin {
     this.type = 'loginPlugin';
     this.eventBus = eventBus;
     this.editorController = editorController;
+    this.layoutManager = layoutManager;
 
-    this.logicalBounds = { x: 10, y: 10, width: 100, height: 40 };
-    this.logicalInputBox = {
+    layoutManager.place({
+      id: 'loginButton',
+      x: 10,
+      y: 10,
+      width: 100,
+      height: 40
+    });
+  
+    layoutManager.place({
+      id: 'loginInput',
+      x: 10,
+      y: 60,
+      width: 200,
+      height: 40
+    });
+  
+    this.inputBox = {
+      id: 'loginInput',
       text: '',
-      startPosition: { x: 10, y: 60 },
-      size: { width: 200, height: 40 },
       updateText: (newText) => {
         this.inputBox.text = newText;
       }
     };
+
   }
 
   render({ ctx }) {
- 
     this.draw(ctx);
   }
 
     draw(ctx) {
+const getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
+const loginBounds = this.layoutManager.getScaledBounds('loginButton', this.canvasWidth, this.canvasHeight);
+const inputBounds = this.layoutManager.getScaledBounds('loginInput', this.canvasWidth, this.canvasHeight);
 
-      const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
-      const getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
-      const bounds = scaleToCanvas(this.logicalBounds, this.canvasWidth, this.canvasHeight);
-  const inputBox = {
-    ...this.logicalInputBox,
-    startPosition: scaleToCanvas(this.logicalInputBox.startPosition, this.canvasWidth, this.canvasHeight),
-    size: {
-      width: (this.logicalInputBox.size.width / 1000) * this.canvasWidth,
-      height: (this.logicalInputBox.size.height / 1000) * this.canvasHeight
-    }
-  };
-
-  ctx.fillStyle = 'blue';
-  ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+ctx.fillStyle = 'blue';
+  ctx.fillRect(loginBounds.x, loginBounds.y, loginBounds.width, loginBounds.height);
   ctx.fillStyle = 'white';
   ctx.font = getLogicalFontSize(16, this.canvasHeight);
-  ctx.fillText('Admin Login', bounds.x + 10, bounds.y + 25);
+  ctx.fillText('Admin Login', loginBounds.x + 10, loginBounds.y + 25);
 
   ctx.fillStyle = '#fff';
-  ctx.fillRect(inputBox.startPosition.x, inputBox.startPosition.y, inputBox.size.width, inputBox.size.height);
+  ctx.fillRect(inputBounds.x, inputBounds.y, inputBounds.width, inputBounds.height);
   ctx.strokeStyle = '#000';
-  ctx.strokeRect(inputBox.startPosition.x, inputBox.startPosition.y, inputBox.size.width, inputBox.size.height);
+  ctx.strokeRect(inputBounds.x, inputBounds.y, inputBounds.width, inputBounds.height);
   ctx.fillStyle = '#000';
-  ctx.fillText(inputBox.text, inputBox.startPosition.x + 10, inputBox.startPosition.y + 25);
+  ctx.fillText(this.inputBox.text, inputBounds.x + 10, inputBounds.y + 25);
 }
     
 handleClick(x, y) {
-
-  const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
-
-  // 🔹 Scale login button bounds
-  const loginBounds = scaleToCanvas(this.logicalBounds, this.canvasWidth, this.canvasHeight);
+const loginBounds = this.layoutManager.getScaledBounds('loginButton', this.canvasWidth, this.canvasHeight);
+const inputBounds = this.layoutManager.getScaledBounds('loginInput', this.canvasWidth, this.canvasHeight);
 
   const withinLogin =
     x >= loginBounds.x &&
@@ -83,22 +86,15 @@ handleClick(x, y) {
     return;
   }
 
-  // 🔹 Scale input box bounds
-  const inputPos = scaleToCanvas(this.logicalInputBox.startPosition, this.canvasWidth, this.canvasHeight);
-  const inputSize = {
-    width: (this.logicalInputBox.size.width / 1000) * this.canvasWidth,
-    height: (this.logicalInputBox.size.height / 1000) * this.canvasHeight
-  };
-
   const withinInput =
-    x >= inputPos.x &&
-    x <= inputPos.x + inputSize.width &&
-    y >= inputPos.y &&
-    y <= inputPos.y + inputSize.height;
+    x >= inputBounds.x &&
+    x <= inputBounds.x + inputBounds.width &&
+    y >= inputBounds.y &&
+    y <= inputBounds.y + inputBounds.height;
 
   if (withinInput) {
     this.editorController.startEditing(this.inputBox, 'text');
-    this.eventBus.emit('showKeyboard', { box: this.inputBox, field: 'text' });
+  
   }
 }
 
