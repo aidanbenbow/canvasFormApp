@@ -4,7 +4,7 @@ export class HitRegistry {
     }
   
     register(hex, info) {
-      this.registry.set(hex.toLowerCase(), info);
+      this.registry.set(hex/*.toLowerCase()*/, info);
      
     }
   
@@ -13,10 +13,28 @@ export class HitRegistry {
     }
   
     get(hex) {
-      return this.registry.get(hex.toLowerCase()) || null;
+      return this.registry.get(hex) || null;
     }
   
     clear() {
       this.registry.clear();
     }
+    entries() {
+      return this.registry.entries();
+    }
+    has(hex) {
+      return this.registry.has(hex.toLowerCase());
+    }
+get size() {
+      return this.registry.size;
+}
+keys() {
+  return this.registry.keys();
+}
+
+values() {
+  return this.registry.values();
+}
+
+    
   }

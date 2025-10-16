@@ -107,49 +107,20 @@ const inputBounds = this.layoutManager.getScaledBounds('loginInput', this.canvas
     }
   
     registerHitRegion(hitRegistry) {
-      hitRegistry.register(this.getHitHex(), {
-        type: this.type,
+      hitRegistry.register('loginButton', {
+        type: 'loginButton',
         plugin: this,
-        bounds: this.bounds
+       bounds: this.layoutManager.getScaledBounds('loginButton', this.canvasWidth, this.canvasHeight),
+        region: 'button'
       });
-      hitRegistry.register('login-input', {
-        type: this.type,
+      
+      hitRegistry.register('loginInput', {
+        type: 'loginPlugin',
         plugin: this,
-        bounds: {
-          x: this.inputBox.startPosition.x,
-          y: this.inputBox.startPosition.y,
-          width: this.inputBox.size.width,
-          height: this.inputBox.size.height
-        }
+       bounds: this.layoutManager.getScaledBounds('loginInput', this.canvasWidth, this.canvasHeight),
+        region: 'input'
       });
-    }
-  
-    drawHitRegion(hitCtx) {
-      hitCtx.fillStyle = this.getHitColor();
-      hitCtx.fillRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-      hitCtx.fillRect(
-        this.inputBox.startPosition.x,
-        this.inputBox.startPosition.y,
-        this.inputBox.size.width,
-        this.inputBox.size.height
-      );
-    }
-    getHitRegions() {
-      return [
-        {
-          hex: this.getHitHex(),
-          bounds: this.bounds
-        },
-        {
-          hex: 'login-input',
-          bounds: {
-            x: this.inputBox.startPosition.x,
-            y: this.inputBox.startPosition.y,
-            width: this.inputBox.size.width,
-            height: this.inputBox.size.height
-          }
-        }
-      ];
+      
     }
     
   }

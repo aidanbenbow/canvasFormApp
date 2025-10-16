@@ -246,7 +246,7 @@ const loginPlugin = new LoginPlugin({
 
 const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx, layoutManager });
 context.pipeline.add(welcomeOverlay);
-
+loginPlugin.registerHitRegion(context.hitRegistry);
 
 function renderLogin() {
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
@@ -262,9 +262,7 @@ renderLogin();
 document.addEventListener('pointerdown', e => {
   const { x, y } = utilsRegister.get('mouse', 'getMousePosition')(loginCanvas, e);
 
-  if (modeState.current !== 'admin') {
-    loginPlugin.handleClick(x, y);
-  }
+  hitRouter.routePointer(x, y);
 });
 
 
@@ -302,7 +300,7 @@ adminCanvas.addEventListener('pointerup', () => {
   boxEditor.handleMouseUp();
 });
 
-const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry );
+const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
 system.eventBus.on('hitClick', ({hex}) => {
   hitRouter.routeHit(hex);
   });
