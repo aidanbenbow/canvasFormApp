@@ -2,49 +2,72 @@ import { utilsRegister } from "../utils/register.js";
 
 
 export class PopupKeyboardPlugin {
-    constructor({ ctx, editorController, position = { x: 50, y: 300 } }) {
+    constructor({ ctx, editorController, layoutManager }) {
       this.type = 'popupKeyboard';
       this.ctx = ctx;
       this.editorController = editorController;
-      
-      const getLogicalDimensions = utilsRegister.get('layout', 'getLogicalDimensions');
-const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
+      this.layoutManager = layoutManager;
+      const canvasWidth = this.ctx.canvas.width;
+const canvasHeight = this.ctx.canvas.height;
 
-this.position = {
-  x: logicalWidth * 0.1,  // 10% from left
-  y: logicalHeight * 0.7  // 70% down the screen
-};
+ this.getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
 
-const scaleToCanvas = utilsRegister.get('layout', 'scaleToCanvas');
-const getCanvasSize = utilsRegister.get('canvas', 'getCanvasSize');
-const { width: canvasWidth, height: canvasHeight } = getCanvasSize();
-const getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
+ const { width: logicalWidth, height: logicalHeight } = utilsRegister.get('layout', 'getLogicalDimensions')();
+ const maxKeyboardHeight = logicalHeight * 0.35;
+ const keyboardHeight = Math.min(maxKeyboardHeight, logicalHeight * 0.3);
+ const keyboardY = logicalHeight - keyboardHeight - 10; // 10 units above bottom
+ 
+ layoutManager.place({
+   id: 'popupKeyboard',
+   x: logicalWidth * 0.05,   // 5% from left
+   y: keyboardY,
+   width: logicalWidth * 0.9, // 90% width
+   height: keyboardHeight,
+   
+ });
+ 
+const bounds = layoutManager.getLogicalBounds('popupKeyboard');
 
-this.canvasPosition = scaleToCanvas(this.position, canvasWidth, canvasHeight);
+const scaledBounds = layoutManager.getScaledBounds('popupKeyboard', canvasWidth, canvasHeight);
+this.canvasPosition = { x: scaledBounds.x, y: scaledBounds.y };
+console.log('PopupKeyboard logical bounds:', scaledBounds);
 
-const logicalKeyWidth = 40;  // logical units
-const logicalKeyHeight = 60;
+this.layout = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['a','S','D','F','G','H','J','K','L'],
+  ['Z','X','C','V','B','N','M'],
+  ['←','Space','↵']
+];
 
+this.rowWeights = this.layout.map(row =>
+  row.reduce((acc, key) => {
+    const multiplier = key === 'Space' ? 5 : key === '↵' ? 1.5 : 1;
+    return acc + multiplier;
+  }, 0)
+);
+
+const maxWeight = Math.max(...this.rowWeights);
+
+
+this.size = { width: scaledBounds.width, height: scaledBounds.height };
+
+this.spacing = 10;
 this.keySize = {
-  width: scaleToCanvas({ x: logicalKeyWidth, y: 0 }, canvasWidth, canvasHeight).x,
-  height: scaleToCanvas({ x: 0, y: logicalKeyHeight }, canvasWidth, canvasHeight).y
+ 
+  height: this.size.height / this.layout.length - this.spacing
 };
-this.keySize.width = Math.max(this.keySize.width, 40);   // px
-this.keySize.height = Math.max(this.keySize.height, 48); // px
 
 
-
-      this.layout = [
-        ['Q','W','E','R','T','Y','U','I','O','P'],
-        ['a','S','D','F','G','H','J','K','L'],
-        ['Z','X','C','V','B','N','M'],
-        ['←','Space','↵']
-      ];
     }
   
     render({ ctx }) {
+      ctx.strokeStyle = 'red';
+ctx.strokeRect(this.canvasPosition.x, this.canvasPosition.y, this.size.width, this.size.height);
+
       ctx.save();
-      ctx.font = ctx.font = `${Math.max(14, this.keySize.height * 0.5)}px Arial`;
+      const fontSize = Math.min(this.keySize.height * 0.6, 24);
+ctx.font = `${fontSize}px Arial`;
+
 
       ctx.fillStyle = '#ddd';
   
@@ -52,29 +75,30 @@ this.keySize.height = Math.max(this.keySize.height, 48); // px
 
       this.keyBounds = [];
   
-      this.layout.forEach((row) => {
-        let x = this.position.x;
-        row.forEach((key) => {
-          const w = key === 'Space'
-          ? this.keySize.width * 5
-          : key === '↵'
-          ? this.keySize.width * 1.5
-          : this.keySize.width;
-        
-          ctx.fillStyle = '#007bff';
-          ctx.fillRect(x, y, w, this.keySize.height);
-          ctx.fillStyle = '#fff';
-          ctx.textBaseline = 'middle';
-ctx.fillText(key, x + 10, y + this.keySize.height / 2);
+      this.layout.forEach((row, rowIndex) => {
+        let x = this.canvasPosition.x;
+        const rowWeight = this.rowWeights[rowIndex];
+  const availableWidth = this.size.width - (row.length - 1) * this.spacing;
+  const unitWidth = availableWidth / rowWeight;
+  row.forEach((key) => {
+    const multiplier = key === 'Space' ? 5 : key === '↵' ? 1.5 : 1;
+    const w = unitWidth * multiplier;
 
-  
-          this.keyBounds.push({ key, x, y, width: w, height: this.keySize.height });
-          x += w + 10;
-        });
-        y += this.keySize.height + 10;
+    ctx.fillStyle = '#007bff';
+    ctx.fillRect(x, y, w, this.keySize.height);
+    ctx.fillStyle = '#fff';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(key, x + 10, y + this.keySize.height / 2);
+
+    this.keyBounds.push({ key, x, y, width: w, height: this.keySize.height });
+    x += w + this.spacing;
+  });
+
+  y += this.keySize.height + this.spacing;
       });
   
       ctx.restore();
+      
     }
   
     handleClick(x, y) {

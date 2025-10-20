@@ -2,10 +2,12 @@ import { canvasConfig, createPluginManifest } from "./constants.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
+import { DashboardManager } from "./managers/dashBoard.js";
 import { interactionManager } from "./managers/interaction.js";
 import { LayoutManager } from "./managers/layOut.js";
 import { AdminOverlay } from "./overlays/adminOverlay.js";
 import { BoxEditorOverlay } from "./overlays/boxEditorOverlay.js";
+import { DashboardOverlay } from "./overlays/dashboardOverlay.js";
 import { FormResultsOverlay } from "./overlays/formResults.js";
 import { MessageOverlay } from "./overlays/messageOverlay.js";
 import { WelcomeOverlay } from "./overlays/welcomeOverlay.js";
@@ -96,7 +98,7 @@ system.eventBus.on('updateStudentCount', (count) => {
 });
 
 
-function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, boxEditor, renderer }) {
+export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, boxEditor, renderer }) {
   
  let saveButtonPlugin = new SaveButtonPlugin({
     ctx: adminCtx,
@@ -171,78 +173,43 @@ loginCanvas.width = window.innerWidth;
 loginCanvas.height = window.innerHeight;
 context.loginCtx = loginCtx;
 
+function transitionToAdminMode({ loginPlugin, welcomeOverlay, loginCtx, loginCanvas, adminCanvas, pipeline }) {
+  modeState.switchTo('admin');
+  adminCanvas.style.pointerEvents = 'auto';
+  loginCanvas.style.pointerEvents = 'none';
+  pipeline.remove(loginPlugin, welcomeOverlay);
+  loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
+}
+
+
 const loginPlugin = new LoginPlugin({
   ctx: loginCtx,
   onLogin: () => {
-    modeState.switchTo('admin');
-    
-    adminCanvas.style.pointerEvents = 'auto';
-    loginCanvas.style.pointerEvents = 'none';
-
-    // ✅ Remove loginPlugin from pipeline
-    context.pipeline.remove(loginPlugin);
-    context.pipeline.remove(welcomeOverlay); // Ensure admin overlay is not rendered
-   // ✅ Clear the login canvas
-  loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
-    const parsedForms = JSON.parse(data);
-
-    const formListOverlay = new FormListOverlay({
-      ctx: adminCtx,
-      forms: parsedForms,
-      onEdit: (form) => {
-        setupAdminPlugins({
-          adminOverlay,
-          hitRegistry: context.hitRegistry,
-          hitCtx: canvas.getHitContext('main'),
-          logicalWidth,
-          boxEditor,
-          renderer: context.pipeline
-        });
-        boxEditor.formMeta = form;
-        init(JSON.stringify([null, form]));
-        adminOverlay.unregister(formListOverlay);
-        context.pipeline.invalidate();
-      },
-      onViewResults: (formMeta) => {
-        adminOverlay.unregister(formListOverlay);
-
-        fetchFormResults(formMeta.id, (results) => {
-          const resultsOverlay = new FormResultsOverlay({
-            ctx: adminCtx,
-            form: { ...formMeta, responses: results },
-            onBack: () => {
-              resultsOverlay.unbindEvents();
-              adminOverlay.unregister(resultsOverlay);
-              adminOverlay.register(formListOverlay);
-              context.pipeline.invalidate();
-            }
-            
-          });
-          resultsOverlay.registerHitRegion(context.hitRegistry);
-          resultsOverlay.bindEvents();
-          adminOverlay.register(resultsOverlay);
-          context.pipeline.invalidate();
-        }, formMeta.resultsTable || 'cscstudents');
-      }
-     
+    transitionToAdminMode({
+      loginPlugin,
+      welcomeOverlay,
+      loginCtx,
+      loginCanvas,
+      adminCanvas,
+      pipeline: context.pipeline
     });
 
-    adminOverlay.register(formListOverlay);
-    context.pipeline.add(formListOverlay);
+    const dashboard = new DashboardManager({
+      ctx: adminCtx,
+      layoutManager,
+      pipeline: context.pipeline,
+      adminOverlay,
+      context
+    });
 
-    const removableBoxes = Array.from(context.pipeline.drawables).filter(d =>
-      ['textBox', 'inputBox', 'imageBox'].includes(d.type)
-    );
-   
-    context.pipeline.remove(...removableBoxes);
-
-    formListOverlay.render();
-    context.pipeline.invalidate();
+    dashboard.loadForms(data);
+    dashboard.showDashboard();
   },
   eventBus: system.eventBus,
   editorController: context.textEditorController,
   layoutManager
 });
+
 
 const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx, layoutManager });
 context.pipeline.add(welcomeOverlay);
@@ -342,7 +309,7 @@ system.eventBus.on('hitClick', ({hex}) => {
     const keyboard = new PopupKeyboardPlugin({
       ctx: adminCtx,
       editorController: context.textEditorController,
-      position: { x: 50, y: window.innerHeight - 250 }
+      layoutManager
     });
     adminOverlay.register(keyboard);
     activeKeyboard = keyboard;
@@ -380,7 +347,7 @@ system.eventBus.on('hitClick', ({hex}) => {
     context.pipeline.invalidate();
   });
 
-async function init(data) {
+export async function init(data) {
     const info = JSON.parse(data);
     const form = info[1];
     if (!Array.isArray(info)) {
