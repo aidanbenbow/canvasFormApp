@@ -1,3 +1,5 @@
+import { utilsRegister } from "../utils/register.js";
+
 export class LayoutRenderer {
     constructor(layoutManager, canvas) {
       this.layout = layoutManager;
@@ -8,9 +10,10 @@ export class LayoutRenderer {
   
     // Draw a filled rectangle from layout
     drawRect(id, style = {}) {
+     
       const bounds = this.layout.getScaledBounds(id, this.canvas.width, this.canvas.height);
       if (!bounds) return;
-  
+
       this.ctx.save();
       this.ctx.fillStyle = style.fill || '#000';
       this.ctx.strokeStyle = style.stroke || '#000';
@@ -20,6 +23,7 @@ export class LayoutRenderer {
       if (style.stroke) {
         this.ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
       }
+      
       this.ctx.restore();
     }
   
@@ -46,6 +50,11 @@ export class LayoutRenderer {
       this.ctx.drawImage(image, bounds.x, bounds.y, bounds.width, bounds.height);
       this.ctx.restore();
     }
+
+    getBounds(id) {
+      return this.layout.getScaledBounds(id, this.canvas.width, this.canvas.height);
+    }
+    
   
     // Clear canvas
     clear() {

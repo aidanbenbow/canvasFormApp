@@ -11,8 +11,7 @@ export class RendererSystem {
       this.pipeline.remove(drawable);
     }
   
-    start() {
-       
+    start() {     
       this.pipeline.start();
     }
   

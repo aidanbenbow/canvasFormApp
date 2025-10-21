@@ -9,6 +9,7 @@ import { AdminOverlayRenderer } from "./renderers/adminOverlay.js";
 import { emitFeedback, onMessageResponse, sendLog } from "./controllers/socketController.js";
 import { LoginRenderer } from "./renderers/loginRenderer.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
+import { UiInputBoxRenderer } from "./renderers/uiInputBox.js";
 
 
 export const canvasConfig = {
@@ -79,10 +80,8 @@ export const myPluginManifest = {
         { id: 'imageBox', class: ImageBoxRenderer },
         { id: 'adminOverlay', class: AdminOverlayRenderer },
         { id: 'loginPlugin', class: LoginRenderer },
-        {
-          id: 'layout',
-          factory: () => new LayoutRenderer(layoutManager, canvas)
-        }
+        {id: 'uiInputBox', class: UiInputBoxRenderer },
+        
       ],
       images: {
         "button-unpushed": "/images/button_unpushed.png",

@@ -19,6 +19,7 @@ import { LoginPlugin } from "./plugins/login.js";
 import { PopupKeyboardPlugin } from "./plugins/popUpKeyboard.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
 import { TextSizerPlugin } from "./plugins/textResizer.js";
+import { LayoutRenderer } from "./renderers/layOutRenderer.js";
 import { HitRouter } from "./routes/hitRouter.js";
 
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
@@ -59,8 +60,20 @@ utilsRegister.on('onRegister', (ns, name, fn) => {
 context.interactionManager = new interactionManager(canvas, context.hitManager);
 context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
 
-const layoutManager = new LayoutManager({ logicalWidth: 1000, logicalHeight: 1000 });
+
+
+const loginCanvas = document.querySelector('#loginCanvas');
+const loginCtx = loginCanvas.getContext('2d');
+loginCanvas.width = window.innerWidth;
+loginCanvas.height = window.innerHeight;
+context.loginCtx = loginCtx;
 const mainCanvas = canvas.layers['main'].canvas;
+const adminCanvas = canvas.layers['overlay'].canvas;
+
+const layoutManager = new LayoutManager({ logicalWidth: loginCanvas.width, logicalHeight: loginCanvas.height });
+const layoutRenderer = new LayoutRenderer(layoutManager, loginCanvas);
+//system.rendererRegistry.register('layout', layoutRenderer);
+
 
 const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
  textEditorController: context.textEditorController,
@@ -68,8 +81,6 @@ const myPluginManifest = createPluginManifest({ eventBus: system.eventBus,
 
 renderBuild.registerFromManifest(myPluginManifest)
 renderBuild.usePlugin(formIconPlugin)
-
-
 
 const rendererSystem = renderBuild.createRendererSystem()
 rendererSystem.start();
@@ -167,11 +178,8 @@ export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWi
   return { saveButtonPlugin, addInputPlugin };
 }
 
-const loginCanvas = document.querySelector('#loginCanvas');
-const loginCtx = loginCanvas.getContext('2d');
-loginCanvas.width = window.innerWidth;
-loginCanvas.height = window.innerHeight;
-context.loginCtx = loginCtx;
+
+
 
 function transitionToAdminMode({ loginPlugin, welcomeOverlay, loginCtx, loginCanvas, adminCanvas, pipeline }) {
   modeState.switchTo('admin');
@@ -183,7 +191,10 @@ function transitionToAdminMode({ loginPlugin, welcomeOverlay, loginCtx, loginCan
 
 
 const loginPlugin = new LoginPlugin({
-  ctx: loginCtx,
+  layoutManager,
+  layoutRenderer, // new: used for component rendering
+  eventBus: system.eventBus,
+  editorController: context.textEditorController,
   onLogin: () => {
     transitionToAdminMode({
       loginPlugin,
@@ -204,24 +215,23 @@ const loginPlugin = new LoginPlugin({
 
     dashboard.loadForms(data);
     dashboard.showDashboard();
-  },
-  eventBus: system.eventBus,
-  editorController: context.textEditorController,
-  layoutManager
+  }
 });
+
+loginPlugin.registerHitRegions(context.hitRegistry);
 
 
 const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx, layoutManager });
-context.pipeline.add(welcomeOverlay);
-loginPlugin.registerHitRegion(context.hitRegistry);
+//context.pipeline.add(welcomeOverlay);
+//loginPlugin.registerHitRegion(context.hitRegistry);
 
 function renderLogin() {
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
   loginCanvas.style.pointerEvents = 'auto';
 
-  loginPlugin.render({ctx: loginCtx });
+  loginPlugin.render();
   context.pipeline.add(loginPlugin);
-  
+  console.log(context.pipeline.drawables);
 }
 
 renderLogin();
@@ -233,7 +243,7 @@ document.addEventListener('pointerdown', e => {
 });
 
 
-const adminCanvas = document.querySelector('#adminOverlayCanvas');
+//const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
 
 adminCanvas.addEventListener('pointerdown', e => {

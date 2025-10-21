@@ -7,6 +7,17 @@ export class HitRegistry {
       this.registry.set(hex/*.toLowerCase()*/, info);
      
     }
+
+    registerPluginHits(plugin, hitMap) {
+      for (const [id, region] of Object.entries(hitMap)) {
+        this.register(id, {
+          plugin,
+          region,
+          box: plugin[id]
+        });
+      }
+    }
+    
   
     unregister(hex) {
       this.registry.delete(hex.toLowerCase());

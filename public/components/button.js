@@ -1,18 +1,32 @@
 export class UIButton {
-    constructor({ x, y, width, height, label, onClick }) {
-      Object.assign(this, { x, y, width, height, label, onClick });
-    }
-  
-    render(ctx) {
-      ctx.fillStyle = '#007bff';
-      ctx.fillRect(this.x, this.y, this.width, this.height);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(this.label, this.x + 10, this.y + 25);
-    }
-  
-    contains(x, y) {
-      return x >= this.x && x <= this.x + this.width &&
-             y >= this.y && y <= this.y + this.height;
-    }
+  constructor({ id, label, onClick, layoutManager, layoutRenderer }) {
+    this.id = id; // layout zone ID
+    this.label = label;
+    this.onClick = onClick;
+    this.layoutManager = layoutManager;
+    this.layoutRenderer = layoutRenderer;
+    this.type = 'layout';
   }
-  
+
+  render() {
+    // Draw button background
+    this.layoutRenderer.drawRect(this.id, {
+      fill: '#007bff',
+      stroke: '#0056b3',
+      lineWidth: 2
+    });
+
+    // Draw button label
+    this.layoutRenderer.drawText(this.id, this.label, 16, {
+      fill: '#fff',
+      align: 'left'
+    });
+  }
+
+  contains(x, y) {
+    const bounds = this.layoutManager.getScaledBounds(this.id, this.layoutRenderer.canvas.width, this.layoutRenderer.canvas.height);
+    if (!bounds) return false;
+    return x >= bounds.x && x <= bounds.x + bounds.width &&
+           y >= bounds.y && y <= bounds.y + bounds.height;
+  }
+}

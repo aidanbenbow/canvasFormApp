@@ -28,8 +28,7 @@ export class RenderPipeline {
         this.dirty = true;
     }
 
-    renderFrame() {
-        
+    renderFrame() {  
         if (!this.dirty) return;
         
         this.renderManager.clearAll(this.rendererContext); // Clear all layers
