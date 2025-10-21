@@ -44,14 +44,24 @@ const modeState = {
 
 const canvasBuilder = new CanvasSystemBuilder(canvas)
 
+const loginCanvas = document.querySelector('#loginCanvas');
+const loginCtx = loginCanvas.getContext('2d');
+loginCanvas.width = window.innerWidth;
+loginCanvas.height = window.innerHeight;
+//context.loginCtx = loginCtx;
+const mainCanvas = canvas.layers['main'].canvas;
+const adminCanvas = canvas.layers['overlay'].canvas;
+
+const layoutManager = new LayoutManager({ logicalWidth: loginCanvas.width, logicalHeight: loginCanvas.height });
+
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 export const eventBus = system.eventBus;
 
-utilsRegister.on('onRegister', (ns, name, fn) => {
-    console.log(`[UTILS] Registered ${name} in ${ns}`);
-  });
+// utilsRegister.on('onRegister', (ns, name, fn) => {
+//     console.log(`[UTILS] Registered ${name} in ${ns}`);
+//   });
   
-  const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry)
+  const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry, layoutManager)
   const context = renderBuild.createRendererContext()
   context.canvasManager = canvas; // ✅ Attach canvasManager to context
   context.firstScreen = false;
@@ -62,15 +72,7 @@ context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEven
 
 
 
-const loginCanvas = document.querySelector('#loginCanvas');
-const loginCtx = loginCanvas.getContext('2d');
-loginCanvas.width = window.innerWidth;
-loginCanvas.height = window.innerHeight;
-context.loginCtx = loginCtx;
-const mainCanvas = canvas.layers['main'].canvas;
-const adminCanvas = canvas.layers['overlay'].canvas;
 
-const layoutManager = new LayoutManager({ logicalWidth: loginCanvas.width, logicalHeight: loginCanvas.height });
 const layoutRenderer = new LayoutRenderer(layoutManager, loginCanvas);
 //system.rendererRegistry.register('layout', layoutRenderer);
 
@@ -229,18 +231,20 @@ function renderLogin() {
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
   loginCanvas.style.pointerEvents = 'auto';
 
-  loginPlugin.render();
-  context.pipeline.add(loginPlugin);
-  console.log(context.pipeline.drawables);
+  context.pipeline.add(loginPlugin); // ✅ Add plugin to pipeline
+  context.pipeline.invalidate();     // ✅ Trigger redraw
 }
+
+
 
 renderLogin();
 
 document.addEventListener('pointerdown', e => {
   const { x, y } = utilsRegister.get('mouse', 'getMousePosition')(loginCanvas, e);
 
-  hitRouter.routePointer(x, y);
+  loginPlugin.dispatchEvent({ type: 'click', x, y }); // ✅ UIElement-native routing
 });
+
 
 
 //const adminCanvas = document.querySelector('#adminOverlayCanvas');

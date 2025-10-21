@@ -12,12 +12,12 @@ import { utilsRegister } from "../utils/register.js";
 
 
 export class RenderSystemBuilder {
-    constructor(canvasManager, eventBus, rendererRegistry){
+    constructor(canvasManager, eventBus, rendererRegistry, layoutManager) {
         this.canvasManager = canvasManager;
         this.eventBus = eventBus;
         this.rendererRegistry = rendererRegistry;
         const hitCtx = this.canvasManager.getHitContext('main');        
-
+        this.layoutManager = layoutManager;
         this.actionRegistry = new ActionRegistry();
         this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
@@ -28,7 +28,7 @@ export class RenderSystemBuilder {
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
-        this.textEditorController = new TextEditorController(this.pipeline, this.eventBus);
+        this.textEditorController = new TextEditorController(this.pipeline, this.eventBus, this.layoutManager);
         this.components = {};
         
         this.attachRendererHooks();
@@ -76,7 +76,7 @@ export class RenderSystemBuilder {
 
         Object.entries(manifest.actions || {}).forEach(([key, fn]) => {
           this.actionRegistry?.register(key, fn);
-          console.log(`[ACTION] Registered action: ${key}`);
+          // console.log(`[ACTION] Registered action: ${key}`);
         });
       
       
@@ -94,7 +94,7 @@ export class RenderSystemBuilder {
       }
       attachRendererHooks() {
         this.rendererRegistry.on('onRegister', (type, renderer) => {
-          console.log(`[RENDERER] Registered renderer for type: ${type}`);
+          // console.log(`[RENDERER] Registered renderer for type: ${type}`);
           this.eventBus.emit('rendererRegistered', { type, renderer });
         });
       
