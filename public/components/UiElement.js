@@ -101,4 +101,9 @@ export class UIElement {
       if (!this.visible) return;
       for (const c of this.children) c.render();
     }
+
+    getChildById(id) {
+        return this.children.find(c => c.id === id);
+      }
+      
   }

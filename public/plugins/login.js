@@ -69,7 +69,7 @@ export class LoginPlugin extends UIElement {
     const username = this.editorController.activeBox?.text?.trim?.() || '';
     const password = this.passwordBox.text?.trim?.() || '';
 console.log('Attempting login with', { username, password });
-    if (username === 'admin' && password === 'aa') {
+    if (username === 'a' && password === 'aa') {
       this.onLogin();
     } else {
       const canvas = this.layoutRenderer.canvas;

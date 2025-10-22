@@ -1,3 +1,4 @@
+import { Dashboard } from "./components/dashBoard.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
@@ -208,18 +209,27 @@ const loginPlugin = new LoginPlugin({
       adminCanvas,
       pipeline: context.pipeline
     });
-
-    const dashboard = new DashboardManager({
-      ctx: adminCtx,
+  
+    const dashboardOverlay = new Dashboard({
       layoutManager,
-      pipeline: context.pipeline,
-      adminOverlay,
-      context
+      layoutRenderer,
+      forms: data,
+      onCreateForm: () => {
+        system.eventBus.emit('createForm');
+      },
+      onEditForm: (form) => {
+        system.eventBus.emit('editForm', form);
+      },
+      onViewResults: (form) => {
+        system.eventBus.emit('viewResults', form);
+      }
     });
-
-    dashboard.loadForms(data);
-    dashboard.showDashboard();
+  
+    context.pipeline.add(dashboardOverlay);
+    uiRegistry.add(dashboardOverlay);
+    context.pipeline.invalidate();
   }
+  
 });
 
 loginPlugin.registerHitRegions(context.hitRegistry);
@@ -252,6 +262,12 @@ document.addEventListener('pointerdown', e => {
 
 //const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
+
+// adminCanvas.addEventListener('wheel', e => {
+//   dashboardOverlay.handleScroll(e.deltaY);
+//   context.pipeline.invalidate();
+// });
+
 
 adminCanvas.addEventListener('pointerdown', e => {
   e.preventDefault();

@@ -1,0 +1,188 @@
+import { UIElement } from './UiElement.js';
+import { UIButton } from './button.js';
+import { UIText } from './text.js';
+import { UIScrollContainer } from './scrollContainer.js';
+
+export class Dashboard extends UIElement {
+  constructor({ id = 'dashboard', layoutManager, layoutRenderer, forms, onCreateForm, onEditForm, onViewResults }) {
+    super({ id, layoutManager, layoutRenderer });
+    let parsedForms = typeof forms === 'string' ? JSON.parse(forms) : forms;
+this.forms = Array.isArray(parsedForms)
+  ? parsedForms.filter(f => f.label && Array.isArray(f.formStructure))
+  : [];
+
+    this.onCreateForm = onCreateForm;
+    this.onEditForm = onEditForm;
+    this.onViewResults = onViewResults;
+
+    this.buildLayout();
+    this.buildUI();
+  }
+
+  buildLayout() {
+    // Title
+    this.layoutManager.place({ id: 'dashboardTitle', x: 0.55, y: 0.05, width: 0.9, height: 0.08 });
+    // Create Form Button
+    this.layoutManager.place({ id: 'createFormButton', x: 0.25, y: 0.15, width: 0.3, height: 0.06 });
+    // Scrollable form list container
+    this.layoutManager.place({ id: 'formList', x: 0.05, y: 0.25, width: 0.9, height: 0.7 });
+    
+  }
+
+  buildUI() {
+    // Dashboard title
+    const title = new UIText({
+      id: 'dashboardTitle',
+      text: 'Welcome, Admin!',
+      fontSize: 24,
+      color: '#333',
+      align: 'left',
+      valign: 'top',
+      layoutManager: this.layoutManager,
+      layoutRenderer: this.layoutRenderer
+    });
+    this.addChild(title);
+
+    // Create form button
+    const createButton = new UIButton({
+      id: 'createFormButton',
+      label: 'Create New Form',
+      layoutManager: this.layoutManager,
+      layoutRenderer: this.layoutRenderer,
+      onClick: this.onCreateForm
+    });
+    this.addChild(createButton);
+
+    // Scrollable container
+    const scrollContainer = new UIScrollContainer({
+        id: 'formList',
+        layoutManager: this.layoutManager,
+        layoutRenderer: this.layoutRenderer
+      });
+      scrollContainer.initializeScroll(); // ✅ after layoutManager.place()
+
+    // Dynamic card height & spacing
+    const containerBounds = this.layoutManager.getLogicalBounds('formList');
+    const containerHeight = containerBounds.height;
+    const formCount = this.forms.length;
+    const maxCardHeight = containerHeight * 0.15;
+    let cardHeight = containerHeight / formCount - 0.02;
+   
+    let spacing = 0.02;
+    if (cardHeight > maxCardHeight) {
+      cardHeight = maxCardHeight;
+      spacing = (containerHeight - cardHeight * formCount) / (formCount - 1);
+    }
+   
+      
+    // Create form cards
+    this.forms.forEach((form, index) => {
+      const y = containerBounds.y + index * (cardHeight + spacing);
+
+      // Form card
+      this.layoutManager.place({
+        id: `formCard-${index}`,
+        x: containerBounds.x,
+        y,
+        width: containerBounds.width,
+        height: cardHeight
+      });
+      const formCard = new UIElement({
+        id: `formCard-${index}`,
+        layoutManager: this.layoutManager,
+        layoutRenderer: this.layoutRenderer
+      });
+
+      // Title inside card
+      this.layoutManager.place({
+        id: `formTitle-${index}`,
+        parent: `formCard-${index}`, // ✅ anchors layout to the card
+        x: 0.02, y: 0.2, width: 0.7, height: 0.6
+      });
+      
+      
+      const formTitle = new UIText({
+        id: `formTitle-${index}`,
+        text: form.title || `Form ${index + 1}`,
+        fontSize: cardHeight * 0.5,
+        color: '#000',
+        layoutManager: this.layoutManager,
+        layoutRenderer: this.layoutRenderer,
+        align: 'left',
+        valign: 'middle'
+      });
+
+      // Edit button
+      this.layoutManager.place({
+        id: `edit-${index}`,
+        parent: `formCard-${index}`,
+        x: 0.75, y: 0.2, width: 0.1, height: 0.6
+      });
+      const editButton = new UIButton({
+        id: `edit-${index}`,
+        label: '✎',
+        layoutManager: this.layoutManager,
+        layoutRenderer: this.layoutRenderer,
+        onClick: () => this.onEditForm(form)
+      });
+
+      // View results button
+      this.layoutManager.place({
+        id: `view-${index}`,
+        parent: `formCard-${index}`,
+        x: 0.87, y: 0.2, width: 0.1, height: 0.6
+      });
+      const viewButton = new UIButton({
+        id: `view-${index}`,
+        label: '📊',
+        layoutManager: this.layoutManager,
+        layoutRenderer: this.layoutRenderer,
+        onClick: () => this.onViewResults(form)
+      });
+      
+formCard.visible = true;
+      formCard.addChild(formTitle);
+      formCard.addChild(editButton);
+      formCard.addChild(viewButton);
+      scrollContainer.addChild(formCard);
+     
+    });
+    scrollContainer.updateContentHeight(); // ✅ update after adding children
+    this.addChild(scrollContainer);
+    console.log(this.children);
+  }
+
+  render() {
+   // console.log('Rendering Dashboard');
+    // Optional dashboard background
+    this.layoutRenderer.drawRect(this.id, { fill: '#fff', stroke: '#ccc', lineWidth: 1 });
+
+    // Render children
+    this.children.forEach(child => {
+      const ctx = this.layoutRenderer.ctx;
+     
+      if (child.scrollController) {
+        ctx.save();
+        const bounds = this.layoutManager.getScaledBounds(child.id, ctx.canvas.width, ctx.canvas.height);
+      
+        ctx.beginPath();
+        ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+        ctx.clip();
+        child.scrollController.apply(ctx);
+        child.children.forEach(grandchild => {
+            grandchild.render()});
+        ctx.restore();
+      } else {
+        child.render();
+      }
+    });
+  }
+
+  // Handle mouse wheel scrolling
+  handleScroll(deltaY) {
+    const formList = this.getChildById('formList');
+    if (formList?.scrollController) {
+      formList.scrollController.scrollBy(deltaY);
+    }
+  }
+}
