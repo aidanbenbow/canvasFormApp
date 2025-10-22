@@ -48,6 +48,7 @@ export class UIElement {
   
     // 🔹 Extended event dispatch
     dispatchEvent(event) {
+        console.log(`Dispatching event ${event.type} on ${this.id}`);
       if (!this.visible) return false;
   
       // CAPTURE phase — go through children

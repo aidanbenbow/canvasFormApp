@@ -6,6 +6,8 @@ export class UIButton extends UIElement {
     this.label = label;
     this.onClickHandler = onClick;
     this.type = 'uiButton';
+    this.interactive = true;
+
   }
 
   onClick() {

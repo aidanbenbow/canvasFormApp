@@ -1,3 +1,4 @@
+import { PopupKeyboard } from "./components/keyBoard.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
@@ -19,6 +20,7 @@ import { LoginPlugin } from "./plugins/login.js";
 import { PopupKeyboardPlugin } from "./plugins/popUpKeyboard.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
 import { TextSizerPlugin } from "./plugins/textResizer.js";
+import { UIRootRegistry } from "./registries/UIRootRegistry.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
 import { HitRouter } from "./routes/hitRouter.js";
 
@@ -222,6 +224,8 @@ const loginPlugin = new LoginPlugin({
 
 loginPlugin.registerHitRegions(context.hitRegistry);
 
+const uiRegistry = new UIRootRegistry();
+uiRegistry.add(loginPlugin);
 
 const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx, layoutManager });
 //context.pipeline.add(welcomeOverlay);
@@ -241,8 +245,7 @@ renderLogin();
 
 document.addEventListener('pointerdown', e => {
   const { x, y } = utilsRegister.get('mouse', 'getMousePosition')(loginCanvas, e);
-
-  loginPlugin.dispatchEvent({ type: 'click', x, y }); // ✅ UIElement-native routing
+  uiRegistry.dispatchEvent({ type: 'click', x, y });
 });
 
 
@@ -320,12 +323,14 @@ system.eventBus.on('hitClick', ({hex}) => {
     context.pipeline.remove(activeKeyboard);
     activeKeyboard = null;
   }
-    const keyboard = new PopupKeyboardPlugin({
-      ctx: adminCtx,
+    const keyboard = new PopupKeyboard({
+      layoutManager,
+      layoutRenderer,
       editorController: context.textEditorController,
-      layoutManager
     });
     adminOverlay.register(keyboard);
+    uiRegistry.add(keyboard);
+    context.pipeline.add(keyboard); // ✅ Add to pipeline
     activeKeyboard = keyboard;
     context.pipeline.invalidate();
   });
