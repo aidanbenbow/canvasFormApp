@@ -6,6 +6,7 @@ export class LayoutRenderer {
       this.canvas = canvas;
      
       this.ctx = canvas.getContext('2d');
+      console.log('LayoutRenderer initialized with canvas size', canvas.width, canvas.height);
     }
   
     // Draw a filled rectangle from layout
@@ -31,14 +32,18 @@ export class LayoutRenderer {
     drawText(id, text, fontSize = 16, style = {}) {
       const bounds = this.layout.getScaledBounds(id, this.canvas.width, this.canvas.height);
       if (!bounds) return;
-  
+ 
       const getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
       this.ctx.save();
       this.ctx.font = getLogicalFontSize(fontSize, this.canvas.height);
+      
       this.ctx.fillStyle = style.fill || '#000';
       this.ctx.textAlign = style.align || 'left';
-      this.ctx.fillText(text, bounds.x, bounds.y + fontSize); // Adjust Y for baseline
-      this.ctx.restore();
+      // Center text vertically within bounds
+  const textY = bounds.y + bounds.height / 2;
+  this.ctx.fillText(text, bounds.x, textY);
+  
+  this.ctx.restore();
     }
   
     // Draw image from layout

@@ -16,14 +16,17 @@ export class PopupKeyboard extends UIElement {
   }
 
   createKeys() {
-    const keyHeight = this.layoutManager.logicalHeight * 0.06;
+    //const keyHeight = Math.min(this.layoutManager.logicalHeight * 0.06, 60);
     const keyWidth = this.layoutManager.logicalWidth * 0.05;
-    const spacing = this.layoutManager.logicalWidth * 0.01;
+    const spacing = this.layoutManager.logicalHeight * 0.01;
     const logicalHeight = this.layoutManager.logicalHeight;
-    const keyboardHeight = logicalHeight * 0.3; // 30% of canvas height
-    const startY = logicalHeight - keyboardHeight - spacing; // anchor near bottom
-    
-  
+    const maxKeyboardHeight = logicalHeight * 0.4;
+    const rowCount = this.layout.length;
+    const keyHeight = Math.min((maxKeyboardHeight - (rowCount - 1) * spacing) / rowCount, logicalHeight * 0.06);
+    const totalKeyboardHeight = rowCount * keyHeight + (rowCount - 1) * spacing;
+
+    const startY = logicalHeight /4 // anchor near bottom
+   
     this.layout.forEach((row, rowIndex) => {
       const y = startY + rowIndex * (keyHeight + spacing);
       const ids = row.map((key, i) => `key-${rowIndex}-${i}-${key}`);

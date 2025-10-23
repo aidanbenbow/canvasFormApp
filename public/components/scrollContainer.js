@@ -18,7 +18,7 @@ export class UIScrollContainer extends UIElement {
           console.warn(`UIScrollContainer: Bounds not found for ${this.id}`);
           return;
         }
-      
+      console.log(`Initializing scroll for ${this.id} with viewport height ${bounds.height}`);
         this.scrollController = new ScrollController({
           contentHeight: 0,
           viewportHeight: bounds.height
@@ -44,8 +44,13 @@ export class UIScrollContainer extends UIElement {
       const bounds = this.getScaledBounds();
   
       ctx.save();
+        // Draw visible stroke around the scroll container
+  ctx.strokeStyle = '#0077cc'; // or any color you prefer
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
       ctx.beginPath();
       ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+     
       ctx.clip();
   
       ctx.save();

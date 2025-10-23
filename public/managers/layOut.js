@@ -1,5 +1,5 @@
 export class LayoutManager {
-    constructor({ logicalWidth = 1000, logicalHeight = 1000 }) {
+    constructor({ logicalWidth = 1000, logicalHeight = 1000 }={}) {
       this.logicalWidth = logicalWidth;
       this.logicalHeight = logicalHeight;
       this.registry = new Map(); // Stores layout entries by ID
@@ -12,8 +12,8 @@ export class LayoutManager {
     }
   
     // Place an item with logical coordinates and optional alignment
-    place({ id, x, y, width, height, anchor = 'top-left', offset = { x: 0, y: 0 } }) {
-      const base = { x, y, width, height };
+    place({ id, x, y, width, height, anchor = 'top-left', offset = { x: 0, y: 0 },parent = null, }) {
+      const base = { x, y, width, height, parent };
   
       // Apply anchor logic
       if (anchor === 'center') {
@@ -75,18 +75,29 @@ export class LayoutManager {
     getScaledBounds(id, canvasWidth, canvasHeight) {
       const item = this.registry.get(id);
       if (!item) return null;
-  
+    
+      let x = item.x;
+      let y = item.y;
+    
+      // Apply parent offset if defined
+      if (item.parent) {
+        const parent = this.registry.get(item.parent);
+        if (parent) {
+          x += parent.x;
+          y += parent.y;
+        }
+      }
+    
       return {
-        x: (item.x / this.logicalWidth) * canvasWidth,
-        y: (item.y / this.logicalHeight) * canvasHeight,
+        x: (x / this.logicalWidth) * canvasWidth,
+        y: (y / this.logicalHeight) * canvasHeight,
         width: (item.width / this.logicalWidth) * canvasWidth,
         height: (item.height / this.logicalHeight) * canvasHeight
       };
     }
-  
-    // Get logical bounds directly
     getLogicalBounds(id) {
       return this.registry.get(id) || null;
     }
+    
   }
   

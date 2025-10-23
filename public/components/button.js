@@ -31,9 +31,9 @@ export class UIButton extends UIElement {
       lineWidth: this.isFocused ? 3 : 2
     });
 
-    this.layoutRenderer.drawText(this.id, this.label, 16, {
+    this.layoutRenderer.drawText(this.id, this.label, 0.01, {
       fill: '#fff',
-      align: 'center',
+      align: 'left',
       valign: 'middle'
     });
   }

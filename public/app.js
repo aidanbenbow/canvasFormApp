@@ -49,13 +49,12 @@ const canvasBuilder = new CanvasSystemBuilder(canvas)
 
 const loginCanvas = document.querySelector('#loginCanvas');
 const loginCtx = loginCanvas.getContext('2d');
-loginCanvas.width = window.innerWidth;
-loginCanvas.height = window.innerHeight;
+
 //context.loginCtx = loginCtx;
 const mainCanvas = canvas.layers['main'].canvas;
 const adminCanvas = canvas.layers['overlay'].canvas;
 
-const layoutManager = new LayoutManager({ logicalWidth: loginCanvas.width, logicalHeight: loginCanvas.height });
+const layoutManager = new LayoutManager();
 
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 export const eventBus = system.eventBus;
@@ -73,11 +72,8 @@ export const eventBus = system.eventBus;
 context.interactionManager = new interactionManager(canvas, context.hitManager);
 context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
 
+const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
 
-
-
-const layoutRenderer = new LayoutRenderer(layoutManager, loginCanvas);
-//system.rendererRegistry.register('layout', layoutRenderer);
 
 
 const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
@@ -98,7 +94,7 @@ const boxEditor = new BoxEditorOverlay(system.eventBus); // allBoxes = array of 
 adminOverlay.register(boxEditor);
 adminOverlay.setMode(modeState.current)
 
-const logicalWidth = window.innerWidth;
+
 adminOverlay.register(new MessageOverlay());
 
 context.pipeline.add(adminOverlay);
@@ -191,6 +187,7 @@ function transitionToAdminMode({ loginPlugin, welcomeOverlay, loginCtx, loginCan
   adminCanvas.style.pointerEvents = 'auto';
   loginCanvas.style.pointerEvents = 'none';
   pipeline.remove(loginPlugin, welcomeOverlay);
+  system.eventBus.emit('hideKeyboard');
   loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
 }
 
@@ -218,7 +215,7 @@ const loginPlugin = new LoginPlugin({
         system.eventBus.emit('createForm');
       },
       onEditForm: (form) => {
-        system.eventBus.emit('editForm', form);
+       console.log('Emitting editForm for:', form);
       },
       onViewResults: (form) => {
         system.eventBus.emit('viewResults', form);
@@ -259,14 +256,8 @@ document.addEventListener('pointerdown', e => {
 });
 
 
-
-//const adminCanvas = document.querySelector('#adminOverlayCanvas');
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
 
-// adminCanvas.addEventListener('wheel', e => {
-//   dashboardOverlay.handleScroll(e.deltaY);
-//   context.pipeline.invalidate();
-// });
 
 
 adminCanvas.addEventListener('pointerdown', e => {
@@ -314,6 +305,27 @@ system.eventBus.on('hitClick', ({hex}) => {
   system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);
     adminOverlay.showMessage(text, position, duration);
+    context.pipeline.invalidate();
+  });
+
+  system.eventBus.on('createForm', () => {
+    console.log('Creating new form');
+  });
+
+  system.eventBus.on('editForm', (form) => {
+    console.log('Editing form:', form);
+  });
+  system.eventBus.on('viewResults', async (form) => {
+    console.log('Viewing results for form:', form);
+    const results = await fetchFormResults(form.id);
+    const resultsOverlay = new FormResultsOverlay({
+      layoutManager,
+      layoutRenderer,
+      form,
+      results
+    }); 
+    context.pipeline.add(resultsOverlay);
+    uiRegistry.add(resultsOverlay);
     context.pipeline.invalidate();
   });
 

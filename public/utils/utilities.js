@@ -140,8 +140,8 @@ export function measureTextSize(text, fontSize, maxWidth = Infinity) {
   }
 
   export function getLogicalFontSize(logicalSize, canvasHeight) {
-    const { height: LOGICAL_HEIGHT } = utilsRegister.get('layout', 'getLogicalDimensions')();
-    return `${Math.round((logicalSize / LOGICAL_HEIGHT) * canvasHeight)}px Arial`;
+  
+    return `${Math.round((logicalSize) * canvasHeight)}px Arial`;
   }
   
   

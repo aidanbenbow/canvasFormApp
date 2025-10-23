@@ -21,11 +21,11 @@ this.forms = Array.isArray(parsedForms)
 
   buildLayout() {
     // Title
-    this.layoutManager.place({ id: 'dashboardTitle', x: 0.55, y: 0.05, width: 0.9, height: 0.08 });
+    this.layoutManager.place({ id: 'dashboardTitle', x: 10, y: 20, width: 100, height: 50 });
     // Create Form Button
-    this.layoutManager.place({ id: 'createFormButton', x: 0.25, y: 0.15, width: 0.3, height: 0.06 });
+    this.layoutManager.place({ id: 'createFormButton', x: 10, y: 80, width: 100, height: 50 });
     // Scrollable form list container
-    this.layoutManager.place({ id: 'formList', x: 0.05, y: 0.25, width: 0.9, height: 0.7 });
+    this.layoutManager.place({ id: 'formList', x: 10, y: 150, width: 300, height: 400 });
     
   }
 
@@ -34,7 +34,7 @@ this.forms = Array.isArray(parsedForms)
     const title = new UIText({
       id: 'dashboardTitle',
       text: 'Welcome, Admin!',
-      fontSize: 24,
+      fontSize: 0.02,
       color: '#333',
       align: 'left',
       valign: 'top',
@@ -65,10 +65,11 @@ this.forms = Array.isArray(parsedForms)
     const containerBounds = this.layoutManager.getLogicalBounds('formList');
     const containerHeight = containerBounds.height;
     const formCount = this.forms.length;
+    let spacing = containerHeight * 0.02;
     const maxCardHeight = containerHeight * 0.15;
-    let cardHeight = containerHeight / formCount - 0.02;
-   
-    let spacing = 0.02;
+    let cardHeight = containerHeight / formCount - spacing
+  
+    
     if (cardHeight > maxCardHeight) {
       cardHeight = maxCardHeight;
       spacing = (containerHeight - cardHeight * formCount) / (formCount - 1);
@@ -96,15 +97,15 @@ this.forms = Array.isArray(parsedForms)
       // Title inside card
       this.layoutManager.place({
         id: `formTitle-${index}`,
-        parent: `formCard-${index}`, // ✅ anchors layout to the card
-        x: 0.02, y: 0.2, width: 0.7, height: 0.6
+        x: 20, y: 20, width: 70, height: 60,
+        parent: `formCard-${index}`
       });
       
       
       const formTitle = new UIText({
         id: `formTitle-${index}`,
         text: form.title || `Form ${index + 1}`,
-        fontSize: cardHeight * 0.5,
+        fontSize: 0.05,
         color: '#000',
         layoutManager: this.layoutManager,
         layoutRenderer: this.layoutRenderer,
@@ -116,7 +117,7 @@ this.forms = Array.isArray(parsedForms)
       this.layoutManager.place({
         id: `edit-${index}`,
         parent: `formCard-${index}`,
-        x: 0.75, y: 0.2, width: 0.1, height: 0.6
+        x: 25, y: 80, width: 40, height: 25
       });
       const editButton = new UIButton({
         id: `edit-${index}`,
@@ -130,7 +131,7 @@ this.forms = Array.isArray(parsedForms)
       this.layoutManager.place({
         id: `view-${index}`,
         parent: `formCard-${index}`,
-        x: 0.87, y: 0.2, width: 0.1, height: 0.6
+        x: 65, y: 80, width: 40, height: 25
       });
       const viewButton = new UIButton({
         id: `view-${index}`,
@@ -142,13 +143,13 @@ this.forms = Array.isArray(parsedForms)
       
 formCard.visible = true;
       formCard.addChild(formTitle);
-      formCard.addChild(editButton);
-      formCard.addChild(viewButton);
-      scrollContainer.addChild(formCard);
+     formCard.addChild(editButton);
+     formCard.addChild(viewButton);
+     scrollContainer.addChild(formCard);
      
     });
     scrollContainer.updateContentHeight(); // ✅ update after adding children
-    this.addChild(scrollContainer);
+   this.addChild(scrollContainer);
     console.log(this.children);
   }
 
@@ -167,7 +168,7 @@ formCard.visible = true;
       
         ctx.beginPath();
         ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-        ctx.clip();
+       // ctx.clip();
         child.scrollController.apply(ctx);
         child.children.forEach(grandchild => {
             grandchild.render()});

@@ -37,7 +37,7 @@ export class UIInputBox extends UIElement {
   const color = rawText ? '#000' : '#888';
   
 
-    this.layoutRenderer.drawText(this.id, displayText, 16, { fill: color, align: 'left', valign: 'middle' });
+    this.layoutRenderer.drawText(this.id, displayText, 0.01, { fill: color, align: 'left', valign: 'middle' });
 
     // Draw caret and selection if this box is active
     if (this.editorController.activeBox === this) {
