@@ -4,7 +4,7 @@ import { canvasConfig, createPluginManifest } from "./constants.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
-import { DashboardManager } from "./managers/dashBoard.js";
+import { DashboardManager } from "./managers/dashBoardManager.js";
 import { interactionManager } from "./managers/interaction.js";
 import { LayoutManager } from "./managers/layOut.js";
 import { AdminOverlay } from "./overlays/adminOverlay.js";
