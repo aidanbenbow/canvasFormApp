@@ -37,7 +37,7 @@ export class TextEditorController {
         this.caretIndex = value.length;
         this.selectionStart = this.selectionEnd = this.caretIndex;
       
-        this.eventBus.emit('showKeyboard', { box, field });
+       this.eventBus.emit('showKeyboard', { box, field });
 
         this.pipeline.invalidate();
       }

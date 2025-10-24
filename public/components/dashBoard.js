@@ -4,7 +4,7 @@ import { UIText } from './text.js';
 import { UIScrollContainer } from './scrollContainer.js';
 
 export class Dashboard extends UIElement {
-  constructor({ id = 'dashboard', layoutManager, layoutRenderer, forms, onCreateForm, onEditForm, onViewResults }) {
+  constructor({ id = 'dashboard', layoutManager, layoutRenderer,forms, onCreateForm, onEditForm, onViewResults }) {
     super({ id, layoutManager, layoutRenderer });
     let parsedForms = typeof forms === 'string' ? JSON.parse(forms) : forms;
 this.forms = Array.isArray(parsedForms)
@@ -38,8 +38,7 @@ this.forms = Array.isArray(parsedForms)
       color: '#333',
       align: 'left',
       valign: 'top',
-      layoutManager: this.layoutManager,
-      layoutRenderer: this.layoutRenderer
+      
     });
     this.addChild(title);
 
@@ -47,8 +46,6 @@ this.forms = Array.isArray(parsedForms)
     const createButton = new UIButton({
       id: 'createFormButton',
       label: 'Create New Form',
-      layoutManager: this.layoutManager,
-      layoutRenderer: this.layoutRenderer,
       onClick: this.onCreateForm
     });
     this.addChild(createButton);
@@ -107,8 +104,7 @@ this.forms = Array.isArray(parsedForms)
         text: form.title || `Form ${index + 1}`,
         fontSize: 0.05,
         color: '#000',
-        layoutManager: this.layoutManager,
-        layoutRenderer: this.layoutRenderer,
+       
         align: 'left',
         valign: 'middle'
       });
@@ -122,8 +118,7 @@ this.forms = Array.isArray(parsedForms)
       const editButton = new UIButton({
         id: `edit-${index}`,
         label: '✎',
-        layoutManager: this.layoutManager,
-        layoutRenderer: this.layoutRenderer,
+       
         onClick: () => this.onEditForm(form)
       });
 
@@ -136,8 +131,7 @@ this.forms = Array.isArray(parsedForms)
       const viewButton = new UIButton({
         id: `view-${index}`,
         label: '📊',
-        layoutManager: this.layoutManager,
-        layoutRenderer: this.layoutRenderer,
+       
         onClick: () => this.onViewResults(form)
       });
       

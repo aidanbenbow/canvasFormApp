@@ -18,6 +18,8 @@ export class UIElement {
     }
   
     addChild(child) {
+        child.layoutManager = this.layoutManager;
+        child.layoutRenderer = this.layoutRenderer;
       child.parent = this;
       this.children.push(child);
     }
@@ -43,14 +45,16 @@ export class UIElement {
     contains(x, y) {
       const b = this.getScaledBounds();
       if (!b) return false;
+      
       return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
     }
   
     // 🔹 Extended event dispatch
     dispatchEvent(event) {
-      //  console.log(`Dispatching event ${event.type} on ${this.id}`);
+        
       if (!this.visible) return false;
-  
+      
+
       // CAPTURE phase — go through children
       for (const child of this.children) {
         if (child.contains(event.x, event.y)) {
@@ -58,11 +62,18 @@ export class UIElement {
         } else if (event.type === 'mousemove' && child.isHovered) {
           // Mouse left child
           child.onMouseLeave();
+          
         }
       }
   
       // TARGET phase
       const hit = this.contains(event.x, event.y);
+      for (const child of this.children) {
+        const hit = child.contains(event.x, event.y);
+       // console.log(`[${child.id}] hit=${hit} type=${event.type}`);
+        if (hit && child.dispatchEvent(event)) return true;
+      }
+      
       if (this.interactive) {
         if (event.type === 'mousemove') {
           if (hit && !this.isHovered) this.onMouseEnter();
@@ -105,5 +116,15 @@ export class UIElement {
     getChildById(id) {
         return this.children.find(c => c.id === id);
       }
+
+      clearChildren() {
+        for (const child of this.children) child.parent = null;
+        this.children = [];
+      }
+      removeChild(child) {
+        this.children = this.children.filter(c => c !== child);
+        child.parent = null;
+      }
+      
       
   }

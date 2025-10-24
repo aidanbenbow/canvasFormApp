@@ -1,8 +1,8 @@
 import { UIElement } from "./UiElement.js";
 
 export class UIButton extends UIElement {
-  constructor({ id, label, onClick, layoutManager, layoutRenderer }) {
-    super({ id, layoutManager, layoutRenderer });
+  constructor({ id, label, onClick}) {
+    super({ id });
     this.label = label;
     this.onClickHandler = onClick;
     this.type = 'uiButton';

@@ -1,11 +1,15 @@
 import { UIElement } from './UiElement.js';
+import { PopupKeyboard } from './keyBoard.js';
 
 export class UIInputBox extends UIElement {
-  constructor({ id, layoutManager, layoutRenderer, editorController, placeholder = '' }) {
-    super({ id, layoutManager, layoutRenderer });
+  constructor({ id, editorController, placeholder = '' }) {
+    super({ id});
     this.editorController = editorController;
     this.placeholder = placeholder;
     this.type = 'uiInputBox';
+    this.interactive = true;
+this.visible = true;
+this.keyboard = null;
   }
 
   // Focus the input box and notify controller
@@ -19,10 +23,41 @@ export class UIInputBox extends UIElement {
     super.onBlur();
     this.editorController.stopEditing();
   }
+  layout(canvasWidth, canvasHeight) {
+    super.layout(canvasWidth, canvasHeight); // ✅ ensures children like keyboard are placed
+  }
+  
+  dispatchEvent(event) {
+    if (!this.visible) return false;
+  
+    // ✅ Pass to children (e.g. keyboard)
+    if (super.dispatchEvent(event)) return true;
+  
+    // ✅ Handle own interaction
+    const hit = this.contains(event.x, event.y);
+  
+    if (this.interactive && hit) {
+      if (event.type === 'click') {
+        this.onClick();
+        return true;
+      }
+      if (event.type === 'mousedown') this.onMouseDown?.();
+      if (event.type === 'mouseup') this.onMouseUp?.();
+      if (event.type === 'mousemove') {
+        if (!this.isHovered) this.onMouseEnter?.();
+      }
+    } else if (event.type === 'mousemove' && this.isHovered) {
+      this.onMouseLeave?.();
+    }
+  
+    return false;
+  }
+  
 
   render() {
     if (!this.visible) return;
-
+   super.render();
+    
     // Draw box background & border
     const fill = '#fff';
     const stroke = this.isFocused ? '#ffcc00' : '#000';
@@ -46,53 +81,22 @@ export class UIInputBox extends UIElement {
       this.editorController.drawCaret(ctx);
     }
   }
+  showKeyboard() {
+    if (this.keyboard) {
+      this.removeChild(this.keyboard);
+      this.keyboard = null;
+    }
+  
+    const keyboard = new PopupKeyboard({
+      layoutManager: this.layoutManager,
+      layoutRenderer: this.layoutRenderer,
+      editorController: this.editorController,
+      targetBox: this,
+      targetField: 'text',
+    });
+  
+    this.addChild(keyboard);
+    this.keyboard = keyboard;
+  }
+  
 }
-
-// export class UIInputBox {
-//     constructor({ id, layoutManager, layoutRenderer, value = '', placeholder = '', fontSize = 14 }) {
-//       this.id = id; // layout zone ID
-//       this.layout = layoutManager;
-//       this.renderer = layoutRenderer;
-//       this.value = value;
-//       this.placeholder = placeholder;
-//       this.fontSize = fontSize;
-//       this.focused = false;
-//       this.type = 'uiInputBox';
-//     }
-  
-//     setValue(val) {
-//       this.value = val;
-//     }
-  
-//     setFocus(state) {
-//       this.focused = state;
-//     }
-  
-//     contains(x, y) {
-//       const bounds = this.layout.getScaledBounds(this.id, this.renderer.canvas.width, this.renderer.canvas.height);
-//       if (!bounds) return false;
-//       return x >= bounds.x && x <= bounds.x + bounds.width &&
-//              y >= bounds.y && y <= bounds.y + bounds.height;
-//     }
-  
-//     render() {
-        
-//       const bounds = this.layout.getScaledBounds(this.id, this.renderer.canvas.width, this.renderer.canvas.height);
-//       if (!bounds) return;
- 
-//       // Draw input box background and border
-//       this.renderer.drawRect(this.id, {
-//         fill: '#FADCF6',
-//         stroke: this.focused ? '#007bff' : '#ccc',
-//         lineWidth: 2
-//       });
-  
-//       // Draw input text or placeholder
-//       const text = this.value || (!this.focused ? this.placeholder : '');
-//       this.renderer.drawText(this.id, text, this.fontSize, {
-//         fill: '#000',
-//         align: 'left'
-//       });
-//     }
-//   }
-  

@@ -1,5 +1,6 @@
 import { Dashboard } from "./components/dashBoard.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
+import { UIStage } from "./components/uiStage.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
@@ -182,78 +183,53 @@ export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWi
 
 
 
-function transitionToAdminMode({ loginPlugin, welcomeOverlay, loginCtx, loginCanvas, adminCanvas, pipeline }) {
+function transitionToAdminMode() {
   modeState.switchTo('admin');
-  adminCanvas.style.pointerEvents = 'auto';
-  loginCanvas.style.pointerEvents = 'none';
-  pipeline.remove(loginPlugin, welcomeOverlay);
   system.eventBus.emit('hideKeyboard');
-  loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
+  uiStage.setActiveRoot('dashboard');
 }
 
+const uiStage = new UIStage({
+  layoutManager,
+  layoutRenderer
+});
+
+const dashboardOverlay = new Dashboard({
+  forms: data,
+  layoutManager,
+  layoutRenderer,
+  onCreateForm: () => {
+    system.eventBus.emit('createForm');
+  },
+  onEditForm: (form) => {
+   console.log('Emitting editForm for:', form);
+  },
+  onViewResults: (form) => {
+    system.eventBus.emit('viewResults', form);
+  }
+});
+context.pipeline.add(uiStage);
+uiStage.addRoot( dashboardOverlay);
 
 const loginPlugin = new LoginPlugin({
-  layoutManager,
-  layoutRenderer, // new: used for component rendering
+ layoutManager,
+  layoutRenderer,
   eventBus: system.eventBus,
   editorController: context.textEditorController,
   onLogin: () => {
-    transitionToAdminMode({
-      loginPlugin,
-      welcomeOverlay,
-      loginCtx,
-      loginCanvas,
-      adminCanvas,
-      pipeline: context.pipeline
-    });
-  
-    const dashboardOverlay = new Dashboard({
-      layoutManager,
-      layoutRenderer,
-      forms: data,
-      onCreateForm: () => {
-        system.eventBus.emit('createForm');
-      },
-      onEditForm: (form) => {
-       console.log('Emitting editForm for:', form);
-      },
-      onViewResults: (form) => {
-        system.eventBus.emit('viewResults', form);
-      }
-    });
-  
-    context.pipeline.add(dashboardOverlay);
-    uiRegistry.add(dashboardOverlay);
+    transitionToAdminMode();
     context.pipeline.invalidate();
   }
   
 });
 
+
+
+uiStage.addRoot(loginPlugin);
+uiStage.setActiveRoot(loginPlugin.id);
 loginPlugin.registerHitRegions(context.hitRegistry);
-
-const uiRegistry = new UIRootRegistry();
-uiRegistry.add(loginPlugin);
-
 const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx, layoutManager });
 //context.pipeline.add(welcomeOverlay);
-//loginPlugin.registerHitRegion(context.hitRegistry);
-
-function renderLogin() {
-  loginCtx.clearRect(0, 0, loginCanvas.width, loginCanvas.height);
-  loginCanvas.style.pointerEvents = 'auto';
-
-  context.pipeline.add(loginPlugin); // ✅ Add plugin to pipeline
-  context.pipeline.invalidate();     // ✅ Trigger redraw
-}
-
-
-
-renderLogin();
-
-document.addEventListener('pointerdown', e => {
-  const { x, y } = utilsRegister.get('mouse', 'getMousePosition')(loginCanvas, e);
-  uiRegistry.dispatchEvent({ type: 'click', x, y });
-});
 
 
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
@@ -344,24 +320,14 @@ system.eventBus.on('hitClick', ({hex}) => {
 
 
   system.eventBus.on('showKeyboard', ({ box, field }) => {
-    adminCanvas.style.pointerEvents = 'auto';
-    // ✅ Remove previous keyboard if it exists
-  if (activeKeyboard) {
-    adminOverlay.unregister(activeKeyboard);
-    context.pipeline.remove(activeKeyboard);
-    activeKeyboard = null;
-  }
-    const keyboard = new PopupKeyboard({
-      layoutManager,
-      layoutRenderer,
-      editorController: context.textEditorController,
-    });
-    adminOverlay.register(keyboard);
-    uiRegistry.add(keyboard);
-    context.pipeline.add(keyboard); // ✅ Add to pipeline
-    activeKeyboard = keyboard;
-    context.pipeline.invalidate();
+    if (box?.showKeyboard) {
+      box.showKeyboard(field); // ✅ delegate to the input box
+      context.pipeline.invalidate();
+    } else {
+      console.warn('showKeyboard: box missing or does not support showKeyboard');
+    }
   });
+  
   
   system.eventBus.on('hideKeyboard', () => {
     if (activeKeyboard) {

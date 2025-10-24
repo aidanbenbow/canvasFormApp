@@ -1,3 +1,5 @@
+import { UIElement } from "./UiElement.js";
+
 export class UIStage {
     constructor({ layoutManager, layoutRenderer }) {
       this.layoutManager = layoutManager;
@@ -51,14 +53,20 @@ export class UIStage {
     }
   
     _handleMouseEvent(e, type) {
-      if (!this.activeRoot) return;
-  
-      const rect = this.layoutRenderer.canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-  
-      this.activeRoot.dispatchEvent({ type, x, y });
-    }
+        if (!this.activeRoot) return;
+      
+        const canvas = this.layoutRenderer.canvas;
+        const rect = canvas.getBoundingClientRect();
+      
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+      
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+     
+        this.activeRoot.dispatchEvent({ type, x, y });
+      }
+      
   
     // -------------------------------
     // Rendering
