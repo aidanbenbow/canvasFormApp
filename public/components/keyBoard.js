@@ -55,7 +55,7 @@ export class PopupKeyboard extends UIElement {
         start: { x: 50, y },
         size: { width: keyWidth, height: keyHeight }
       });
-      console.log('Logical bounds for Q:', this.layoutManager.getLogicalBounds('key-0-0-Q'));
+     
 
     });
 
@@ -73,6 +73,7 @@ export class PopupKeyboard extends UIElement {
   render() {
   
     super.render();
+    
   }
   dispatchEvent(event) {
     // Always check children, even if parent isn't hit

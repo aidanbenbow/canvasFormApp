@@ -12,6 +12,8 @@ export class UIButton extends UIElement {
 
   onClick() {
     this.onClickHandler?.();
+    console.log(`✅ Clicked: ${this.label}`);
+
   }
 
   render() {

@@ -187,6 +187,8 @@ function transitionToAdminMode() {
   modeState.switchTo('admin');
   system.eventBus.emit('hideKeyboard');
   uiStage.setActiveRoot('dashboard');
+  
+
 }
 
 const uiStage = new UIStage({

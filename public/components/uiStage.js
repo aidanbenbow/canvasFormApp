@@ -27,6 +27,7 @@ export class UIStage {
       const root = this.roots.get(rootId);
       if (!root) throw new Error(`UIStage: no root with id ${rootId}`);
       this.activeRoot = root;
+      console.log('📤 Dispatching to root:', this.activeRoot?.id);
     }
   
     getActiveRoot() {
@@ -54,7 +55,8 @@ export class UIStage {
   
     _handleMouseEvent(e, type) {
         if (!this.activeRoot) return;
-      
+        console.log('📍 Mouse event:');
+
         const canvas = this.layoutRenderer.canvas;
         const rect = canvas.getBoundingClientRect();
       
