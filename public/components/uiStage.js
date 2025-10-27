@@ -73,11 +73,20 @@ export class UIStage {
     // -------------------------------
   
     render() {
+      const canvas = this.layoutRenderer.canvas;
       const ctx = this.layoutRenderer.ctx;
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  
-      this.activeRoot?.render();
+    
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+    
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    
+      if (this.activeRoot) {
+        this.activeRoot.layout(canvasWidth, canvasHeight); // ✅ layout pass
+        this.activeRoot.render();                          // ✅ render pass
+      }
     }
+    
   
     startRenderLoop() {
       const loop = () => {

@@ -320,13 +320,27 @@ system.eventBus.on('hitClick', ({hex}) => {
 
 
   system.eventBus.on('showKeyboard', ({ box, field }) => {
-    if (box?.showKeyboard) {
-      box.showKeyboard(field); // ✅ delegate to the input box
-      context.pipeline.invalidate();
-    } else {
-      console.warn('showKeyboard: box missing or does not support showKeyboard');
+    if (activeKeyboard) {
+      uiStage.getActiveRoot().removeChild(activeKeyboard);
+      uiRegistry.remove(activeKeyboard);
+      activeKeyboard = null;
     }
+  
+    const keyboard = new PopupKeyboard({
+      layoutManager,
+      layoutRenderer,
+      editorController: context.textEditorController,
+      targetBox: box,
+      targetField: field,
+    });
+ 
+    
+    
+   uiStage.getActiveRoot().addChild(keyboard);
+    activeKeyboard = keyboard;
+    context.pipeline.invalidate();
   });
+  
   
   
   system.eventBus.on('hideKeyboard', () => {

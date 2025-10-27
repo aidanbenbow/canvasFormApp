@@ -9,7 +9,7 @@ export class UIInputBox extends UIElement {
     this.type = 'uiInputBox';
     this.interactive = true;
 this.visible = true;
-this.keyboard = null;
+
   }
 
   // Focus the input box and notify controller
@@ -24,7 +24,7 @@ this.keyboard = null;
     this.editorController.stopEditing();
   }
   layout(canvasWidth, canvasHeight) {
-    super.layout(canvasWidth, canvasHeight); // ✅ ensures children like keyboard are placed
+   // super.layout(canvasWidth, canvasHeight); // ✅ ensures children like keyboard are placed
   }
   
   dispatchEvent(event) {
@@ -81,22 +81,5 @@ this.keyboard = null;
       this.editorController.drawCaret(ctx);
     }
   }
-  showKeyboard() {
-    if (this.keyboard) {
-      this.removeChild(this.keyboard);
-      this.keyboard = null;
-    }
-  
-    const keyboard = new PopupKeyboard({
-      layoutManager: this.layoutManager,
-      layoutRenderer: this.layoutRenderer,
-      editorController: this.editorController,
-      targetBox: this,
-      targetField: 'text',
-    });
-  
-    this.addChild(keyboard);
-    this.keyboard = keyboard;
-  }
-  
+ 
 }

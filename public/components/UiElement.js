@@ -45,7 +45,7 @@ export class UIElement {
     contains(x, y) {
       const b = this.getScaledBounds();
       if (!b) return false;
-      
+     // console.log(`[${this.id}] contains? x=${x} y=${y} within (${b.x},${b.y}) - (${b.x + b.width},${b.y + b.height})`);
       return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
     }
   
@@ -68,6 +68,7 @@ export class UIElement {
   
       // TARGET phase
       const hit = this.contains(event.x, event.y);
+      console.log(`[${this.id}] hit=${hit} type=${event.type}`);
       for (const child of this.children) {
         const hit = child.contains(event.x, event.y);
        // console.log(`[${child.id}] hit=${hit} type=${event.type}`);
@@ -124,6 +125,12 @@ export class UIElement {
       removeChild(child) {
         this.children = this.children.filter(c => c !== child);
         child.parent = null;
+      }
+      layout(canvasWidth, canvasHeight) {
+        for (const child of this.children) {
+          
+          child.layout(canvasWidth, canvasHeight);
+        }
       }
       
       
