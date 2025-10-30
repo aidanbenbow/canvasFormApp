@@ -51,7 +51,6 @@ const canvasBuilder = new CanvasSystemBuilder(canvas)
 const loginCanvas = document.querySelector('#loginCanvas');
 const loginCtx = loginCanvas.getContext('2d');
 
-//context.loginCtx = loginCtx;
 const mainCanvas = canvas.layers['main'].canvas;
 const adminCanvas = canvas.layers['overlay'].canvas;
 
@@ -75,8 +74,6 @@ context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEven
 
 const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
 
-
-
 const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
  textEditorController: context.textEditorController,
  layoutManager,canvas: mainCanvas });
@@ -95,20 +92,19 @@ const boxEditor = new BoxEditorOverlay(system.eventBus); // allBoxes = array of 
 adminOverlay.register(boxEditor);
 adminOverlay.setMode(modeState.current)
 
-
 adminOverlay.register(new MessageOverlay());
 
 context.pipeline.add(adminOverlay);
 let studentCount = 0;
 const messagePlugin = adminOverlay.plugins.find(p => p.type === 'messageOverlay');
-if (messagePlugin) {
-  messagePlugin.setLiveMessage(() => `👥 Students: ${studentCount}`, { x: 20, y: 160 });
-}
+// if (messagePlugin) {
+//   messagePlugin.setLiveMessage(() => `👥 Students: ${studentCount}`, { x: 20, y: 160 });
+// }
 
-system.eventBus.on('updateStudentCount', (count) => {
-  studentCount = count;
-  context.pipeline.invalidate();
-});
+// system.eventBus.on('updateStudentCount', (count) => {
+//   studentCount = count;
+//   context.pipeline.invalidate();
+// });
 
 
 export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, boxEditor, renderer }) {
@@ -180,15 +176,10 @@ export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWi
   return { saveButtonPlugin, addInputPlugin };
 }
 
-
-
-
 function transitionToAdminMode() {
   modeState.switchTo('admin');
   system.eventBus.emit('hideKeyboard');
   uiStage.setActiveRoot('dashboard');
-  
-
 }
 
 const uiStage = new UIStage({
@@ -222,21 +213,13 @@ const loginPlugin = new LoginPlugin({
     transitionToAdminMode();
     context.pipeline.invalidate();
   }
-  
 });
-
-
 
 uiStage.addRoot(loginPlugin);
 uiStage.setActiveRoot(loginPlugin.id);
 loginPlugin.registerHitRegions(context.hitRegistry);
-const welcomeOverlay = new WelcomeOverlay({ ctx: loginCtx, layoutManager });
-//context.pipeline.add(welcomeOverlay);
-
 
 const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
-
-
 
 adminCanvas.addEventListener('pointerdown', e => {
   e.preventDefault();
