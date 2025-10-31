@@ -1,7 +1,7 @@
 import { UIElement } from './UiElement.js';
 
 export class UIText extends UIElement {
-  constructor({ id, text, fontSize = 16, color = '#000', align = 'left', valign = 'top' }) {
+  constructor({ id, text, fontSize = 0.04, color = '#000', align = 'left', valign = 'top' }) {
     super({ id});
     this.text = text;
     this.fontSize = fontSize;

@@ -27,32 +27,6 @@ this.visible = true;
    // super.layout(canvasWidth, canvasHeight); // ✅ ensures children like keyboard are placed
   }
   
-  dispatchEvent(event) {
-    if (!this.visible) return false;
-  
-    // ✅ Pass to children (e.g. keyboard)
-    if (super.dispatchEvent(event)) return true;
-  
-    // ✅ Handle own interaction
-    const hit = this.contains(event.x, event.y);
-  
-    if (this.interactive && hit) {
-      if (event.type === 'click') {
-        this.onClick();
-        return true;
-      }
-      if (event.type === 'mousedown') this.onMouseDown?.();
-      if (event.type === 'mouseup') this.onMouseUp?.();
-      if (event.type === 'mousemove') {
-        if (!this.isHovered) this.onMouseEnter?.();
-      }
-    } else if (event.type === 'mousemove' && this.isHovered) {
-      this.onMouseLeave?.();
-    }
-  
-    return false;
-  }
-  
 
   render() {
     if (!this.visible) return;

@@ -1,6 +1,7 @@
 import { UIElement } from '../components/UiElement.js';
 import { UIInputBox } from '../components/inputBox.js';
 import { UIButton } from '../components/button.js';
+import { UIText } from '../components/text.js';
 
 export class LoginPlugin extends UIElement {
   constructor({ layoutManager,layoutRenderer, eventBus, editorController, onLogin }) {
@@ -32,15 +33,23 @@ export class LoginPlugin extends UIElement {
       onClick: () => this.tryLogin()
     });
 
+    this.loginMessage = new UIText({
+      id: 'loginMessage',
+      
+      text: 'Welcome, Please Log In',
+    });
+
     // 🔹 Compose children
     this.addChild(this.usernameBox);
     this.addChild(this.passwordBox);
     this.addChild(this.loginButton);
+    this.addChild(this.loginMessage);
 
     // 🔹 Layout zones
     layoutManager.place({ id: 'usernameInput', x: 10, y: 10, width: 200, height: 40 });
     layoutManager.place({ id: 'passwordInput', x: 10, y: 60, width: 200, height: 40 });
     layoutManager.place({ id: 'loginButton', x: 10, y: 110, width: 100, height: 40 });
+    layoutManager.place({ id: 'loginMessage', x: 10, y: 180, width: 300, height: 30 });
   }
 
   // 🔹 Register hit zones
@@ -48,7 +57,8 @@ export class LoginPlugin extends UIElement {
     hitRegistry.registerPluginHits(this, {
       usernameInput: 'input',
       passwordInput: 'input',
-      loginButton: 'button'
+      loginButton: 'button',
+      
     });
   }
 

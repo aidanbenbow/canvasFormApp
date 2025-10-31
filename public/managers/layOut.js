@@ -78,7 +78,7 @@ export class LayoutManager {
     
       let x = item.x;
       let y = item.y;
-    
+  
       // Apply parent offset if defined
       if (item.parent) {
         const parent = this.registry.get(item.parent);

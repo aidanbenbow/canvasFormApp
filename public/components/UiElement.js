@@ -51,14 +51,10 @@ export class UIElement {
   
     // 🔹 Extended event dispatch
     dispatchEvent(event) {
-      console.log(`[${this.id}] dispatchEvent received:`, event);
- 
       if (!this.visible) return false;
-      
-
+      console.log(`[${this.id}] dispatchEvent type=${event.type}`);
       // CAPTURE phase — go through children
       for (const child of this.children) {
-       
         if (child.contains(event.x, event.y)) {
           if (child.dispatchEvent(event)) return true;
         } else if (event.type === 'mousemove' && child.isHovered) {
@@ -101,7 +97,8 @@ export class UIElement {
     }
   
     // 🔹 Event hooks (can be overridden)
-    onMouseEnter() { this.isHovered = true; }
+    onMouseEnter() { this.isHovered = true;
+    console.log(`[${this.id}] onMouseEnter`); }
     onMouseLeave() { this.isHovered = false; this.isActive = false; }
     onMouseDown() { this.isActive = true; }
     onMouseUp() { this.isActive = false; }

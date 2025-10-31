@@ -32,6 +32,7 @@ import {  utilsRegister } from "./utils/register.js";
 
 
 const canvas = new CanvasManager(canvasConfig)
+
 const forms = document.querySelector('#data')
 const data = forms.innerHTML
 
@@ -48,14 +49,11 @@ const modeState = {
 
 const canvasBuilder = new CanvasSystemBuilder(canvas)
 
-const loginCanvas = document.querySelector('#loginCanvas');
-const loginCtx = loginCanvas.getContext('2d');
-
 const mainCanvas = canvas.layers['main'].canvas;
 const adminCanvas = canvas.layers['overlay'].canvas;
 
 const layoutManager = new LayoutManager();
-
+console.log('LayoutManager initialized.', layoutManager.logicalHeight);
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 export const eventBus = system.eventBus;
 
@@ -203,6 +201,7 @@ const dashboardOverlay = new Dashboard({
 });
 context.pipeline.add(uiStage);
 uiStage.addRoot( dashboardOverlay);
+dashboardOverlay.registerHitRegions(context.hitRegistry);
 
 const loginPlugin = new LoginPlugin({
  layoutManager,
@@ -219,38 +218,7 @@ uiStage.addRoot(loginPlugin);
 uiStage.setActiveRoot(loginPlugin.id);
 loginPlugin.registerHitRegions(context.hitRegistry);
 
-const mousePosition = utilsRegister.get('mouse', 'getMousePosition')
 
-adminCanvas.addEventListener('pointerdown', e => {
-  e.preventDefault();
-  const { x, y } = mousePosition(adminCanvas, e);
-
-  boxEditor.handleMouseDown(x, y);
-
-  adminOverlay.plugins.forEach(p => {
-    if (typeof p.handleClick === 'function') {
-      p.handleClick(x, y);
-    }
-  });
-
-  adminCanvas.setPointerCapture(e.pointerId); // Ensures consistent tracking
-});
-
-let lastMove = 0;
-adminCanvas.addEventListener('pointermove', e => {
-  const now = Date.now();
-  if (now - lastMove > 16) { // ~60fps
-    const { x, y } = mousePosition(adminCanvas, e);
-    boxEditor.handleMouseMove(x, y);
-    context.pipeline.invalidate();
-    lastMove = now;
-  }
-  e.preventDefault();
-});
-
-adminCanvas.addEventListener('pointerup', () => {
-  boxEditor.handleMouseUp();
-});
 
 const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
 system.eventBus.on('hitClick', ({hex}) => {
@@ -292,8 +260,7 @@ system.eventBus.on('hitClick', ({hex}) => {
 
   system.eventBus.on('modeChanged', (newMode) => {
     boxEditor.setMode(newMode);
-    adminCanvas.style.pointerEvents = newMode === 'admin' ? 'auto' : 'none';
-    loginCanvas.style.pointerEvents = newMode === 'admin' ? 'none' : 'auto';
+   
     context.pipeline.invalidate();
   });
 

@@ -44,8 +44,8 @@ function resizeCanvas(canvas, width, height) {
     resizeAll() {
       for (const layer in this.layers) {
         const { canvas, hitCanvas } = this.layers[layer];
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        const width = 1000
+        const height = 1000
   
         this.layers[layer].ctx = resizeCanvas(canvas, width, height);
         this.layers[layer].hitCtx = resizeCanvas(hitCanvas, width, height);

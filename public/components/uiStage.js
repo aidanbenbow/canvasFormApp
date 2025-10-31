@@ -55,11 +55,11 @@ export class UIStage {
   
     _handleMouseEvent(e, type) {
         if (!this.activeRoot) return;
-        console.log('📍 Mouse event:');
+       // console.log('📍 Mouse event:');
 
         const canvas = this.layoutRenderer.canvas;
         const rect = canvas.getBoundingClientRect();
-      
+ //console.log('Mouse Event:', { type, clientX: e.clientX, clientY: e.clientY, rect });
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
       

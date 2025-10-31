@@ -28,6 +28,7 @@ this.forms = Array.isArray(parsedForms)
     this.layoutManager.place({ id: 'formList', x: 10, y: 150, width: 300, height: 400 });
     
   }
+  
 
   buildUI() {
     // Dashboard title
@@ -146,6 +147,33 @@ formCard.visible = true;
    this.addChild(scrollContainer);
     console.log(this.children);
   }
+
+  registerHitRegions(hitRegistry) {
+    hitRegistry.registerPluginHits(this, {
+      createFormButton: 'button',
+    });
+
+    // Register hits for dynamic form cards
+    this.forms.forEach((form, index) => {
+      hitRegistry.registerPluginHits(this, {
+        [`edit-${index}`]: 'button',
+        [`view-${index}`]: 'button',
+      });
+    });
+
+      //register granchildren hits
+    const formList = this.getChildById('formList');
+    formList.children.forEach(formCard => {
+      formCard.children.forEach(child => {
+        hitRegistry.registerPluginHits(this, {
+          [child.id]: 'button',
+        });
+      });
+
+    });
+
+    }
+  
 
   render() {
    // console.log('Rendering Dashboard');
