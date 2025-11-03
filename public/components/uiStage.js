@@ -27,7 +27,7 @@ export class UIStage {
       const root = this.roots.get(rootId);
       if (!root) throw new Error(`UIStage: no root with id ${rootId}`);
       this.activeRoot = root;
-      console.log('📤 Dispatching to root:', this.activeRoot?.id);
+    
     }
   
     getActiveRoot() {
@@ -65,7 +65,7 @@ export class UIStage {
       
         const x = (e.clientX - rect.left) * scaleX;
         const y = (e.clientY - rect.top) * scaleY;
-     
+    
         this.activeRoot.dispatchEvent({ type, x, y });
       }
       

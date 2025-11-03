@@ -29,6 +29,7 @@ export class LayoutManager {
       base.y += offset.y;
   
       this.registry.set(id, base);
+
     }
   
     // Place relative to another item
@@ -87,7 +88,7 @@ export class LayoutManager {
           y += parent.y;
         }
       }
-    
+  
       return {
         x: (x / this.logicalWidth) * canvasWidth,
         y: (y / this.logicalHeight) * canvasHeight,

@@ -4,9 +4,9 @@ function resizeCanvas(canvas, width, height) {
     canvas.height = height * dpr;
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
-  
+  console.log('Resized canvas to:', canvas.width, canvas.height, 'with dpr:', dpr);
     const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
+   // ctx.scale(dpr, dpr);
     return ctx;
   }
   

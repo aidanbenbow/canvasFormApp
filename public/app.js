@@ -209,7 +209,7 @@ const uiStage = new UIStage({
 context.pipeline.add(uiStage);
 
 
-const isLoggedIn = localStorage.getItem('isLoggedIn') === 'false';
+const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
 if (isLoggedIn) {
   transitionToAdminMode();
