@@ -65,15 +65,21 @@ export function fetchAllForms(callback) {
 
 }
   
-export function fetchFormResults(formId, callback, tableName= null) {
+export function fetchFormResults(formId, tableName = null) {
   console.log('[SOCKET] Emitting getFormResults for:', formId, tableName);
-  socket.emit('getFormResults', { formId, tableName });
 
-  socket.once('formResultsData', ({ formId, results }) => {
-    console.log('[SOCKET] Received formResultsData:', results);
-    callback(results);
+  return new Promise((resolve, reject) => {
+    socket.emit('getFormResults', { formId, tableName });
+
+    socket.once('formResultsData', ({ formId, results }) => {
+      console.log('[SOCKET] Received formResultsData:', results);
+      resolve(results);
+    });
+
+    // Optional: add timeout or error handling
   });
 }
+
 
 socket.on('formResultsUpdated', ({ formId, results }) => {
   console.log('[SOCKET] Live update for form:', formId);

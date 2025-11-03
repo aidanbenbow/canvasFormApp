@@ -9,14 +9,16 @@ export class CreateForm extends UIElement {
     super({ id, layoutManager, layoutRenderer });
     this.onSubmit = onSubmit;
 this.editorController = context?.textEditorController;
+this.context = context;
     this.buildLayout();
     this.buildUI();
   }
 
   buildLayout() {
     this.layoutManager.place({ id: `${this.id}-title`, x: 20, y: 20, width: 200, height: 40 });
-    this.layoutManager.place({ id: `${this.id}-labelInput`, x: 20, y: 80, width: 200, height: 40 });
-    this.layoutManager.place({ id: `${this.id}-submitButton`, x: 20, y: 140, width: 100, height: 40 });
+    this.layoutManager.place({ id: `${this.id}-addInput`, x: 20, y: 80, width: 200, height: 40 });
+    this.layoutManager.place({ id: `${this.id}-labelInput`, x: 20, y: 140, width: 200, height: 40 });
+    this.layoutManager.place({ id: `${this.id}-submitButton`, x: 20, y: 200, width: 100, height: 40 });
   }
 
   buildUI() {
@@ -36,6 +38,19 @@ this.editorController = context?.textEditorController;
       onChange: value => { this.formLabel = value; }
     });
 
+    const addInputButton = new UIButton({
+        id: `${this.id}-addInput`,
+        label: 'Add Input Field',
+        onClick: () => {
+            const inputField = new UIInputBox({
+            id: `${this.id}-inputField-${Date.now()}`,
+            editorController: this.editorController,
+            placeholder: 'Input Field'
+            });
+            this.addInputBox(inputField);
+        }
+        });
+
     const submitButton = new UIButton({
       id: `${this.id}-submitButton`,
       label: 'Create',
@@ -46,7 +61,7 @@ this.editorController = context?.textEditorController;
       }
     });
 
-    this.addChild(labelInput);
+    this.addChild(addInputButton);
     this.addChild(submitButton);
   }
 
@@ -59,4 +74,32 @@ this.editorController = context?.textEditorController;
       });
     });
   }
+
+  addInputBox(inputBox) {
+    this.addChild(inputBox);
+    const nextY = this.calculateNextY(); // your own logic
+this.layoutManager.place({
+  id: inputBox.id,
+  x: 20,
+  y: nextY,
+  width: 200,
+  height: 40
+});
+
+    this.context.pipeline.invalidate();
+  }
+  calculateNextY() {
+    let maxY = 140; // starting Y after title and label input
+    this.children.forEach(child => {
+      const bounds = this.layoutManager.getLogicalBounds(child.id);
+      if (bounds && bounds.y != null && bounds.height != null) {
+        const bottom = bounds.y + bounds.height;
+        if (bottom > maxY) {
+          maxY = bottom;
+        }
+      }
+    });
+    return maxY + 20; // add spacing
+  }
+  
 }

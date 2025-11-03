@@ -1,5 +1,7 @@
 import { CreateForm } from "./components/createForm.js";
 import { Dashboard } from "./components/dashBoard.js";
+import { FormEditor } from "./components/formEditor.js";
+import { UIFormResults } from "./components/formResults.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { UIStage } from "./components/uiStage.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
@@ -178,7 +180,24 @@ export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWi
 function transitionToAdminMode() {
   modeState.switchTo('admin');
   system.eventBus.emit('hideKeyboard');
+  const dashboardOverlay = new Dashboard({
+    forms: data,
+    layoutManager,
+    layoutRenderer,
+    onCreateForm: () => {
+      system.eventBus.emit('createForm');
+    },
+    onEditForm: (form) => {
+     //console.log('Emitting editForm for:', form);
+     system.eventBus.emit('editForm', form);
+    },
+    onViewResults: (form) => {
+      system.eventBus.emit('viewResults', form);
+    }
+  });
+  uiStage.addRoot( dashboardOverlay);
   uiStage.setActiveRoot('dashboard');
+dashboardOverlay.registerHitRegions(context.hitRegistry);
 }
 
 const uiStage = new UIStage({
@@ -186,38 +205,33 @@ const uiStage = new UIStage({
   layoutRenderer
 });
 
-const dashboardOverlay = new Dashboard({
-  forms: data,
-  layoutManager,
-  layoutRenderer,
-  onCreateForm: () => {
-    system.eventBus.emit('createForm');
-  },
-  onEditForm: (form) => {
-   console.log('Emitting editForm for:', form);
-  },
-  onViewResults: (form) => {
-    system.eventBus.emit('viewResults', form);
-  }
-});
+
 context.pipeline.add(uiStage);
-uiStage.addRoot( dashboardOverlay);
-dashboardOverlay.registerHitRegions(context.hitRegistry);
 
-const loginPlugin = new LoginPlugin({
- layoutManager,
-  layoutRenderer,
-  eventBus: system.eventBus,
-  editorController: context.textEditorController,
-  onLogin: () => {
-    transitionToAdminMode();
-    context.pipeline.invalidate();
-  }
-});
 
-uiStage.addRoot(loginPlugin);
-uiStage.setActiveRoot(loginPlugin.id);
-loginPlugin.registerHitRegions(context.hitRegistry);
+const isLoggedIn = localStorage.getItem('isLoggedIn') === 'false';
+
+if (isLoggedIn) {
+  transitionToAdminMode();
+  context.pipeline.invalidate();
+} else {
+  const loginPlugin = new LoginPlugin({
+    layoutManager,
+    layoutRenderer,
+    eventBus: system.eventBus,
+    editorController: context.textEditorController,
+    onLogin: () => {
+      localStorage.setItem('isLoggedIn', 'true');
+      transitionToAdminMode();
+      context.pipeline.invalidate();
+    }
+  });
+
+  uiStage.addRoot(loginPlugin);
+  uiStage.setActiveRoot(loginPlugin.id);
+  loginPlugin.registerHitRegions(context.hitRegistry);
+}
+
 
 
 
@@ -239,6 +253,7 @@ system.eventBus.on('hitClick', ({hex}) => {
   });
 
   system.eventBus.on('createForm', () => {
+    console.log('Creating new form...');
     const createForm = new CreateForm({
       layoutManager,
       layoutRenderer,
@@ -255,20 +270,35 @@ system.eventBus.on('hitClick', ({hex}) => {
   
 
   system.eventBus.on('editForm', (form) => {
-    console.log('Editing form:', form);
+    const editor = new FormEditor({
+      layoutManager,
+      layoutRenderer,
+      context,
+      form,
+      onSubmit: updatedForm => {
+        console.log('✅ Form updated:', updatedForm);
+        // Replace in dashboard.forms or emit 'formUpdated'
+      }
+    });
+  
+    uiStage.addRoot(editor);
+    uiStage.setActiveRoot('formEditor');
   });
+  
+
+
   system.eventBus.on('viewResults', async (form) => {
     console.log('Viewing results for form:', form);
     const results = await fetchFormResults(form.id);
-    const resultsOverlay = new FormResultsOverlay({
+    const resultsOverlay = new UIFormResults({
       layoutManager,
       layoutRenderer,
       form,
       results
-    }); 
-    context.pipeline.add(resultsOverlay);
-    uiRegistry.add(resultsOverlay);
-    context.pipeline.invalidate();
+    });
+
+    uiStage.addRoot(resultsOverlay);
+    uiStage.setActiveRoot('formResults');
   });
 
   system.eventBus.on('modeChanged', (newMode) => {

@@ -5,8 +5,7 @@ export class HitRegistry {
   
     register(hex, info) {
       this.registry.set(hex/*.toLowerCase()*/, info);
-     console.log(`🛠️ Registered hit: ${hex}`, info);
-     console.log(this.registry);
+
     }
 
     registerPluginHits(plugin, hitMap) {

@@ -98,7 +98,7 @@ export class UIElement {
   
     // 🔹 Event hooks (can be overridden)
     onMouseEnter() { this.isHovered = true;
-    console.log(`[${this.id}] onMouseEnter`); }
+}
     onMouseLeave() { this.isHovered = false; this.isActive = false; }
     onMouseDown() { this.isActive = true; }
     onMouseUp() { this.isActive = false; }
