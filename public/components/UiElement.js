@@ -52,7 +52,7 @@ export class UIElement {
     // 🔹 Extended event dispatch
     dispatchEvent(event) {
       if (!this.visible) return false;
-      console.log(`[${this.id}] dispatchEvent type=${event.type}`);
+     
       // CAPTURE phase — go through children
       for (const child of this.children) {
         if (child.contains(event.x, event.y)) {

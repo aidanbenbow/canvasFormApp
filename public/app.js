@@ -1,3 +1,4 @@
+import { CreateForm } from "./components/createForm.js";
 import { Dashboard } from "./components/dashBoard.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { UIStage } from "./components/uiStage.js";
@@ -238,8 +239,20 @@ system.eventBus.on('hitClick', ({hex}) => {
   });
 
   system.eventBus.on('createForm', () => {
-    console.log('Creating new form');
+    const createForm = new CreateForm({
+      layoutManager,
+      layoutRenderer,
+      context,
+      onSubmit: newForm => {
+        console.log('✅ New form created:', newForm);
+        // Add to dashboard.forms or emit another event
+      }
+    });
+  
+    uiStage.addRoot(createForm);
+    uiStage.setActiveRoot('createForm');
   });
+  
 
   system.eventBus.on('editForm', (form) => {
     console.log('Editing form:', form);

@@ -2,6 +2,7 @@ import { UIElement } from './UiElement.js';
 import { UIButton } from './button.js';
 import { UIText } from './text.js';
 import { UIScrollContainer } from './scrollContainer.js';
+import { UIFormCard } from './formCard.js';
 
 export class Dashboard extends UIElement {
   constructor({ id = 'dashboard', layoutManager, layoutRenderer,forms, onCreateForm, onEditForm, onViewResults }) {
@@ -76,72 +77,27 @@ this.forms = Array.isArray(parsedForms)
       
     // Create form cards
     this.forms.forEach((form, index) => {
+      const cardId = `formCard-${index}`;
       const y = containerBounds.y + index * (cardHeight + spacing);
-
-      // Form card
+    
       this.layoutManager.place({
-        id: `formCard-${index}`,
+        id: cardId,
         x: containerBounds.x,
         y,
         width: containerBounds.width,
         height: cardHeight
       });
-      const formCard = new UIElement({
-        id: `formCard-${index}`,
+    
+      const formCard = new UIFormCard({
+        id: cardId,
+        form,
         layoutManager: this.layoutManager,
-        layoutRenderer: this.layoutRenderer
+        layoutRenderer: this.layoutRenderer,
+        onEdit: this.onEditForm,
+        onView: this.onViewResults
       });
-
-      // Title inside card
-      this.layoutManager.place({
-        id: `formTitle-${index}`,
-        x: 20, y: 20, width: 70, height: 60,
-        parent: `formCard-${index}`
-      });
-      
-      
-      const formTitle = new UIText({
-        id: `formTitle-${index}`,
-        text: form.title || `Form ${index + 1}`,
-        fontSize: 0.05,
-        color: '#000',
-       
-        align: 'left',
-        valign: 'middle'
-      });
-
-      // Edit button
-      this.layoutManager.place({
-        id: `edit-${index}`,
-        parent: `formCard-${index}`,
-        x: 25, y: 80, width: 40, height: 25
-      });
-      const editButton = new UIButton({
-        id: `edit-${index}`,
-        label: '✎',
-       
-        onClick: () => this.onEditForm(form)
-      });
-
-      // View results button
-      this.layoutManager.place({
-        id: `view-${index}`,
-        parent: `formCard-${index}`,
-        x: 65, y: 80, width: 40, height: 25
-      });
-      const viewButton = new UIButton({
-        id: `view-${index}`,
-        label: '📊',
-       
-        onClick: () => this.onViewResults(form)
-      });
-      
-formCard.visible = true;
-      formCard.addChild(formTitle);
-     formCard.addChild(editButton);
-     formCard.addChild(viewButton);
-     scrollContainer.addChild(formCard);
-     
+    
+      scrollContainer.addChild(formCard);
     });
     scrollContainer.updateContentHeight(); // ✅ update after adding children
    this.addChild(scrollContainer);
@@ -153,24 +109,20 @@ formCard.visible = true;
       createFormButton: 'button',
     });
 
-    // Register hits for dynamic form cards
-    this.forms.forEach((form, index) => {
-      hitRegistry.registerPluginHits(this, {
-        [`edit-${index}`]: 'button',
-        [`view-${index}`]: 'button',
-      });
-    });
+    // // Register hits for dynamic form cards
+    // this.forms.forEach((form, index) => {
+    //   hitRegistry.registerPluginHits(this, {
+    //     [`edit-${index}`]: 'button',
+    //     [`view-${index}`]: 'button',
+    //   });
+    // });
 
       //register granchildren hits
     const formList = this.getChildById('formList');
     formList.children.forEach(formCard => {
-      formCard.children.forEach(child => {
-        hitRegistry.registerPluginHits(this, {
-          [child.id]: 'button',
-        });
-      });
-
+      formCard.registerHitRegions?.(hitRegistry);
     });
+    
 
     }
   

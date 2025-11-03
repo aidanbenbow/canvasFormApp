@@ -61,4 +61,17 @@ export class UIScrollContainer extends UIElement {
       ctx.restore();
     }
     
+    dispatchEvent(event) {
+      if (!this.visible || !this.scrollController) return false;
+    
+      const offsetY = this.scrollController.offsetY || 0;
+      const adjustedEvent = { ...event, y: event.y + offsetY };
+    
+      for (const child of this.children) {
+        if (child.dispatchEvent?.(adjustedEvent)) return true;
+      }
+    
+      return false;
+    }
+    
   }
