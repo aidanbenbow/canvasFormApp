@@ -11,6 +11,8 @@ export class CreateForm extends UIElement {
     this.onSubmit = onSubmit;
 this.editorController = context?.textEditorController;
 this.context = context;
+this.formStructure = [];
+this.formLabel = 'new form';
     this.buildLayout();
     this.buildUI();
   }
@@ -57,9 +59,15 @@ this.context = context;
       id: `${this.id}-submitButton`,
       label: 'Create',
       onClick: () => {
-        console.log('Submitting form with label:', this.formLabel);
+        console.log('Submitting form with label:', this.formStructure);
         if (this.formLabel?.trim()) {
-          this.onSubmit?.({ label: this.formLabel, formStructure: [] });
+          const newForm = {
+            label: this.formLabel,
+            id: `form-${Date.now()}`,
+            user: 'admin',
+            formStructure: this.formStructure
+          };
+          this.onSubmit?.(newForm);
         }
       }
     });
@@ -88,7 +96,7 @@ this.layoutManager.place({
   width: 200,
   height: 40
 });
-
+this.formStructure.push({ type: 'input', id: inputBox.id, placeholder: inputBox.placeholder, layout: { x: 20, y: nextY, width: 200, height: 40 } });
     this.context.pipeline.invalidate();
   }
   calculateNextY() {

@@ -27,7 +27,7 @@ context.textEditorController.startEditing(input, 'text');
         label: 'Apply',
         onClick: () => {
             const newText = input.getText().trim();
-console.log("New placeholder text:", newText);
+
             if (newText) {
               this.onConfirm(newText);
               this.context.uiStage.overlayRoot = null;

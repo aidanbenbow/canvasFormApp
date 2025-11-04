@@ -210,28 +210,28 @@ context.uiStage = uiStage;
 context.pipeline.add(uiStage);
 
 
-// const isLoggedIn = localStorage.getItem('isLoggedIn') === 'false';
+const isLoggedIn = localStorage.getItem('isLoggedIn') === 'false';
 
-// if (isLoggedIn) {
-//   transitionToAdminMode();
-//   context.pipeline.invalidate();
-// } else {
-//   const loginPlugin = new LoginPlugin({
-//     layoutManager,
-//     layoutRenderer,
-//     eventBus: system.eventBus,
-//     editorController: context.textEditorController,
-//     onLogin: () => {
-//       localStorage.setItem('isLoggedIn', 'true');
-//       transitionToAdminMode();
-//       context.pipeline.invalidate();
-//     }
-//   });
+if (isLoggedIn) {
+  transitionToAdminMode();
+  context.pipeline.invalidate();
+} else {
+  const loginPlugin = new LoginPlugin({
+    layoutManager,
+    layoutRenderer,
+    eventBus: system.eventBus,
+    editorController: context.textEditorController,
+    onLogin: () => {
+      localStorage.setItem('isLoggedIn', 'true');
+      transitionToAdminMode();
+      context.pipeline.invalidate();
+    }
+  });
 
-//   uiStage.addRoot(loginPlugin);
-//   uiStage.setActiveRoot(loginPlugin.id);
-//   loginPlugin.registerHitRegions(context.hitRegistry);
-// }
+  uiStage.addRoot(loginPlugin);
+  uiStage.setActiveRoot(loginPlugin.id);
+  loginPlugin.registerHitRegions(context.hitRegistry);
+}
 
 
 
@@ -261,7 +261,13 @@ system.eventBus.on('hitClick', ({hex}) => {
       context,
       onSubmit: newForm => {
         console.log('✅ New form created:', newForm);
-        // Add to dashboard.forms or emit another event
+        const payload = {
+          id: newForm.id,
+          formStructure: newForm.formStructure,
+          label: newForm.label,
+          user: newForm.user,
+      }
+        saveFormStructure(payload);
       }
     });
   
@@ -269,7 +275,7 @@ system.eventBus.on('hitClick', ({hex}) => {
     uiStage.setActiveRoot('createForm');
     createForm.registerHitRegions(context.hitRegistry);
   });
-  system.eventBus.emit('createForm');
+ // system.eventBus.emit('createForm');
 
   system.eventBus.on('editForm', (form) => {
     const editor = new FormEditor({
@@ -279,7 +285,14 @@ system.eventBus.on('hitClick', ({hex}) => {
       form,
       onSubmit: updatedForm => {
         console.log('✅ Form updated:', updatedForm);
-        // Replace in dashboard.forms or emit 'formUpdated'
+       
+        const payload = {
+          id: updatedForm.id,
+          formStructure: updatedForm.formStructure,
+          label: updatedForm.label,
+          user: updatedForm.user,
+      }
+        saveFormStructure(payload);
       }
     });
   
