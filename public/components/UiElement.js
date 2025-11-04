@@ -1,3 +1,5 @@
+
+
 export class UIElement {
     static focusedElement = null;
     constructor({ id, layoutManager, layoutRenderer }) {
@@ -106,7 +108,11 @@ export class UIElement {
     onFocus() { this.isFocused = true; }
     onBlur() { this.isFocused = false; }
   
-    onChildEvent(event, child) { return false; }
+    onChildEvent(event, child) {
+     
+      return false;
+    }
+    
   
     render() {
       if (!this.visible) return;

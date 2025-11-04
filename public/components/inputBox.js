@@ -2,12 +2,12 @@ import { UIElement } from './UiElement.js';
 import { PopupKeyboard } from './keyBoard.js';
 
 export class UIInputBox extends UIElement {
-  constructor({ id, editorController, placeholder = '' }) {
+  constructor({ id, editorController, placeholder = '', interactive = true }) {
     super({ id});
     this.editorController = editorController;
     this.placeholder = placeholder;
     this.type = 'uiInputBox';
-    this.interactive = true;
+    this.interactive = interactive
 this.visible = true;
 
   }
@@ -55,5 +55,12 @@ this.visible = true;
       this.editorController.drawCaret(ctx);
     }
   }
+  getText() {
+    if (this.editorController.activeBox === this) {
+      return this.editorController.activeBox[this.editorController.activeField] ?? '';
+    }
+    return '';
+  }
+  
  
 }

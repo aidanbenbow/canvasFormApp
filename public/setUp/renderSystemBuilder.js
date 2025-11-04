@@ -47,7 +47,8 @@ export class RenderSystemBuilder {
             boxManager: this.boxManager|| null,
             boxHitManager: this.boxHitManager || null,
             assetRegistry: this.assetRegistry || null,
-            canvas: this.canvasManager 
+            canvas: this.canvasManager ,
+            uiStage: this.uiStage || null
           });
         
           this.components.rendererContext = context;

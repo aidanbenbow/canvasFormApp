@@ -4,7 +4,8 @@ export class UIStage {
     constructor({ layoutManager, layoutRenderer }) {
       this.layoutManager = layoutManager;
       this.layoutRenderer = layoutRenderer;
-  
+      this.overlayRoot = null;
+
       // Currently active root UI element
       this.activeRoot = null;
   
@@ -66,6 +67,10 @@ export class UIStage {
         const x = (e.clientX - rect.left) * scaleX;
         const y = (e.clientY - rect.top) * scaleY;
     
+if(this.overlayRoot && this.overlayRoot.dispatchEvent({ type, x, y })) {
+  return;
+}
+
         this.activeRoot.dispatchEvent({ type, x, y });
       }
       
@@ -86,6 +91,11 @@ export class UIStage {
       if (this.activeRoot) {
         this.activeRoot.layout(canvasWidth, canvasHeight); // ✅ layout pass
         this.activeRoot.render();                          // ✅ render pass
+      }
+
+      if(this.overlayRoot) {
+        this.overlayRoot.layout(canvasWidth, canvasHeight);
+        this.overlayRoot.render();
       }
     }
     

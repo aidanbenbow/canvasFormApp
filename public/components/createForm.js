@@ -2,6 +2,7 @@ import { UIElement } from './UiElement.js';
 
 import { UIButton } from './button.js';
 import { UIInputBox } from './inputBox.js';
+import { PlaceholderPromptOverlay } from './placeHolderOverlay.js';
 import { UIText } from './text.js';
 
 export class CreateForm extends UIElement {
@@ -16,9 +17,9 @@ this.context = context;
 
   buildLayout() {
     this.layoutManager.place({ id: `${this.id}-title`, x: 20, y: 20, width: 200, height: 40 });
-    this.layoutManager.place({ id: `${this.id}-addInput`, x: 20, y: 80, width: 200, height: 40 });
+    this.layoutManager.place({ id: `${this.id}-addInput`, x: 240, y: 20, width: 200, height: 40 });
     this.layoutManager.place({ id: `${this.id}-labelInput`, x: 20, y: 140, width: 200, height: 40 });
-    this.layoutManager.place({ id: `${this.id}-submitButton`, x: 20, y: 200, width: 100, height: 40 });
+    this.layoutManager.place({ id: `${this.id}-submitButton`, x: 480, y: 20, width: 100, height: 40 });
   }
 
   buildUI() {
@@ -45,7 +46,8 @@ this.context = context;
             const inputField = new UIInputBox({
             id: `${this.id}-inputField-${Date.now()}`,
             editorController: this.editorController,
-            placeholder: 'Input Field'
+            placeholder: 'Input Field',
+            interactive:false
             });
             this.addInputBox(inputField);
         }
@@ -55,6 +57,7 @@ this.context = context;
       id: `${this.id}-submitButton`,
       label: 'Create',
       onClick: () => {
+        console.log('Submitting form with label:', this.formLabel);
         if (this.formLabel?.trim()) {
           this.onSubmit?.({ label: this.formLabel, formStructure: [] });
         }
@@ -101,5 +104,31 @@ this.layoutManager.place({
     });
     return maxY + 20; // add spacing
   }
+  // In CreateForm.js
+  onChildEvent(event, child) {
+    if (
+      event.type === 'click' &&
+      child instanceof UIInputBox &&
+      child.interactive === false
+    ) {
+      const overlay = new PlaceholderPromptOverlay({
+        targetBox: child,
+        layoutManager: this.layoutManager,
+        layoutRenderer: this.layoutRenderer,
+        context: this.context,
+        onConfirm: newText => {
+          child.placeholder = newText;
+          this.context.pipeline.invalidate();
+        }
+      });
+  
+      this.context.uiStage.overlayRoot = overlay;
+      overlay.registerHitRegions(this.context.hitRegistry);
+      this.context.pipeline.invalidate();
+      return true;
+    }
+    return super.onChildEvent?.(event, child);
+  }
+  
   
 }

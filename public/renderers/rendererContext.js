@@ -1,5 +1,5 @@
 export class RendererContext {
-    constructor({ ctx, hitCtx, hitRegistry, hitManager, pipeline, textEditorController, selectionController, interactionManager, focusManager, boxManager, boxHitManager, assetRegistry, canvas }) {
+    constructor({ ctx, hitCtx, hitRegistry, hitManager, pipeline, textEditorController, selectionController, interactionManager, focusManager, boxManager, boxHitManager, assetRegistry, canvas, uiStage }) {
         this.ctx = ctx;
         this.hitCtx = hitCtx;
         this.hitRegistry = hitRegistry;
@@ -13,5 +13,6 @@ export class RendererContext {
         this.boxHitManager = boxHitManager;
         this.assetRegistry = assetRegistry;
         this.canvas = canvas;
+        this.uiStage = uiStage;
     }
 }

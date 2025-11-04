@@ -178,8 +178,9 @@ export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWi
 }
 
 function transitionToAdminMode() {
-  modeState.switchTo('admin');
-  system.eventBus.emit('hideKeyboard');
+ // modeState.switchTo('admin');
+ // system.eventBus.emit('hideKeyboard');
+ context.hitRegistry.clear();
   const dashboardOverlay = new Dashboard({
     forms: data,
     layoutManager,
@@ -205,32 +206,32 @@ const uiStage = new UIStage({
   layoutRenderer
 });
 
-
+context.uiStage = uiStage;
 context.pipeline.add(uiStage);
 
 
-const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+// const isLoggedIn = localStorage.getItem('isLoggedIn') === 'false';
 
-if (isLoggedIn) {
-  transitionToAdminMode();
-  context.pipeline.invalidate();
-} else {
-  const loginPlugin = new LoginPlugin({
-    layoutManager,
-    layoutRenderer,
-    eventBus: system.eventBus,
-    editorController: context.textEditorController,
-    onLogin: () => {
-      localStorage.setItem('isLoggedIn', 'true');
-      transitionToAdminMode();
-      context.pipeline.invalidate();
-    }
-  });
+// if (isLoggedIn) {
+//   transitionToAdminMode();
+//   context.pipeline.invalidate();
+// } else {
+//   const loginPlugin = new LoginPlugin({
+//     layoutManager,
+//     layoutRenderer,
+//     eventBus: system.eventBus,
+//     editorController: context.textEditorController,
+//     onLogin: () => {
+//       localStorage.setItem('isLoggedIn', 'true');
+//       transitionToAdminMode();
+//       context.pipeline.invalidate();
+//     }
+//   });
 
-  uiStage.addRoot(loginPlugin);
-  uiStage.setActiveRoot(loginPlugin.id);
-  loginPlugin.registerHitRegions(context.hitRegistry);
-}
+//   uiStage.addRoot(loginPlugin);
+//   uiStage.setActiveRoot(loginPlugin.id);
+//   loginPlugin.registerHitRegions(context.hitRegistry);
+// }
 
 
 
@@ -266,8 +267,9 @@ system.eventBus.on('hitClick', ({hex}) => {
   
     uiStage.addRoot(createForm);
     uiStage.setActiveRoot('createForm');
+    createForm.registerHitRegions(context.hitRegistry);
   });
-  
+  system.eventBus.emit('createForm');
 
   system.eventBus.on('editForm', (form) => {
     const editor = new FormEditor({
@@ -317,7 +319,7 @@ system.eventBus.on('hitClick', ({hex}) => {
   system.eventBus.on('showKeyboard', ({ box, field }) => {
     if (activeKeyboard) {
       uiStage.getActiveRoot().removeChild(activeKeyboard);
-      uiRegistry.remove(activeKeyboard);
+     // uiRegistry.remove(activeKeyboard);
       activeKeyboard = null;
     }
   
