@@ -18,7 +18,7 @@ export class UIScrollContainer extends UIElement {
           console.warn(`UIScrollContainer: Bounds not found for ${this.id}`);
           return;
         }
-      console.log(`Initializing scroll for ${this.id} with viewport height ${bounds.height}`);
+      
         this.scrollController = new ScrollController({
           contentHeight: 0,
           viewportHeight: bounds.height
@@ -31,7 +31,7 @@ export class UIScrollContainer extends UIElement {
       const bounds = this.layoutManager.getLogicalBounds(lastChild.id);
       const containerBounds = this.layoutManager.getLogicalBounds(this.id);
       this.scrollController.contentHeight = bounds.y + bounds.height - containerBounds.y;
-      console.log(`Updated content height for ${this.id}: ${this.scrollController.contentHeight}`);
+    
     }
   
     handleScroll(deltaY) {

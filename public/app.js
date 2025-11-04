@@ -5,6 +5,7 @@ import { UIFormResults } from "./components/formResults.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { UIStage } from "./components/uiStage.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
+import { DragController } from "./controllers/dragController.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { CanvasManager } from "./managers/canvas.js";
@@ -38,7 +39,8 @@ const canvas = new CanvasManager(canvasConfig)
 
 const forms = document.querySelector('#data')
 const data = forms.innerHTML
-
+const raw = JSON.parse(data);
+console.log('Form data loaded:', raw[0].formStructure);
 const modeState = {
   current: 'fill',
   switchTo(newMode) {
@@ -209,32 +211,46 @@ const uiStage = new UIStage({
 context.uiStage = uiStage;
 context.pipeline.add(uiStage);
 
+  // const loginPlugin = new LoginPlugin({
+  //   layoutManager,
+  //   layoutRenderer,
+  //   eventBus: system.eventBus,
+  //   editorController: context.textEditorController,
+  //   onLogin: () => {
+  //     localStorage.setItem('isLoggedIn', 'true');
+  //     transitionToAdminMode();
+  //     context.pipeline.invalidate();
+  //   }
+  // });
 
-const isLoggedIn = localStorage.getItem('isLoggedIn') === 'false';
+  // uiStage.addRoot(loginPlugin);
+  // uiStage.setActiveRoot(loginPlugin.id);
+  // loginPlugin.registerHitRegions(context.hitRegistry);
 
-if (isLoggedIn) {
-  transitionToAdminMode();
-  context.pipeline.invalidate();
-} else {
-  const loginPlugin = new LoginPlugin({
-    layoutManager,
-    layoutRenderer,
-    eventBus: system.eventBus,
-    editorController: context.textEditorController,
-    onLogin: () => {
-      localStorage.setItem('isLoggedIn', 'true');
-      transitionToAdminMode();
-      context.pipeline.invalidate();
-    }
-  });
+//   const dashboardOverlay = new Dashboard({
+//     forms: data,
+//     layoutManager,
+//     layoutRenderer,
+//     onCreateForm: () => {
+//       system.eventBus.emit('createForm');
+//     },
+//     onEditForm: (form) => {
+//      //console.log('Emitting editForm for:', form);
+//      system.eventBus.emit('editForm', form);
+//     },
+//     onViewResults: (form) => {
+//       system.eventBus.emit('viewResults', form);
+//     }
+//   });
+//   uiStage.addRoot( dashboardOverlay);
+//   uiStage.setActiveRoot('dashboard');
+// dashboardOverlay.registerHitRegions(context.hitRegistry);
 
-  uiStage.addRoot(loginPlugin);
-  uiStage.setActiveRoot(loginPlugin.id);
-  loginPlugin.registerHitRegions(context.hitRegistry);
-}
+const dragController = new DragController({ canvas: mainCanvas,hitManager: context.hitManager, layoutManager, pipeline: context.pipeline,
+getMousePos: utilsRegister.get('mouse', 'getMousePosition'),
+normalisePos: utilsRegister.get('normalise', 'normalizePos') });
 
-
-
+context.dragController = dragController;
 
 const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
 system.eventBus.on('hitClick', ({hex}) => {
@@ -278,6 +294,7 @@ system.eventBus.on('hitClick', ({hex}) => {
  // system.eventBus.emit('createForm');
 
   system.eventBus.on('editForm', (form) => {
+    console.log('Editing form:', form);
     const editor = new FormEditor({
       layoutManager,
       layoutRenderer,
@@ -300,7 +317,7 @@ system.eventBus.on('hitClick', ({hex}) => {
     uiStage.setActiveRoot('formEditor');
   });
   
-
+  system.eventBus.emit('editForm', raw[3]);
 
   system.eventBus.on('viewResults', async (form) => {
     console.log('Viewing results for form:', form);

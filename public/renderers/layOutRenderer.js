@@ -6,7 +6,7 @@ export class LayoutRenderer {
       this.canvas = canvas;
      
       this.ctx = canvas.getContext('2d');
-      console.log('LayoutRenderer initialized with canvas size', canvas.width, canvas.height);
+     
     }
   
     // Draw a filled rectangle from layout

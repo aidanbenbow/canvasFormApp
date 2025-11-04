@@ -16,6 +16,13 @@ export class HitManager {
       const hex = this.getHitHex(this.hitCtx, pos);
       return this.hitRegistry.get(hex);
     }
+    getHitTarget(pos) {
+      if (!this.getHitHex) return null;
+      const hex = this.getHitHex(this.hitCtx, pos);
+      return this.hitRegistry.get(hex);
+    }
+    
+    
     handleClick(canvas,pos) {
       
       const hex = this.getHitHex(canvas,this.hitCtx, pos);

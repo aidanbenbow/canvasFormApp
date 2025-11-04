@@ -9,6 +9,7 @@ export class UIInputBox extends UIElement {
     this.type = 'uiInputBox';
     this.interactive = interactive
 this.visible = true;
+this.draggable = false;
 
   }
 
