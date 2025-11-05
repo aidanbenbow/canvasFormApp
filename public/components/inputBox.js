@@ -7,6 +7,7 @@ export class UIInputBox extends UIElement {
     this.editorController = editorController;
     this.placeholder = placeholder;
     this.type = 'uiInputBox';
+    this.text = '';
     this.interactive = interactive
 this.visible = true;
 this.draggable = false;
@@ -22,6 +23,14 @@ this.draggable = false;
   // Optional: lose focus
   onBlur() {
     super.onBlur();
+    // Safely extract the current value before stopping editing
+  if (this.editorController.activeBox === this) {
+    const currentValue = this.editorController.activeBox[this.editorController.activeField];
+    if (typeof currentValue === 'string') {
+      this.text = currentValue;
+    }
+  }
+
     this.editorController.stopEditing();
   }
   layout(canvasWidth, canvasHeight) {
@@ -62,6 +71,8 @@ this.draggable = false;
     }
     return '';
   }
-  
+  getValue() {
+    return this.text
+  }
  
 }

@@ -63,6 +63,7 @@ export class LayoutManager {
       let cursor = { ...start };
   
       for (const id of items) {
+    
         this.place({ id, x: cursor.x, y: cursor.y, width: size.width, height: size.height, anchor });
         if (direction === 'vertical') {
           cursor.y += size.height + spacing;

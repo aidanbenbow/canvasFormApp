@@ -26,7 +26,7 @@ export class PopupKeyboard extends UIElement {
     const keyHeight = Math.min((maxKeyboardHeight - (rowCount - 1) * spacing) / rowCount, logicalHeight * 0.06);
     this.totalKeyboardHeight = rowCount * keyHeight + (rowCount - 1) * spacing;
 
-    const startY = logicalHeight /4 // anchor near bottom
+    const startY = logicalHeight /2 // anchor near bottom
    
     this.keyLayout.forEach((row, rowIndex) => {
       const y = startY + rowIndex * (keyHeight + spacing);

@@ -1,6 +1,7 @@
 import { CreateForm } from "./components/createForm.js";
 import { Dashboard } from "./components/dashBoard.js";
 import { FormEditor } from "./components/formEditor.js";
+import { FormPanel } from "./components/formPanel.js";
 import { UIFormResults } from "./components/formResults.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { UIStage } from "./components/uiStage.js";
@@ -22,11 +23,13 @@ import { AddBoxPlugin } from "./plugins/addInputBox.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 import { FormListOverlay } from "./plugins/formListOverlay.js";
+import { feedbackFormManifest, formManifest, pluginRegistry } from "./plugins/formManifests.js";
 import { LoginPlugin } from "./plugins/login.js";
 import { PopupKeyboardPlugin } from "./plugins/popUpKeyboard.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
 import { TextSizerPlugin } from "./plugins/textResizer.js";
 import { UIRootRegistry } from "./registries/UIRootRegistry.js";
+import { registerFieldTypes } from "./registries/registerFieldTypes.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
 import { HitRouter } from "./routes/hitRouter.js";
 
@@ -211,6 +214,35 @@ const uiStage = new UIStage({
 context.uiStage = uiStage;
 context.pipeline.add(uiStage);
 
+
+
+const formPanel = new FormPanel({
+  layoutManager,
+  layoutRenderer,
+  context,
+  manifest: feedbackFormManifest,
+  pluginRegistry: pluginRegistry,
+  onSubmit: (formData) => {
+    console.log('Form submitted:', formData);
+    // Handle form submission logic here
+    emitFeedback( {
+      success: true,
+      text: "Form submitted successfully ✅",
+      box: formPanel
+    });
+    onClose: () => {
+      context.pipeline.remove(formPanel);
+      context.uiStage.setActiveRoot(''); // or switch to another root as needed
+      context.pipeline.invalidate();
+    }
+  }
+});
+uiStage.addRoot(formPanel);
+uiStage.setActiveRoot('formPanel');
+
+registerFieldTypes();
+
+
   // const loginPlugin = new LoginPlugin({
   //   layoutManager,
   //   layoutRenderer,
@@ -246,11 +278,11 @@ context.pipeline.add(uiStage);
 //   uiStage.setActiveRoot('dashboard');
 // dashboardOverlay.registerHitRegions(context.hitRegistry);
 
-const dragController = new DragController({ canvas: mainCanvas,hitManager: context.hitManager, layoutManager, pipeline: context.pipeline,
-getMousePos: utilsRegister.get('mouse', 'getMousePosition'),
-normalisePos: utilsRegister.get('normalise', 'normalizePos') });
+// const dragController = new DragController({ canvas: mainCanvas,hitManager: context.hitManager, layoutManager, pipeline: context.pipeline,
+// getMousePos: utilsRegister.get('mouse', 'getMousePosition'),
+// normalisePos: utilsRegister.get('normalise', 'normalizePos') });
 
-context.dragController = dragController;
+// context.dragController = dragController;
 
 const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
 system.eventBus.on('hitClick', ({hex}) => {
@@ -317,7 +349,7 @@ system.eventBus.on('hitClick', ({hex}) => {
     uiStage.setActiveRoot('formEditor');
   });
   
-  system.eventBus.emit('editForm', raw[3]);
+ // system.eventBus.emit('editForm', raw[3]);
 
   system.eventBus.on('viewResults', async (form) => {
     console.log('Viewing results for form:', form);
