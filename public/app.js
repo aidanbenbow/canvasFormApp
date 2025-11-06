@@ -61,7 +61,8 @@ const mainCanvas = canvas.layers['main'].canvas;
 const adminCanvas = canvas.layers['overlay'].canvas;
 
 const layoutManager = new LayoutManager();
-console.log('LayoutManager initialized.', layoutManager.logicalHeight);
+const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
+
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 export const eventBus = system.eventBus;
 
@@ -69,7 +70,7 @@ export const eventBus = system.eventBus;
 //     console.log(`[UTILS] Registered ${name} in ${ns}`);
 //   });
   
-  const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry, layoutManager)
+  const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry, layoutManager, layoutRenderer)
   const context = renderBuild.createRendererContext()
   context.canvasManager = canvas; // ✅ Attach canvasManager to context
   context.firstScreen = false;
@@ -78,7 +79,7 @@ export const eventBus = system.eventBus;
 context.interactionManager = new interactionManager(canvas, context.hitManager);
 context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
 
-const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
+
 
 const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
  textEditorController: context.textEditorController,

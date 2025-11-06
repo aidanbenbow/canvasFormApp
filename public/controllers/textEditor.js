@@ -1,5 +1,5 @@
 export class TextEditorController {
-    constructor(pipeline, eventBus, layoutManager) {
+    constructor(pipeline, eventBus, layoutManager, layoutRenderer) {
         this.activeBox = null;
         this.activeField = null; // Not used in this controller, but kept for consistency
         this.caretIndex = 0;
@@ -7,6 +7,7 @@ export class TextEditorController {
         this.pipeline = pipeline;
         this.eventBus = eventBus;
         this.layoutManager = layoutManager;
+        this.layoutRenderer = layoutRenderer;
 
         this.selectionStart = this.caretIndex;
         this.selectionEnd = this.caretIndex;
@@ -104,7 +105,7 @@ export class TextEditorController {
         this.caretIndex++;
         this.selectionStart = this.selectionEnd = this.caretIndex; // Reset selection to caret position
 
-        if (typeof this.activeBox.updateText === 'function' && field === 'text') {
+        if (typeof this.activeBox.updateText === 'function' ) {
             this.activeBox.updateText(newText);
           }
         
@@ -184,27 +185,6 @@ export class TextEditorController {
         });
     }
 
-    // drawCaret(ctx) {
-       
-    //     if (!this.activeBox|| !this.activeField || !this.blinkState) return;
-
-    //     const field = this.activeField; // Use the active field for caret drawing
-    //     const text = typeof this.activeBox[field] === 'string' ? this.activeBox[field] : '';
-    //     const textBeforeCaret = text.slice(0, this.caretIndex);
-        
-    //     const metrics = ctx.measureText(textBeforeCaret);
-    //     let baseX = this.activeBox.startPosition.x
-    //     if(field === 'text') baseX += 65 // Adjust for text box padding
-    //     else if(field === 'label') baseX += 10; // Adjust for label box padding
-    //     const x = baseX + metrics.width;
-    //     const y = this.activeBox.startPosition.y + this.activeBox.size.height / 2;
-
-    //     ctx.strokeStyle = 'black';
-    //     ctx.beginPath();
-    //     ctx.moveTo(x, y - 10);
-    //     ctx.lineTo(x, y + 10);
-    //     ctx.stroke();
-    // }
     drawCaret(ctx) {
         if (!this.activeBox || !this.activeField || !this.blinkState) return;
       
@@ -215,18 +195,18 @@ export class TextEditorController {
         const bounds = this.layoutManager.getScaledBounds(this.activeBox.id, ctx.canvas.width, ctx.canvas.height);
         if (!bounds) return;
       
-        const metrics = ctx.measureText(textBeforeCaret);
-        let baseX = bounds.x;
-        if (field === 'text') baseX += 65;
-        else if (field === 'label') baseX += 10;
-      
-        const x = baseX + metrics.width;
-        const y = bounds.y + bounds.height / 2;
+        const fontSizeRatio = 0.01;
+  const textWidth = this.layoutRenderer.getTextWidth(textBeforeCaret, fontSizeRatio);
+
+  const x = bounds.x + textWidth;
+  const fontSize = fontSizeRatio * ctx.canvas.height;
+  const y = bounds.y + bounds.height / 2 - fontSize / 2;
+
       
         ctx.strokeStyle = 'black';
         ctx.beginPath();
-        ctx.moveTo(x, y - 10);
-        ctx.lineTo(x, y + 10);
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + fontSize);
         ctx.stroke();
       }
       

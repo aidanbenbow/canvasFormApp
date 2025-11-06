@@ -30,9 +30,10 @@ this.fieldComponents = {};
     Object.entries(layout).forEach(([key, config]) => {
       this.layoutManager.place({ id: `${this.id}-${key}`, ...config });
     });
-  
+    const titleBounds = this.layoutManager.getLogicalBounds(`${this.id}-title`);
+    const flowStartY = titleBounds ? titleBounds.y + titleBounds.height + 20 : 80;
    // Flow all fields together
-  this.flowLabeledFields(this.fields, { x: 20, y: 80 });
+  this.flowLabeledFields(this.fields, { x: 20, y: flowStartY });
 
     } 
     
@@ -216,7 +217,22 @@ console.log(field.layout.x, field.layout.y, field.layout.width, labelHeight);
         }) || new UIButton({
           ...common,
           label: field.label,
-          onClick: () => { /* same as above */ }
+          onClick: () => { const filledFields = this.fields
+            .filter(f => f.type !== 'button')
+            .map(f => {
+              const component = this.fieldComponents[f.id];
+              const value = component?.getValue?.() ?? f.value ?? '';
+              return { id: f.id, value };
+            });
+
+          const payload = {
+            id: this.manifest.id || `form-${Date.now()}`,
+            label: this.formLabel,
+            fields: filledFields,
+            user: 'admin'
+          };
+            
+            console.log('Form submitted with payload:', payload); }
         });
   
       case 'textarea':

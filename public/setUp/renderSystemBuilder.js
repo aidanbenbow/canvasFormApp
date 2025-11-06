@@ -12,12 +12,13 @@ import { utilsRegister } from "../utils/register.js";
 
 
 export class RenderSystemBuilder {
-    constructor(canvasManager, eventBus, rendererRegistry, layoutManager) {
+    constructor(canvasManager, eventBus, rendererRegistry, layoutManager, layoutRenderer) {
         this.canvasManager = canvasManager;
         this.eventBus = eventBus;
         this.rendererRegistry = rendererRegistry;
         const hitCtx = this.canvasManager.getHitContext('main');        
         this.layoutManager = layoutManager;
+        this.layoutRenderer = layoutRenderer;
         this.actionRegistry = new ActionRegistry();
         this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
@@ -28,7 +29,7 @@ export class RenderSystemBuilder {
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
-        this.textEditorController = new TextEditorController(this.pipeline, this.eventBus, this.layoutManager);
+        this.textEditorController = new TextEditorController(this.pipeline, this.eventBus, this.layoutManager, this.layoutRenderer);
         this.components = {};
         
         this.attachRendererHooks();

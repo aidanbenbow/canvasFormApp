@@ -31,10 +31,6 @@ export class UITextArea extends UIElement {
     if (this.autoResize) this.adjustHeight();
   }
 
-  onFocus() {
-    this.isFocused = true;
-  }
-
   onBlur() {
     this.isFocused = false;
   }
@@ -54,7 +50,17 @@ export class UITextArea extends UIElement {
   adjustHeight() {
     const lines = this.text.split('\n').length;
     this.height = Math.max(this.height, lines * this.lineHeight + this.padding * 2);
-    this.layoutManager.place({ id: this.id, x: this.x, y: this.y, width: this.width, height: this.height });
+    const bounds = this.layoutManager.getLogicalBounds(this.id);
+  if (!bounds) return;
+
+  this.layoutManager.place({
+    id: this.id,
+    x: bounds.x,
+    y: bounds.y,
+    width: this.width,
+    height: this.height
+  });
+
   }
 
   render() {
@@ -84,6 +90,13 @@ export class UITextArea extends UIElement {
         offsetY: padding + i * lineHeight
       });
     });
+     // ✅ Draw caret and selection if active
+  if (this.editorController.activeBox === this) {
+    const ctx = this.layoutRenderer.ctx;
+    this.editorController.drawSelection(ctx);
+    this.editorController.drawCaret(ctx);
+  }
+
   }
   getValue() {
     return this.text;

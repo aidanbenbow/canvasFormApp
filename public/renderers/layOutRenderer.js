@@ -45,6 +45,15 @@ export class LayoutRenderer {
   
   this.ctx.restore();
     }
+
+    getTextWidth(text, fontSize = 16) {
+      const getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
+      this.ctx.save();
+      this.ctx.font = getLogicalFontSize(fontSize, this.canvas.height);
+      const metrics = this.ctx.measureText(text);
+      this.ctx.restore();
+      return metrics.width;
+    }
   
     // Draw image from layout
     drawImage(id, image, style = {}) {

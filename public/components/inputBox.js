@@ -23,20 +23,15 @@ this.draggable = false;
   // Optional: lose focus
   onBlur() {
     super.onBlur();
-    // Safely extract the current value before stopping editing
-  if (this.editorController.activeBox === this) {
-    const currentValue = this.editorController.activeBox[this.editorController.activeField];
-    if (typeof currentValue === 'string') {
-      this.text = currentValue;
-    }
-  }
-
     this.editorController.stopEditing();
   }
   layout(canvasWidth, canvasHeight) {
    // super.layout(canvasWidth, canvasHeight); // ✅ ensures children like keyboard are placed
   }
-  
+  updateText(newText) {
+    this.text = newText;
+    this.onChange?.(newText);
+  }
 
   render() {
     if (!this.visible) return;
@@ -52,9 +47,8 @@ this.draggable = false;
   ? this.editorController.activeBox[this.editorController.activeField] ?? ''
   : '';
 
-  const displayText = rawText || this.placeholder;
+  const displayText = rawText || this.text;
   const color = rawText ? '#000' : '#888';
-  
 
     this.layoutRenderer.drawText(this.id, displayText, 0.01, { fill: color, align: 'left', valign: 'middle' });
 
