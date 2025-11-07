@@ -1,3 +1,4 @@
+import { UIStage } from "../components/uiStage.js";
 import { TextEditorController } from "../controllers/textEditor.js";
 import { HitManager } from "../managers/hit.js";
 import { interactionManager } from "../managers/interaction.js";
@@ -19,6 +20,7 @@ export class RenderSystemBuilder {
         const hitCtx = this.canvasManager.getHitContext('main');        
         this.layoutManager = layoutManager;
         this.layoutRenderer = layoutRenderer;
+        this.uiStage = new UIStage({ layoutManager: this.layoutManager, layoutRenderer: this.layoutRenderer });
         this.actionRegistry = new ActionRegistry();
         this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
@@ -29,7 +31,7 @@ export class RenderSystemBuilder {
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
-        this.textEditorController = new TextEditorController(this.pipeline, this.eventBus, this.layoutManager, this.layoutRenderer);
+        this.textEditorController = new TextEditorController(this.pipeline,this.layoutManager, this.layoutRenderer, this.uiStage);
         this.components = {};
         
         this.attachRendererHooks();

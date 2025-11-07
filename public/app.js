@@ -23,7 +23,7 @@ import { AddBoxPlugin } from "./plugins/addInputBox.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 import { FormListOverlay } from "./plugins/formListOverlay.js";
-import { feedbackFormManifest, formManifest, pluginRegistry } from "./plugins/formManifests.js";
+import { discussionFeedbackFormManifest, feedbackFormManifest, formManifest, pluginRegistry } from "./plugins/formManifests.js";
 import { LoginPlugin } from "./plugins/login.js";
 import { PopupKeyboardPlugin } from "./plugins/popUpKeyboard.js";
 import { SaveButtonPlugin } from "./plugins/saveButton.js";
@@ -60,7 +60,7 @@ const canvasBuilder = new CanvasSystemBuilder(canvas)
 const mainCanvas = canvas.layers['main'].canvas;
 const adminCanvas = canvas.layers['overlay'].canvas;
 
-const layoutManager = new LayoutManager();
+export const layoutManager = new LayoutManager();
 const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
 
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
@@ -207,39 +207,51 @@ function transitionToAdminMode() {
 dashboardOverlay.registerHitRegions(context.hitRegistry);
 }
 
-const uiStage = new UIStage({
-  layoutManager,
-  layoutRenderer
-});
+context.pipeline.add(context.uiStage);
 
-context.uiStage = uiStage;
-context.pipeline.add(uiStage);
-
-
-
-const formPanel = new FormPanel({
+const createForm = new CreateForm({
   layoutManager,
   layoutRenderer,
   context,
-  manifest: feedbackFormManifest,
-  pluginRegistry: pluginRegistry,
-  onSubmit: (formData) => {
-    console.log('Form submitted:', formData);
-    // Handle form submission logic here
-    emitFeedback( {
-      success: true,
-      text: "Form submitted successfully ✅",
-      box: formPanel
-    });
-    onClose: () => {
-      context.pipeline.remove(formPanel);
-      context.uiStage.setActiveRoot(''); // or switch to another root as needed
-      context.pipeline.invalidate();
-    }
+  manifest: discussionFeedbackFormManifest,
+  onSubmit: newForm => {
+    console.log('✅ New form created:', newForm);
+    const payload = {
+      id: newForm.id,
+      formStructure: newForm.formStructure,
+      label: newForm.label,
+      user: 'admin',
+  }
+    //saveFormStructure(payload);
   }
 });
-uiStage.addRoot(formPanel);
-uiStage.setActiveRoot('formPanel');
+ context.uiStage.addRoot(createForm);
+ context.uiStage.setActiveRoot('createForm');
+
+
+// const formPanel = new FormPanel({
+//   layoutManager,
+//   layoutRenderer,
+//   context,
+//   manifest: discussionFeedbackFormManifest,
+//   pluginRegistry: pluginRegistry,
+//   onSubmit: (formData) => {
+//     console.log('Form submitted:', formData);
+//     // Handle form submission logic here
+//     emitFeedback( {
+//       success: true,
+//       text: "Form submitted successfully ✅",
+//       box: formPanel
+//     });
+//     onClose: () => {
+//       context.pipeline.remove(formPanel);
+//       context.uiStage.setActiveRoot(''); // or switch to another root as needed
+//       context.pipeline.invalidate();
+//     }
+//   }
+// });
+// context.uiStage.addRoot(formPanel);
+// context.uiStage.setActiveRoot('formPanel');
 
 registerFieldTypes();
 
@@ -379,41 +391,41 @@ system.eventBus.on('hitClick', ({hex}) => {
   let activeKeyboard = null;
 
 
-  system.eventBus.on('showKeyboard', ({ box, field }) => {
-    if (activeKeyboard) {
-      uiStage.getActiveRoot().removeChild(activeKeyboard);
-     // uiRegistry.remove(activeKeyboard);
-      activeKeyboard = null;
-    }
+  // system.eventBus.on('showKeyboard', ({ box, field }) => {
+  //   if (activeKeyboard) {
+  //     uiStage.getActiveRoot().removeChild(activeKeyboard);
+  //    // uiRegistry.remove(activeKeyboard);
+  //     activeKeyboard = null;
+  //   }
   
-    const keyboard = new PopupKeyboard({
-      layoutManager,
-      layoutRenderer,
-      editorController: context.textEditorController,
-      targetBox: box,
-      targetField: field,
-    });
+  //   const keyboard = new PopupKeyboard({
+  //     layoutManager,
+  //     layoutRenderer,
+  //     editorController: context.textEditorController,
+  //     targetBox: box,
+  //     targetField: field,
+  //   });
  
     
     
-   uiStage.getActiveRoot().addChild(keyboard);
-    activeKeyboard = keyboard;
-    context.pipeline.invalidate();
-  });
+  //  uiStage.getActiveRoot().addChild(keyboard);
+  //   activeKeyboard = keyboard;
+  //   context.pipeline.invalidate();
+  // });
   
   
   
-  system.eventBus.on('hideKeyboard', () => {
-    if (activeKeyboard) {
-      adminOverlay.unregister(activeKeyboard);
-      context.pipeline.remove(activeKeyboard);
-      activeKeyboard = null;
-    }
-    if (modeState.current !== 'admin') {
-      adminCanvas.style.pointerEvents = 'none';
-    }
-    context.pipeline.invalidate();
-  });
+  // system.eventBus.on('hideKeyboard', () => {
+  //   if (activeKeyboard) {
+  //     adminOverlay.unregister(activeKeyboard);
+  //     context.pipeline.remove(activeKeyboard);
+  //     activeKeyboard = null;
+  //   }
+  //   if (modeState.current !== 'admin') {
+  //     adminCanvas.style.pointerEvents = 'none';
+  //   }
+  //   context.pipeline.invalidate();
+  // });
   
   system.eventBus.on('loginAttempt', ({ password }) => {
     if (password === 'aa') {

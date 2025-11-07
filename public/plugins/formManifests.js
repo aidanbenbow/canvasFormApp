@@ -1,3 +1,6 @@
+
+import { FormLayoutHelper } from "./formLayoutHelper.js";
+
 export const pluginRegistry = {
     fieldTypes: {},
     registerFieldType(type, factory) {
@@ -95,5 +98,75 @@ export const formManifest = {
       editable: false }
 
 
+    ]
+  };
+
+  const helper = new FormLayoutHelper(null, { formWidth: 450, fieldHeight: 50, spacing: 15, startY: 70 });
+
+  const layout = helper.generateLayout([
+    { id: 'title', height: 40 },
+    { id: 'nameInput' },
+    { id: 'ocupatieInput' },
+    { id: 'goodTextarea', height: 60 },
+    { id: 'betterTextarea', height: 60 },
+    { id: 'learntTextarea', height: 60 },
+    { id: 'submitButton', width: 200 }
+  ]);
+
+  export const discussionFeedbackFormManifest = {
+    id: 'discussionFeedbackForm',
+    label: 'Discussion Feedback Form',
+    mode: 'create',
+    layout,
+    fields: [
+      {
+        id: 'title',
+        type: 'text',
+        label: '',
+        layout: layout['title'],
+        editable: false
+      },
+      {
+        id: 'nameInput',
+        type: 'input',
+        label: 'Your Name',
+        layout: layout['nameInput'],
+        editable: true
+      },
+      {
+        id: 'ocupatieInput',
+        type: 'input',
+        label: 'Your Occupation',
+        layout: layout['ocupatieInput'],
+        editable: true
+      },
+      {
+        id: 'goodTextarea',
+        type: 'textarea',
+        label: 'What went well?',
+        layout: layout['goodTextarea'],
+        editable: true
+      },
+      {
+        id: 'betterTextarea',
+        type: 'textarea',
+        label: 'What could be better?',
+        layout: layout['betterTextarea'],
+        editable: true
+      },
+      {
+        id: 'learntTextarea',
+        type: 'textarea',
+        label: 'What did you learn?',
+        layout: layout['learntTextarea'],
+        editable: true
+      },
+      { 
+        id: 'submitButton', 
+        type: 'button', 
+        label: 'Submit Feedback', 
+        layout: layout['submitButton'], 
+        editable: false 
+      }
     ]
   };

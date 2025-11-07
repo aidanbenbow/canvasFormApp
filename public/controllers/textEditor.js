@@ -1,14 +1,16 @@
+import { PopupKeyboard } from "../components/keyBoard.js";
+
 export class TextEditorController {
-    constructor(pipeline, eventBus, layoutManager, layoutRenderer) {
+    constructor(pipeline,  layoutManager, layoutRenderer, uiStage) {
         this.activeBox = null;
         this.activeField = null; // Not used in this controller, but kept for consistency
         this.caretIndex = 0;
         this.blinkState = true;
         this.pipeline = pipeline;
-        this.eventBus = eventBus;
+     
         this.layoutManager = layoutManager;
         this.layoutRenderer = layoutRenderer;
-
+this.uiStage = uiStage;
         this.selectionStart = this.caretIndex;
         this.selectionEnd = this.caretIndex;
 
@@ -30,6 +32,57 @@ export class TextEditorController {
     handle(box){
         this.startEditing(box);
     }
+    showKeyboard(box, field) {
+        if (this.keyboard) {
+          this.uiStage.getActiveRoot().removeChild(this.keyboard);
+          this.keyboard = null;
+        }
+    
+        this.keyboard = new PopupKeyboard({
+          layoutManager: this.layoutManager,
+          layoutRenderer: this.layoutRenderer,
+          editorController: this,
+          targetBox: box,
+          targetField: field
+        });
+    
+        this.uiStage.overlayRoot = this.keyboard;
+        this.positionKeyboard();
+        this.pipeline.invalidate();
+      }
+    
+      hideKeyboard() {
+        if (this.keyboard) {
+            this.uiStage.overlayRoot = null;
+          this.keyboard = null;
+          this.pipeline.invalidate();
+        }
+      }
+      positionKeyboard() {
+        if (!this.keyboard || !this.activeBox) return;
+      
+        const bounds = this.layoutManager.getLogicalBounds(this.activeBox.id);
+        if (!bounds) return;
+      
+        const spacing = 10;
+        const keyboardHeight = this.keyboard.totalKeyboardHeight;
+        const logicalHeight = this.layoutManager.logicalHeight;
+      
+        // Prefer placing below the input, fallback to above if not enough space
+        const fitsBelow = bounds.y + bounds.height + spacing + keyboardHeight <= logicalHeight;
+        const y = fitsBelow
+          ? bounds.y + bounds.height + spacing
+          : Math.max(bounds.y - keyboardHeight - spacing, 0);
+      
+        this.layoutManager.place({
+          id: this.keyboard.id,
+          x: 0,
+          y,
+          width: this.layoutManager.logicalWidth,
+          height: keyboardHeight
+        });
+      }
+    
     startEditing(box, field = 'text') {
         const value = typeof box[field] === 'string' ? box[field] : '';
       
@@ -38,10 +91,19 @@ export class TextEditorController {
         this.caretIndex = value.length;
         this.selectionStart = this.selectionEnd = this.caretIndex;
       
-       this.eventBus.emit('showKeyboard', { box, field });
+       this.showKeyboard(box, field);
 
         this.pipeline.invalidate();
       }
+
+      
+    stopEditing() {
+        this.activeBox = null;
+        this.activeField = null; // Not used in this controller, but kept for consistency
+        this.hideKeyboard();
+        this.pipeline.invalidate();
+        
+    }
 
       insertText(text) {
        
@@ -84,12 +146,6 @@ export class TextEditorController {
         this.pipeline.invalidate();
       }
 
-    stopEditing() {
-        this.activeBox = null;
-        this.activeField = null; // Not used in this controller, but kept for consistency
-        this.pipeline.invalidate();
-        this.eventBus.emit('hideKeyboard');
-    }
 
     insertChar(char) {
     
