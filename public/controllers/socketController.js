@@ -52,6 +52,17 @@ export function emitFeedback({ success, error, box }) {
     });
   }
 
+  export function loadFormStructure(formId, callback) {
+    console.log('[SOCKET] Emitting loadFormStructure for:', formId);
+  
+    socket.emit('loadFormStructure', { formId });
+  
+    socket.once('formStructureData', (data) => {
+      console.log('[SOCKET] Received formStructureData:', data);
+      callback(data);
+    });
+  }
+
   // controllers/socketController.js
 export function fetchAllForms(callback) {
   console.log('[SOCKET] Emitting getAllForms');

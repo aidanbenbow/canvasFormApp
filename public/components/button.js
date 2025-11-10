@@ -1,18 +1,19 @@
 import { UIElement } from "./UiElement.js";
 
 export class UIButton extends UIElement {
-  constructor({ id, label, onClick}) {
+  constructor({ id, label, colour = '#007bff', onClick}) {
     super({ id });
     this.label = label;
     this.onClickHandler = onClick;
     this.type = 'uiButton';
     this.interactive = true;
+    this.colour = colour;
 
   }
 
   onClick() {
     this.onClickHandler?.();
-    console.log(`✅ Clicked: ${this.label}`);
+    this.isActive = true;
 
   }
 
@@ -20,7 +21,7 @@ export class UIButton extends UIElement {
     if (!this.visible) return;
 
     // Pick color based on interaction state
-    let fill = '#007bff';
+    let fill = this.colour;
     if (this.isActive) fill = '#0056b3';
     else if (this.isHovered) fill = '#3399ff';
 

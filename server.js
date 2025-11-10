@@ -77,6 +77,15 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('loadFormStructure', async ({ formId }) => {
+    try {
+      const formData = await db.getFormDataById(formId);
+      socket.emit('formStructureData', { formId, formData });
+    } catch (error) {
+      socket.emit('formStructureData', { formId, formData: null, error: error.message });
+    }
+  });
+
   socket.on('getFormResults', async ({ formId, tableName }) => {
     try {
       const results = await db.getFormResults(formId, tableName);

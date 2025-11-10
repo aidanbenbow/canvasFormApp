@@ -12,7 +12,7 @@ export class FormPanel extends UIElement {
     this.editorController = context?.textEditorController;
     this.manifest = manifest;
     this.pluginRegistry = pluginRegistry;
-
+console.log(manifest.fields);
     this.mode = manifest.mode || 'create';
     this.formLabel = manifest.label || '';
     this.fields = manifest.fields || [];
@@ -31,6 +31,7 @@ this.fieldComponents = {};
       this.layoutManager.place({ id: `${this.id}-${key}`, ...config });
     });
     const titleBounds = this.layoutManager.getLogicalBounds(`${this.id}-title`);
+    
     const flowStartY = titleBounds ? titleBounds.y + titleBounds.height + 20 : 80;
    // Flow all fields together
   this.flowLabeledFields(this.fields, { x: 20, y: flowStartY });
@@ -89,55 +90,6 @@ flowLabeledFields(fields, start = { x: 20, y: 80 }) {
     } );
 }
 
-  placeLabeledFieldsFlow(fields, start = { x: 20, y: 80 }) {
-    const labelHeight = 20;
-    const spacing = 5;
-    const labelIds = fields.map(f => `${f.id}-label`);
-  
-    this.layoutManager.flow({
-      direction: 'vertical',
-      items: labelIds,
-      spacing:  spacing,
-      start,
-      size: { width: 400, height: labelHeight }
-    });
-  
-    fields.forEach(field => {
-      const labelId = `${field.id}-label`;
-      this.layoutManager.placeRelative({
-        id: field.id,
-        relativeTo: labelId,
-        position: 'below',
-        margin: spacing,
-        width: field.layout.width,
-        height: field.layout.height
-      });
-    });
-  }
-
-  placeLabeledField(field) {
-    const labelId = `${field.id}-label`;
-    const labelHeight = 20;
-    const spacing = 5;
-
-    this.layoutManager.place({
-        id: labelId,
-        x: field.layout.x,
-        y: field.layout.y,
-        width: field.layout.width,
-        height: labelHeight
-        });
-console.log(field.layout.x, field.layout.y, field.layout.width, labelHeight);
-    this.layoutManager.placeRelative({
-        id: field.id,
-        relativeTo: labelId,
-        position: 'below',
-        margin: spacing,
-        width: field.layout.width,
-        height: field.layout.height
-    });
-    }
-
   buildUI() {
     this.addChild(new UIText({
       id: `${this.id}-title`,
@@ -148,26 +100,9 @@ console.log(field.layout.x, field.layout.y, field.layout.width, labelHeight);
       valign: 'top'
     }));
 
-    if (this.mode === 'results') {
-      this.addChild(new UIButton({
-        id: `${this.id}-close`,
-        label: '✖',
-        onClick: () => this.onClose?.()
-      }));
-
-      this.addChild(new UIText({
-        id: `${this.id}-results`,
-        text: `Total Submissions: ${this.manifest.results?.length || 0}`,
-        fontSize: 0.04,
-        color: '#000',
-        align: 'left',
-        valign: 'top'
-      }));
-    }
-
     this.fields.forEach(field => {
         const labelId = `${field.id}-label`;
-      
+
         if (field.type !== 'button') {
           this.addChild(new UIText({
             id: labelId,
@@ -181,6 +116,7 @@ console.log(field.layout.x, field.layout.y, field.layout.width, labelHeight);
       
         const fieldComponent = this.createFieldComponent(field);
         this.fieldComponents[field.id] = fieldComponent; // ✅ store reference
+        console.log('Adding field component:', fieldComponent);
         this.addChild(fieldComponent); // ✅ add to UI
       });
 }
@@ -190,7 +126,7 @@ console.log(field.layout.x, field.layout.y, field.layout.width, labelHeight);
       layout: field.layout,
       editorController: this.editorController,
     };
-  
+  console.log(common, field.type)
     switch (field.type) {
       case 'button':
         return this.pluginRegistry?.createField('button', {

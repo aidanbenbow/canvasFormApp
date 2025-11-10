@@ -7,7 +7,7 @@ import { UIInputBox } from "./components/inputBox.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { DragController } from "./controllers/dragController.js";
-import { emitFeedback, fetchAllForms, fetchFormResults, saveFormStructure } from "./controllers/socketController.js";
+import { emitFeedback, fetchAllForms, fetchFormResults, loadFormStructure, saveFormStructure, sendLog } from "./controllers/socketController.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
 import { LayoutManager } from "./managers/layOut.js";
@@ -119,38 +119,70 @@ dashboardOverlay.registerHitRegions(context.hitRegistry);
 
 context.pipeline.add(context.uiStage);
 
-const createForm = new CreateForm({
-  layoutManager,
-  layoutRenderer,
-  context,
-  manifest: discussionFeedbackFormManifest,
-  onSubmit: () => {
-   const fields = discussionFeedbackFormManifest.fields.map(field => {
-    const component = createForm.fieldComponents.get(field.id);
-    if( component instanceof UIInputBox) {
-      return {
-        ...field,
-        placeholder: component.placeholder
-      };
-    } return field;
-    }
-    )
-    const layout = Object.fromEntries(Array.from(createForm.fieldComponents).map(([id]) => [
-      id,
-      createForm.layoutManager.getLogicalBounds(id)
-    ]));
-    const payload = {
-      id: createForm.manifest.id || `form-${Date.now()}`,
-      label: createForm.manifest.label || 'Untitled Form',
-      user: 'admin',
-      formStructure: { fields, layout }
-    }
-console.log('Form submitted with payload:', payload);
-    saveFormStructure(payload);
-  }
+// const createForm = new CreateForm({
+//   layoutManager,
+//   layoutRenderer,
+//   context,
+//   manifest: discussionFeedbackFormManifest,
+//   onSubmit: () => {
+//    const fields = discussionFeedbackFormManifest.fields.map(field => {
+//     const component = createForm.fieldComponents.get(field.id);
+//     if( component instanceof UIInputBox) {
+//       return {
+//         ...field,
+//         placeholder: component.placeholder
+//       };
+//     } return field;
+//     }
+//     )
+//     const layout = Object.fromEntries(Array.from(createForm.fieldComponents).map(([id]) => [
+//       id,
+//       createForm.layoutManager.getLogicalBounds(id)
+//     ]));
+//     const payload = {
+//       id: createForm.manifest.id || `form-${Date.now()}`,
+//       label: createForm.manifest.label || 'Untitled Form',
+//       user: 'admin',
+//       formStructure: { fields, layout }
+//     }
+// console.log('Form submitted with payload:', payload);
+//     saveFormStructure(payload);
+//   }
+// });
+//  context.uiStage.addRoot(createForm);
+//  context.uiStage.setActiveRoot('createForm');
+const formy = loadFormStructure('discussionFeedbackForm', (data) => {
+  console.log('Form structure loaded:', data);
+  const { layout, fields } = data.formData.formStructure;
+  const form = new FormPanel({
+    layoutManager,
+    layoutRenderer,
+    context,
+    manifest: {
+      id: data.formData.id,
+      label: data.formData.label,
+      fields: fields,
+      layout: layout
+    },
+    pluginRegistry: pluginRegistry,
+    onSubmit: (formData) => {
+      sendLog(formData.id, formData,fields);
+      // Handle form submission logic here
+      emitFeedback( {
+        success: true,
+        text: "Form submitted successfully ✅",
+        box: form
+      })},
+      onClose: () => {
+        context.pipeline.remove(form);
+        context.uiStage.setActiveRoot(''); // or switch to another root as needed
+        context.pipeline.invalidate();
+      }
+  });
+  context.uiStage.addRoot(form);
+  context.uiStage.setActiveRoot('formPanel');
+  context.pipeline.invalidate();
 });
- context.uiStage.addRoot(createForm);
- context.uiStage.setActiveRoot('createForm');
 
 
 // const formPanel = new FormPanel({

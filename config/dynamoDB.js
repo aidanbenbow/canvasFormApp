@@ -1,5 +1,5 @@
 import { DescribeTableCommand, DynamoDBClient,  } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand, QueryCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -24,12 +24,12 @@ class DynamoDB {
         const payload = {
           id: 'msg-' + timestamp,
          formId,
-          ...inputs,
+          inputs,
           timestamp
         };
     
         const params = {
-          TableName: 'onequestion',
+          TableName: 'faithandbelief',
           Item: payload
         };
     
@@ -63,6 +63,22 @@ class DynamoDB {
             throw new Error("Could not fetch form data");
         }
     }
+async getFormDataById(id) {
+        try {
+            const params = {
+                TableName: 'formStructures',
+                Key: { id },
+            };
+            const data = await this.docClient.send(new GetCommand(params));
+            console.log("Fetched form data by ID:", data.Item);
+            return data.Item || null;
+        } catch (error) {
+            console.error("Error fetching form data by ID:", error);
+            throw new Error("Could not fetch form data by ID");
+        }
+    }
+
+
     async updateFormData(id, formStructure, label = 'Untitled') {
         try {
           const params = {
