@@ -146,36 +146,18 @@ async getFormDataById(id) {
       }
 
       async getFormResults(formId, tableName = 'cscstudents') {
-        try {
-          let params;
-          let command
-
-if(tableName === 'progressreports') {
-             // Query by primary key (id)
-      params = {
-        TableName: tableName  
-        }
-          
-command = new ScanCommand(params);
-          } else {
-          // Scan with filter (less efficient, but works for flat tables)
-      params = {
+      try{const params = {
         TableName: tableName,
-        FilterExpression: 'formId = :formId',
-        ExpressionAttributeValues: {
-          ':formId':  formId
-        }
+        Key: {id: formId },
       };
-      command = new ScanCommand(params);
-    }
+      const data = await this.docClient.send(new GetCommand(params));
+      console.log("Fetched form results:", data.Item);
+      return data.Item ? [data.Item] : [];
+    } catch (error) {
+        console.error("Error fetching form results:", error);
+        throw new Error("Could not fetch form results");
 
-          const data = await this.docClient.send(command);
-          
-          return data.Items || [];
-        } catch (error) {
-          console.error('Error fetching form results:', error);
-          throw new Error('Could not fetch form results');
-        }
+      }
       }
     
     

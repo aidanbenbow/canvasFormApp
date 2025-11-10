@@ -5,6 +5,7 @@ import { FormPanel } from "./components/formPanel.js";
 import { UIFormResults } from "./components/formResults.js";
 import { UIInputBox } from "./components/inputBox.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
+import { ResultsPanel } from "./components/resultsPanel.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { DragController } from "./controllers/dragController.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, loadFormStructure, saveFormStructure, sendLog } from "./controllers/socketController.js";
@@ -151,38 +152,39 @@ context.pipeline.add(context.uiStage);
 // });
 //  context.uiStage.addRoot(createForm);
 //  context.uiStage.setActiveRoot('createForm');
-const formy = loadFormStructure('discussionFeedbackForm', (data) => {
-  console.log('Form structure loaded:', data);
-  const { layout, fields } = data.formData.formStructure;
-  const form = new FormPanel({
-    layoutManager,
-    layoutRenderer,
-    context,
-    manifest: {
-      id: data.formData.id,
-      label: data.formData.label,
-      fields: fields,
-      layout: layout
-    },
-    pluginRegistry: pluginRegistry,
-    onSubmit: (formData) => {
-      sendLog(formData.id, formData,fields);
-      // Handle form submission logic here
-      emitFeedback( {
-        success: true,
-        text: "Form submitted successfully ✅",
-        box: form
-      })},
-      onClose: () => {
-        context.pipeline.remove(form);
-        context.uiStage.setActiveRoot(''); // or switch to another root as needed
-        context.pipeline.invalidate();
-      }
-  });
-  context.uiStage.addRoot(form);
-  context.uiStage.setActiveRoot('formPanel');
-  context.pipeline.invalidate();
-});
+
+// const formy = loadFormStructure('discussionFeedbackForm', (data) => {
+//   console.log('Form structure loaded:', data);
+//   const { layout, fields } = data.formData.formStructure;
+//   const form = new FormPanel({
+//     layoutManager,
+//     layoutRenderer,
+//     context,
+//     manifest: {
+//       id: data.formData.id,
+//       label: data.formData.label,
+//       fields: fields,
+//       layout: layout
+//     },
+//     pluginRegistry: pluginRegistry,
+//     onSubmit: (formData) => {
+//       sendLog(formData.id, formData,fields);
+//       // Handle form submission logic here
+//       emitFeedback( {
+//         success: true,
+//         text: "Form submitted successfully ✅",
+//         box: form
+//       })},
+//       onClose: () => {
+//         context.pipeline.remove(form);
+//         context.uiStage.setActiveRoot(''); // or switch to another root as needed
+//         context.pipeline.invalidate();
+//       }
+//   });
+//   context.uiStage.addRoot(form);
+//   context.uiStage.setActiveRoot('formPanel');
+//   context.pipeline.invalidate();
+// });
 
 
 // const formPanel = new FormPanel({
@@ -210,6 +212,19 @@ const formy = loadFormStructure('discussionFeedbackForm', (data) => {
 // context.uiStage.setActiveRoot('formPanel');
 
 registerFieldTypes();
+
+const results = fetchFormResults('msg-1762771379271', 'faithandbelief').then(data => {
+  const resultsPanel = new ResultsPanel({
+    results: data,
+    layoutManager,
+    layoutRenderer
+  });
+  context.uiStage.addRoot(resultsPanel);
+  context.uiStage.setActiveRoot(resultsPanel.id)
+  context.pipeline.invalidate();
+}).catch(err => {
+  console.error('Error fetching form results:', err);
+});
 
 
   // const loginPlugin = new LoginPlugin({
