@@ -11,22 +11,56 @@ export class CreateForm extends UIElement {
     this.context = context;
     this.editorController = context?.textEditorController;
     this.manifest = manifest;
+    this.formLabel = manifest.label || 'new form';
     this.onSubmit = onSubmit;
 
     this.fieldComponents = new Map();
+    this.buildUI();
     this.buildFromManifest();
   }
 
+  buildUI() {
+    this.layoutManager.place({ id: `${this.id}-addComponent`, x: 20, y: 140, width: 200, height: 40 });
+    const addComponentButton = new UIButton({
+      id: `${this.id}-addComponent`,
+      label: 'Add Component',
+      onClick: () => {
+        // Logic to add a new component dynamically
+        const newField = {
+          id: `input-${Date.now()}`,
+          type: 'input',
+          label: 'New Input',
+          layout: { x: 225, y: 200 + this.fieldComponents.size * 65, width: 450, height: 60 }
+        };
+        this.manifest.fields.push(newField);
+      this.addChild(new UIInputBox({
+        id: newField.id,
+        editorController: this.editorController,
+        placeholder: '',
+        label: newField.label,
+        interactive: false
+      }));
+      this.layoutManager.place({ id: newField.id, ...newField.layout });
+      this.fieldComponents.set(newField.id, this.children[this.children.length - 1]);
+      this.context.pipeline.invalidate();
+      }
+    });
+    this.addChild(addComponentButton);
+
+  }
+
   buildFromManifest() {
+
     this.manifest.fields.forEach(field => {
       const { id, type, label, placeholder, layout } = field;
-
+console.log(layout);
       let component;
       if (type === 'input' || type === 'textarea') {
         component = new UIInputBox({
           id,
           editorController: this.editorController,
-          placeholder: placeholder || label,
+          placeholder: placeholder || '',
+          label: label || '',
           interactive: false
         });
       } else if (type === 'button') {
@@ -50,6 +84,11 @@ export class CreateForm extends UIElement {
         this.fieldComponents.set(id, component);
       }
     });
+  }
+
+  addCompenent(field) {
+    // Implementation for adding a new component dynamically if needed
+
   }
 
   handleSubmit() {
@@ -84,7 +123,13 @@ export class CreateForm extends UIElement {
         layoutRenderer: this.layoutRenderer,
         context: this.context,
         onConfirm: newText => {
-          child.placeholder = newText;
+          child.label = newText;
+          this.manifest.fields = this.manifest.fields.map(field => {
+            if (field.id === child.id) {
+              return { ...field, label: newText };
+            }
+            return field;
+          });
           this.context.pipeline.invalidate();
         }
       });
@@ -99,138 +144,3 @@ export class CreateForm extends UIElement {
   }
 }
 
-// export class CreateForm extends UIElement {
-//   constructor({ id = 'createForm', layoutManager, layoutRenderer,context, onSubmit }) {
-//     super({ id, layoutManager, layoutRenderer });
-//     this.onSubmit = onSubmit;
-// this.editorController = context?.textEditorController;
-// this.context = context;
-// this.formStructure = [];
-// this.formLabel = 'new form';
-//     this.buildLayout();
-//     this.buildUI();
-//   }
-
-//   buildLayout() {
-//     this.layoutManager.place({ id: `${this.id}-title`, x: 20, y: 20, width: 200, height: 40 });
-//     this.layoutManager.place({ id: `${this.id}-addInput`, x: 240, y: 20, width: 200, height: 40 });
-//     this.layoutManager.place({ id: `${this.id}-labelInput`, x: 20, y: 140, width: 200, height: 40 });
-//     this.layoutManager.place({ id: `${this.id}-submitButton`, x: 480, y: 20, width: 100, height: 40 });
-//   }
-
-//   buildUI() {
-//     this.addChild(new UIText({
-//       id: `${this.id}-title`,
-//       text: 'Create New Form',
-//       fontSize: 0.03,
-//       color: '#333',
-//       align: 'left',
-//       valign: 'top'
-//     }));
-
-//     const labelInput = new UIInputBox({
-//       id: `${this.id}-labelInput`,
-//       editorController: this.editorController,
-//       placeholder: 'Form Label',
-//       onChange: value => { this.formLabel = value; }
-//     });
-
-//     const addInputButton = new UIButton({
-//         id: `${this.id}-addInput`,
-//         label: 'Add Input Field',
-//         onClick: () => {
-//             const inputField = new UIInputBox({
-//             id: `${this.id}-inputField-${Date.now()}`,
-//             editorController: this.editorController,
-//             placeholder: 'Input Field',
-//             interactive:false
-//             });
-//             this.addInputBox(inputField);
-//         }
-//         });
-
-//     const submitButton = new UIButton({
-//       id: `${this.id}-submitButton`,
-//       label: 'Create',
-//       onClick: () => {
-//         console.log('Submitting form with label:', this.formStructure);
-//         if (this.formLabel?.trim()) {
-//           const newForm = {
-//             label: this.formLabel,
-//             id: `form-${Date.now()}`,
-//             user: 'admin',
-//             formStructure: this.formStructure
-//           };
-//           this.onSubmit?.(newForm);
-//         }
-//       }
-//     });
-
-//     this.addChild(addInputButton);
-//     this.addChild(submitButton);
-//   }
-
-//   registerHitRegions(hitRegistry) {
-//     this.children.forEach(child => {
-//       hitRegistry.register(`${child.id}`, {
-//         plugin: this,
-//         region: 'button',
-//         box: child
-//       });
-//     });
-//   }
-
-//   addInputBox(inputBox) {
-//     this.addChild(inputBox);
-//     const nextY = this.calculateNextY(); // your own logic
-// this.layoutManager.place({
-//   id: inputBox.id,
-//   x: 20,
-//   y: nextY,
-//   width: 200,
-//   height: 40
-// });
-// this.formStructure.push({ type: 'input', id: inputBox.id, placeholder: inputBox.placeholder, layout: { x: 20, y: nextY, width: 200, height: 40 } });
-//     this.context.pipeline.invalidate();
-//   }
-//   calculateNextY() {
-//     let maxY = 140; // starting Y after title and label input
-//     this.children.forEach(child => {
-//       const bounds = this.layoutManager.getLogicalBounds(child.id);
-//       if (bounds && bounds.y != null && bounds.height != null) {
-//         const bottom = bounds.y + bounds.height;
-//         if (bottom > maxY) {
-//           maxY = bottom;
-//         }
-//       }
-//     });
-//     return maxY + 20; // add spacing
-//   }
-//   // In CreateForm.js
-//   onChildEvent(event, child) {
-//     if (
-//       event.type === 'click' &&
-//       child instanceof UIInputBox &&
-//       child.interactive === false
-//     ) {
-//       const overlay = new PlaceholderPromptOverlay({
-//         targetBox: child,
-//         layoutManager: this.layoutManager,
-//         layoutRenderer: this.layoutRenderer,
-//         context: this.context,
-//         onConfirm: newText => {
-//           child.placeholder = newText;
-//           this.context.pipeline.invalidate();
-//         }
-//       });
-  
-//       this.context.uiStage.overlayRoot = overlay;
-//       overlay.registerHitRegions(this.context.hitRegistry);
-//       this.context.pipeline.invalidate();
-//       return true;
-//     }
-//     return super.onChildEvent?.(event, child);
-//   }
-  
-  
-// }

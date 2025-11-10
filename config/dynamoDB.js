@@ -89,6 +89,31 @@ class DynamoDB {
         }
       }
     
+      async upsertFormData(id, formStructure, label = 'Untitled', user = 'admin') {
+        try {
+          const item = {
+            id,
+            label,
+            user,
+            formStructure,
+            lastModified: new Date().toISOString()
+          };
+      
+          const params = {
+            TableName: 'formStructures',
+            Item: item
+          };
+      console.log('Upserting form data with params:', params);
+          const result = await this.docClient.send(new PutCommand(params));
+          console.log('Form upserted:', result);
+          return result;
+        } catch (error) {
+          console.error('Error upserting form data:', error);
+          throw new Error('Could not save form data');
+        }
+      }
+      
+
       async fetchStudentCount() {
         try {
           const params = {

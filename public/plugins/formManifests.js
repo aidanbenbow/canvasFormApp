@@ -122,7 +122,7 @@ export const formManifest = {
       {
         id: 'title',
         type: 'text',
-        label: '',
+        label: 'Discussion Feedback Form',
         layout: layout['title'],
         editable: false
       },

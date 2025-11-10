@@ -64,10 +64,10 @@ io.on('connection', (socket) => {
   });
   
   socket.on('saveFormStructure', async (payload) => {
-    const { id, formStructure, label } = payload;
- 
+    const { id, formStructure, label, user } = payload;
+ console.log('Saving form structure with payload:', payload);
     try {
-      const result = await db.updateFormData(id, formStructure, label);
+      const result = await db.upsertFormData(id, formStructure, label, user);
       socket.emit('formSavedResponse', { success: true, result });
     } catch (error) {
       socket.emit('formSavedResponse', {

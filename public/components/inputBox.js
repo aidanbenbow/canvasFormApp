@@ -2,10 +2,11 @@ import { UIElement } from './UiElement.js';
 import { PopupKeyboard } from './keyBoard.js';
 
 export class UIInputBox extends UIElement {
-  constructor({ id, editorController, placeholder = '', interactive = true }) {
+  constructor({ id, editorController, placeholder = '', label= '', interactive = true }) {
     super({ id});
     this.editorController = editorController;
     this.placeholder = placeholder;
+    this.label = label;
     this.type = 'uiInputBox';
     this.text = '';
     this.interactive = interactive
@@ -41,6 +42,8 @@ this.draggable = false;
     const fill = '#fff';
     const stroke = this.isFocused ? '#ffcc00' : '#000';
     this.layoutRenderer.drawRect(this.id, { fill, stroke, lineWidth: 2 });
+
+   this.layoutRenderer.drawText(this.id, this.label, 0.015, { fill: '#000', align: 'left', valign: 'top' });
 
     // Determine text to display
     const rawText = this.editorController.activeBox === this

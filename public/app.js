@@ -3,6 +3,7 @@ import { Dashboard } from "./components/dashBoard.js";
 import { FormEditor } from "./components/formEditor.js";
 import { FormPanel } from "./components/formPanel.js";
 import { UIFormResults } from "./components/formResults.js";
+import { UIInputBox } from "./components/inputBox.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { DragController } from "./controllers/dragController.js";
@@ -123,15 +124,29 @@ const createForm = new CreateForm({
   layoutRenderer,
   context,
   manifest: discussionFeedbackFormManifest,
-  onSubmit: newForm => {
-    console.log('✅ New form created:', newForm);
+  onSubmit: () => {
+   const fields = discussionFeedbackFormManifest.fields.map(field => {
+    const component = createForm.fieldComponents.get(field.id);
+    if( component instanceof UIInputBox) {
+      return {
+        ...field,
+        placeholder: component.placeholder
+      };
+    } return field;
+    }
+    )
+    const layout = Object.fromEntries(Array.from(createForm.fieldComponents).map(([id]) => [
+      id,
+      createForm.layoutManager.getLogicalBounds(id)
+    ]));
     const payload = {
-      id: newForm.id,
-      formStructure: newForm.formStructure,
-      label: newForm.label,
+      id: createForm.manifest.id || `form-${Date.now()}`,
+      label: createForm.manifest.label || 'Untitled Form',
       user: 'admin',
-  }
-    //saveFormStructure(payload);
+      formStructure: { fields, layout }
+    }
+console.log('Form submitted with payload:', payload);
+    saveFormStructure(payload);
   }
 });
  context.uiStage.addRoot(createForm);
