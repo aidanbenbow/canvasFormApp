@@ -32,7 +32,7 @@ export class LayoutRenderer {
     drawText(id, text, fontSize = 16, style = {}) {
       const bounds = this.layout.getScaledBounds(id, this.canvas.width, this.canvas.height);
       if (!bounds) return;
- 
+      
       const getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
       this.ctx.save();
       this.ctx.font = getLogicalFontSize(fontSize, this.canvas.height);

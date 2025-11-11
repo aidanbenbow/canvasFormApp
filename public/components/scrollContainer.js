@@ -18,6 +18,7 @@ export class UIScrollContainer extends UIElement {
           console.warn(`UIScrollContainer: Bounds not found for ${this.id}`);
           return;
         }
+        // console.log('Container bounds:', this.layoutManager.getLogicalBounds(this.id));
       
         this.scrollController = new ScrollController({
           contentHeight: 0,
@@ -31,7 +32,8 @@ export class UIScrollContainer extends UIElement {
       const bounds = this.layoutManager.getLogicalBounds(lastChild.id);
       const containerBounds = this.layoutManager.getLogicalBounds(this.id);
       this.scrollController.contentHeight = bounds.y + bounds.height - containerBounds.y;
-    
+      // console.log('Container bounds:', this.layoutManager.getLogicalBounds(this.id));
+      // console.log('Last child bounds:', this.layoutManager.getLogicalBounds(lastChild.id));
     }
   
     handleScroll(deltaY) {
@@ -43,16 +45,17 @@ export class UIScrollContainer extends UIElement {
   
       const ctx = this.layoutRenderer.ctx;
       const bounds = this.getScaledBounds();
-  console.log(ctx, bounds);
+
       ctx.save();
         // Draw visible stroke around the scroll container
   ctx.strokeStyle = '#0077cc'; // or any color you prefer
   ctx.lineWidth = 2;
+  ctx.fillStyle = 'rgba(10, 119, 204, 0.1)'; // light fill to indicate area
   ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
       ctx.beginPath();
       ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
      
-      ctx.clip();
+     ctx.clip();
   
       ctx.save();
       this.scrollController.apply(ctx); // shift all children by offsetY
@@ -62,17 +65,18 @@ export class UIScrollContainer extends UIElement {
       ctx.restore();
     }
     
-    dispatchEvent(event) {
-      if (!this.visible || !this.scrollController) return false;
+    // dispatchEvent(event) {
+    //   if (!this.visible || !this.scrollController) return false;
     
-      const offsetY = this.scrollController.offsetY || 0;
-      const adjustedEvent = { ...event, y: event.y + offsetY };
+    //   const offsetY = this.scrollController.offsetY || 0;
+    //   const adjustedEvent = { ...event, y: event.y + offsetY };
     
-      for (const child of this.children) {
-        if (child.dispatchEvent?.(adjustedEvent)) return true;
-      }
+    //   for (const child of this.children) {
+    //     if (child.dispatchEvent?.(adjustedEvent)) return true;
+        
+    //   }
     
-      return false;
-    }
+    //   return false;
+    // }
     
   }

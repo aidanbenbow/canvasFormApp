@@ -37,7 +37,19 @@ app.use(express.urlencoded({ extended: true }));
 // });
 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+ // console.log('A user connected:', socket.id);
+
+ socket.on('getAllForms', async ({ user }) => {
+  console.log(`Fetching all forms for user: ${user}`);
+    try {
+      const forms = await db.getFormData(user);
+   
+     socket.emit('allFormsData', {user, forms });
+    } catch (error) {
+      console.error('Error fetching all forms:', error);
+      socket.emit('allFormsData', { forms: [], error: error.message });
+    }
+  });
 
   socket.on('log', async ({ message, data }) => {
     console.log(`[LOG] ${message}`);

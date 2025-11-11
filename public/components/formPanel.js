@@ -12,7 +12,7 @@ export class FormPanel extends UIElement {
     this.editorController = context?.textEditorController;
     this.manifest = manifest;
     this.pluginRegistry = pluginRegistry;
-console.log(manifest.fields);
+console.log(manifest);
     this.mode = manifest.mode || 'create';
     this.formLabel = manifest.label || '';
     this.fields = manifest.fields || [];

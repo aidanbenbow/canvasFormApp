@@ -42,26 +42,31 @@ class DynamoDB {
       }
     }
   
-    async getFormData() {
-        try {
-            const params = {
-                TableName: 'formStructures', // Replace with your table name
-                ProjectionExpression: '#id, #label, #formStructure, #resultsTable',
-      ExpressionAttributeNames: {
-        '#id': 'id',
-        '#label': 'label',
-        '#formStructure': 'formStructure',
-        '#resultsTable': 'resultsTable'
+    async getFormData(user) {
+      try {
+        const params = {
+          TableName: 'faithandbelief',
+          ProjectionExpression: '#id, #label, #formStructure, #resultsTable, #inputs',
+          ExpressionAttributeNames: {
+            '#id': 'id',
+            '#label': 'label',
+            '#formStructure': 'formStructure',
+            '#resultsTable': 'resultsTable',
+            '#inputs': 'inputs'
+          }
+        };
+    
+        const data = await this.docClient.send(new ScanCommand(params));
+        const allForms = data.Items || [];
+    
+        // ✅ Filter by user inside inputs
+        const userForms = allForms.filter(item => item.inputs?.user === user);
+    
+        return userForms;
+      } catch (error) {
+        console.error("Error fetching form data:", error);
+        throw new Error("Could not fetch form data");
       }
-
-            };
-            const data = await this.docClient.send(new ScanCommand(params));
-     console.log("Fetched form data:", data.Items);
-            return data.Items || [];
-        } catch (error) {
-            console.error("Error fetching form data:", error);
-            throw new Error("Could not fetch form data");
-        }
     }
 async getFormDataById(id) {
         try {

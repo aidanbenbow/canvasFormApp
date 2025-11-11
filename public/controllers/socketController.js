@@ -64,17 +64,16 @@ export function emitFeedback({ success, error, box }) {
   }
 
   // controllers/socketController.js
-export function fetchAllForms(callback) {
-  console.log('[SOCKET] Emitting getAllForms');
-
-  socket.emit('getAllForms');
- // socket.on('allFormsData', callback);
- socket.once('allFormsData', (data) => {
-  console.log('[SOCKET] Received allFormsData:', data);
-  callback(data);
-});
-
-}
+  export function fetchAllForms(user) {
+    return new Promise((resolve, reject) => {
+      socket.emit('getAllForms', { user });
+  
+      socket.once('allFormsData', (data) => {
+        if (data.error) reject(data.error);
+        else resolve(data);
+      });
+    });
+  }
   
 export function fetchFormResults(formId, tableName = null) {
   console.log('[SOCKET] Emitting getFormResults for:', formId, tableName);

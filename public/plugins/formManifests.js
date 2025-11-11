@@ -170,3 +170,34 @@ export const formManifest = {
       }
     ]
   };
+
+  export const blankFormManifest = {
+    id: `form-${Date.now()}`,
+    label: 'New Form',
+    mode: 'create',
+    layout: {
+      title: { x: 20, y: 20, width: 300, height: 40 }
+    },
+    fields: [
+      {
+        id: 'input-1',
+        type: 'input',
+        label: 'Your Name',
+        placeholder: 'Enter your name',
+        layout: { width: 300, height: 40 }
+      },
+      {
+        id: 'textarea-1',
+        type: 'textarea',
+        label: 'Your Feedback',
+        placeholder: 'Write your thoughts...',
+        layout: { width: 300, height: 100 }
+      },
+      {
+        id: 'submit-button',
+        type: 'button',
+        label: 'Submit',
+        layout: { width: 100, height: 40 }
+      }
+    ]
+  };

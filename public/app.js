@@ -1,3 +1,4 @@
+import { AllForms } from "./components/allForms.js";
 import { CreateForm } from "./components/createForm.js";
 import { Dashboard } from "./components/dashBoard.js";
 import { FormEditor } from "./components/formEditor.js";
@@ -21,7 +22,7 @@ import { WelcomeOverlay } from "./overlays/welcomeOverlay.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { formIconPlugin } from "./plugins/formIconPlugin.js";
 
-import { discussionFeedbackFormManifest, feedbackFormManifest, formManifest, pluginRegistry } from "./plugins/formManifests.js";
+import { blankFormManifest, discussionFeedbackFormManifest, feedbackFormManifest, formManifest, pluginRegistry } from "./plugins/formManifests.js";
 import { LoginPlugin } from "./plugins/login.js";
 
 import { TextSizerPlugin } from "./plugins/textResizer.js";
@@ -37,10 +38,10 @@ import {  utilsRegister } from "./utils/register.js";
 
 const canvas = new CanvasManager(canvasConfig)
 
-const forms = document.querySelector('#data')
-const data = forms.innerHTML
-const raw = JSON.parse(data);
-console.log('Form data loaded:', raw[0].formStructure);
+// const forms = document.querySelector('#data')
+// const data = forms.innerHTML
+// const raw = JSON.parse(data);
+// console.log('Form data loaded:', raw[0].formStructure);
 const modeState = {
   current: 'fill',
   switchTo(newMode) {
@@ -120,6 +121,8 @@ dashboardOverlay.registerHitRegions(context.hitRegistry);
 
 context.pipeline.add(context.uiStage);
 
+
+
 // const createForm = new CreateForm({
 //   layoutManager,
 //   layoutRenderer,
@@ -186,6 +189,98 @@ context.pipeline.add(context.uiStage);
 //   context.pipeline.invalidate();
 // });
 
+function launchFormPanel({layoutManager,
+  layoutRenderer, context,manifest, pluginRegistry, emitFeedback}) {
+    const formPanel = new FormPanel({
+      layoutManager,
+      layoutRenderer,
+      context,
+      manifest,
+      pluginRegistry,
+      onSubmit: (formData) => {
+        console.log('Form submitted:', formData);
+        // Handle form submission logic here
+        emitFeedback( {
+          success: true,
+          text: "Form submitted successfully ✅",
+          box: formPanel
+        });
+        onClose: () => {
+          context.pipeline.remove(formPanel);
+          context.uiStage.setActiveRoot(''); // or switch to another root as needed
+          context.pipeline.invalidate();
+        }
+      }
+    });
+    context.uiStage.addRoot(formPanel);
+    context.uiStage.setActiveRoot('formPanel');
+context.pipeline.invalidate();
+}
+
+function launchCreateForm({
+  layoutManager,
+  layoutRenderer,
+  context,
+  manifest,
+  saveFormStructure
+}) {
+  const createForm = new CreateForm({
+    layoutManager,
+    layoutRenderer,
+    context,
+    manifest,
+    onSubmit: () => {
+      const fields = manifest.fields.map(field => {
+        const component = createForm.fieldComponents.get(field.id);
+        if (component instanceof UIInputBox) {
+          return {
+            ...field,
+            placeholder: component.placeholder
+          };
+        }
+        return field;
+      });
+
+      const layout = Object.fromEntries(
+        Array.from(createForm.fieldComponents).map(([id]) => [
+          id,
+          createForm.layoutManager.getLogicalBounds(id)
+        ])
+      );
+
+      const payload = {
+        id: manifest.id || `form-${Date.now()}`,
+        label: manifest.label || 'Untitled Form',
+        user: 'admin',
+        formStructure: { fields, layout }
+      };
+
+      console.log('Form submitted with payload:', payload);
+      saveFormStructure(payload);
+    }
+  });
+
+  context.uiStage.addRoot(createForm);
+  context.uiStage.setActiveRoot('createForm');
+  context.pipeline.invalidate();
+}
+
+const normalizeFormManifest = (form) => {
+  const inputs = form.inputs || {};
+  return {
+    id: inputs.id || form.id || `form-${Date.now()}`,
+    label: inputs.label || 'Untitled Form',
+    user: inputs.user || 'admin',
+    mode: 'results',
+    layout: {
+      title: { x: 20, y: 20, width: 300, height: 40 }
+    },
+    fields: (inputs.fields || []).map(field => ({
+      ...field,
+      layout: field.layout || { width: 300, height: 40 }
+    }))
+  };
+};
 
 // const formPanel = new FormPanel({
 //   layoutManager,
@@ -213,6 +308,35 @@ context.pipeline.add(context.uiStage);
 
 registerFieldTypes();
 
+const display = fetchAllForms('admin').then(({user,forms}) => {
+  const allFormsPanel = new AllForms({
+    user,
+    forms,
+    layoutManager,
+    layoutRenderer,
+    onCreateForm: () => {
+launchCreateForm({
+        layoutManager,
+        layoutRenderer,
+        context,
+        manifest: blankFormManifest,
+        saveFormStructure
+      });
+    },
+    onViewForm: (form) => {
+      const mani = normalizeFormManifest(form);
+      launchFormPanel({layoutManager,
+        layoutRenderer, context,manifest:mani, pluginRegistry,
+        emitFeedback});
+    }
+  });
+  context.uiStage.addRoot(allFormsPanel);
+  context.uiStage.setActiveRoot(allFormsPanel.id)
+  context.pipeline.invalidate();
+}).catch(err => {
+  console.error('Error fetching forms:', err);
+});
+
 const results = fetchFormResults('msg-1762771379271', 'faithandbelief').then(data => {
   const resultsPanel = new ResultsPanel({
     results: data,
@@ -220,7 +344,7 @@ const results = fetchFormResults('msg-1762771379271', 'faithandbelief').then(dat
     layoutRenderer
   });
   context.uiStage.addRoot(resultsPanel);
-  context.uiStage.setActiveRoot(resultsPanel.id)
+ // context.uiStage.setActiveRoot(resultsPanel.id)
   context.pipeline.invalidate();
 }).catch(err => {
   console.error('Error fetching form results:', err);
