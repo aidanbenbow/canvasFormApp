@@ -2,9 +2,9 @@ import { UIElement } from './UiElement.js';
 import { PopupKeyboard } from './keyBoard.js';
 
 export class UIInputBox extends UIElement {
-  constructor({ id, editorController, placeholder = '', label= '', interactive = true }) {
+  constructor({ id, editor,interactive = true, placeholder = '', label= '',  }) {
     super({ id});
-    this.editorController = editorController;
+    this.editorController = editor;
     this.placeholder = placeholder;
     this.label = label;
     this.type = 'uiInputBox';
@@ -46,30 +46,25 @@ this.draggable = false;
    this.layoutRenderer.drawText(this.id, this.label, 0.015, { fill: '#000', align: 'left', valign: 'top' });
 
     // Determine text to display
-    const rawText = this.editorController.activeBox === this
-  ? this.editorController.activeBox[this.editorController.activeField] ?? ''
-  : '';
-
-  const displayText = rawText || this.text;
-  const color = rawText ? '#000' : '#888';
+  
+  const displayText = this.text;
+  const color = '#888';
 
     this.layoutRenderer.drawText(this.id, displayText, 0.01, { fill: color, align: 'left', valign: 'middle' });
 
     // Draw caret and selection if this box is active
-    if (this.editorController.activeBox === this) {
+    if (this.isFocused) {
       const ctx = this.layoutRenderer.ctx; // assuming layoutRenderer exposes canvas context
       this.editorController.drawSelection(ctx);
       this.editorController.drawCaret(ctx);
     }
   }
-  getText() {
-    if (this.editorController.activeBox === this) {
-      return this.editorController.activeBox[this.editorController.activeField] ?? '';
-    }
-    return '';
-  }
   getValue() {
     return this.text
+  }
+  updateText(newText) {
+    this.text = newText;
+    this.onChange?.(newText);
   }
  
 }

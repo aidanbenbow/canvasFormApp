@@ -52,7 +52,7 @@ constructor({ id = 'allForms', layoutManager, layoutRenderer, user,forms, onCrea
         
 
           this.forms.forEach((form, index) => {
-            console.log(form);
+            
             const formText = new UIText({
               id: `form-${index}`,
               text: `Form ${index + 1}: ${form.id || 'Untitled Form'}`,

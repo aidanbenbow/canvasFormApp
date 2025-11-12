@@ -1,7 +1,9 @@
 import { UIElement } from './UiElement.js';
 
 import { UIButton } from './button.js';
+import { createUIComponent } from './createUIComponent.js';
 import { UIInputBox } from './inputBox.js';
+import { LabeledInput } from './labeledInput.js';
 import { PlaceholderPromptOverlay } from './placeHolderOverlay.js';
 import { UIText } from './text.js';
 
@@ -11,41 +13,42 @@ export class CreateForm extends UIElement {
     this.context = context;
     this.editorController = context?.textEditorController;
     this.manifest = manifest;
+    console.log(manifest);
     this.formLabel = manifest.label || 'new form';
     this.onSubmit = onSubmit;
 
     this.fieldComponents = new Map();
+    
     this.buildUI();
-    this.buildFromManifest();
+   this.buildFromManifest();
   }
 
   buildUI() {
-    this.layoutManager.place({ id: `${this.id}-addComponent`, x: 20, y: 140, width: 200, height: 40 });
-    const addComponentButton = new UIButton({
-      id: `${this.id}-addComponent`,
-      label: 'Add Component',
-      onClick: () => {
-        // Logic to add a new component dynamically
-        const newField = {
-          id: `input-${Date.now()}`,
-          type: 'input',
-          label: 'New Input',
-          layout: { x: 225, y: 200 + this.fieldComponents.size * 65, width: 450, height: 60 }
-        };
-        this.manifest.fields.push(newField);
-      this.addChild(new UIInputBox({
-        id: newField.id,
-        editorController: this.editorController,
-        placeholder: '',
-        label: newField.label,
-        interactive: false
-      }));
-      this.layoutManager.place({ id: newField.id, ...newField.layout });
-      this.fieldComponents.set(newField.id, this.children[this.children.length - 1]);
-      this.context.pipeline.invalidate();
-      }
-    });
-    this.addChild(addComponentButton);
+    const saveBtn = createUIComponent({
+      id: `${this.id}-saveBtn`,
+      type: 'button',
+      label: 'Save Form',
+      layout: { x: 20, y: 20, width: 100, height: 40 },
+      onClick: () => this.handleSubmit()
+    }, this.context);
+const addTitleBtn = createUIComponent({
+      id: `${this.id}-addTitle`,
+      type: 'button',
+      label: 'Add Title',
+      layout: { x: 20, y: 100, width: 100, height: 40 },
+      onClick: () => this.addCompenent('text')
+    }, this.context);
+const addInputBtn = createUIComponent({
+      id: `${this.id}-addInput`,
+      type: 'button',
+      label: 'Add Input',
+      layout: { x: 20, y: 160, width: 100, height: 40 },
+      onClick: () => this.addCompenent('input')
+    }, this.context);
+
+    this.addChild(addTitleBtn);
+    this.addChild(addInputBtn);
+    this.addChild(saveBtn);
 
   }
 
@@ -53,42 +56,84 @@ export class CreateForm extends UIElement {
 
     this.manifest.fields.forEach(field => {
       const { id, type, label, placeholder, layout } = field;
-console.log(layout);
-      let component;
-      if (type === 'input' || type === 'textarea') {
-        component = new UIInputBox({
-          id,
-          editorController: this.editorController,
-          placeholder: placeholder || '',
-          label: label || '',
-          interactive: false
-        });
-      } else if (type === 'button') {
-        component = new UIButton({
-          id,
-          label,
-          onClick: () => this.handleSubmit()
-        });
-      } else if (type === 'text') {
-        component = new UIText({
-          id,
-          text: label,
-          fontSize: 0.03,
-          color: '#333'
-        });
-      }
-
-      if (component) {
-        this.addChild(component);
-        this.layoutManager.place({ id, ...layout });
-        this.fieldComponents.set(id, component);
-      }
+console.log(field);
+switch(type) {
+        case 'text':
+          const title = createUIComponent({
+            id,
+            type: 'text',
+            label,
+            layout
+          }, this.context);
+          this.fieldComponents.set(id, title);
+          this.addChild(title);
+          break;
+        case 'input':
+          const inputBox = createUIComponent({
+            id,
+            type: 'input',
+            label,
+            placeholder,
+            layout
+          }, this.context);
+          this.fieldComponents.set(id, inputBox);
+          this.addChild(inputBox);
+          break;
+          case 'button':
+          const button = createUIComponent({
+            id,
+            type: 'button',
+            label,
+            layout
+          }, this.context);
+          this.fieldComponents.set(id, button);
+          this.addChild(button);
+        }
+  
     });
+    
   }
 
-  addCompenent(field) {
-    // Implementation for adding a new component dynamically if needed
-
+  addCompenent(type) {
+    switch(type) {
+      case 'text':
+     const newField = {
+          id: `input-${Date.now()}`,
+          type: 'text',
+          label: 'New Title',
+          layout: { x: 225, y: 10 + this.fieldComponents.size * 65, width: 450, height: 60 }
+        };
+        this.manifest.fields.push(newField);
+        const title = createUIComponent({
+          id: newField.id,
+          type: 'text',
+          label: newField.label,
+          layout: newField.layout
+        }, this.context);
+        this.fieldComponents.set(newField.id, title);
+         this.addChild(title);
+         break;
+      case 'input':
+        const newInputField = {
+            id: `input-${Date.now()}`,
+            type: 'input',
+            label: 'New Input',
+            placeholder: 'Enter text here...',
+            layout: { x: 225, y: 10 + this.fieldComponents.size * 65, width: 450, height: 60 }
+          };
+          this.manifest.fields.push(newInputField);
+          const inputBox = createUIComponent({
+            id: newInputField.id,
+            type: 'input',
+            label: newInputField.label,
+            placeholder: newInputField.placeholder,
+            layout: newInputField.layout
+          }, this.context);
+          this.fieldComponents.set(newInputField.id, inputBox);
+          this.addChild(inputBox);
+          break;
+        }
+this.context.pipeline.invalidate();
   }
 
   handleSubmit() {
@@ -107,8 +152,8 @@ console.log(layout);
       ...this.manifest,
       fields: updatedFields
     };
-
-    this.onSubmit?.(updatedManifest);
+console.log('Form saved with manifest:', updatedManifest);
+    //this.onSubmit?.(updatedManifest);
   }
 
   onChildEvent(event, child) {

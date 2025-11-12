@@ -265,6 +265,14 @@ function launchCreateForm({
   context.pipeline.invalidate();
 }
 
+launchCreateForm({
+  layoutManager,
+  layoutRenderer,
+  context,
+  manifest: blankFormManifest,
+  saveFormStructure
+});
+
 const normalizeFormManifest = (form) => {
   const inputs = form.inputs || {};
   return {
@@ -331,7 +339,7 @@ launchCreateForm({
     }
   });
   context.uiStage.addRoot(allFormsPanel);
-  context.uiStage.setActiveRoot(allFormsPanel.id)
+ // context.uiStage.setActiveRoot(allFormsPanel.id)
   context.pipeline.invalidate();
 }).catch(err => {
   console.error('Error fetching forms:', err);
