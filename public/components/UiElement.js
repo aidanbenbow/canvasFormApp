@@ -48,7 +48,18 @@ export class UIElement {
       const b = this.getScaledBounds();
       if (!b) return false;
       
-      return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
+let scrollOffsetY = 0;
+let ancestor = this.parent;
+while (ancestor) {
+    if (ancestor.scrollController) {
+        scrollOffsetY += ancestor.scrollController.offsetY;
+    }
+    ancestor = ancestor.parent;
+}
+  const adjustedY = y + scrollOffsetY;
+
+      return x >= b.x && x <= b.x + b.width &&
+              adjustedY >= b.y && adjustedY <= b.y + b.height;
     }
   
     // 🔹 Extended event dispatch

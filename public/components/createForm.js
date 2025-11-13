@@ -54,9 +54,17 @@ const addInputBtn = createUIComponent({
       layout: { x: 20, y: 160, width: 100, height: 40 },
       onClick: () => this.addCompenent('input')
     }, this.context, {place: false});
+    const addSubmitBtn = createUIComponent({
+      id: `${this.id}-addSubmit`,
+      type: 'button',
+      label: 'Add Submit Button',
+      layout: { x: 20, y: 220, width: 100, height: 40 },
+      onClick: () => this.addCompenent('button')
+    }, this.context, {place: false});
     UIcontainer.addChild(saveBtn);
     UIcontainer.addChild(addTitleBtn);
     UIcontainer.addChild(addInputBtn);
+    UIcontainer.addChild(addSubmitBtn);
 
   }
 
@@ -69,45 +77,7 @@ const addInputBtn = createUIComponent({
       defaultChildHeight: 70
     }, this.context);
     this.formContainer.initializeScroll();
-    this.addChild(this.formContainer);
-
-//     this.manifest.fields.forEach(field => {
-//       const { id, type, label, placeholder, layout } = field;
-// console.log(field);
-// switch(type) {
-//         case 'text':
-//           const title = createUIComponent({
-//             id,
-//             type: 'text',
-//             label,
-//             layout
-//           }, this.context);
-//           this.fieldComponents.set(id, title);
-//           this.addChild(title);
-//           break;
-//         case 'input':
-//           const inputBox = createUIComponent({
-//             id,
-//             type: 'input',
-//             label,
-//             placeholder,
-//             layout
-//           }, this.context);
-//           this.fieldComponents.set(id, inputBox);
-//           this.addChild(inputBox);
-//           break;
-//           case 'button':
-//           const button = createUIComponent({
-//             id,
-//             type: 'button',
-//             label,
-//             layout
-//           }, this.context);
-//           this.fieldComponents.set(id, button);
-//           this.addChild(button);
-//         }
-  
-//     });
+    this.addChild(this.formContainer)
     
   }
 
@@ -149,6 +119,23 @@ const addInputBtn = createUIComponent({
           this.fieldComponents.set(newInputField.id, inputBox);
           this.formContainer.addChild(inputBox);
           break;
+          case 'button':
+          const newButtonField = {
+              id: `button-${Date.now()}`,
+              type: 'button',
+              label: 'submit',
+             
+            };
+            this.manifest.fields.push(newButtonField);
+            const button = createUIComponent({
+              id: newButtonField.id,
+              type: 'button',
+              label: newButtonField.label,
+             
+            }, this.context, {place: false});
+            this.fieldComponents.set(newButtonField.id, button);
+            this.formContainer.addChild(button);
+            break;
         }
 this.context.pipeline.invalidate();
   }

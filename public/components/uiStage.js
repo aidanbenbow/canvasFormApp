@@ -66,10 +66,6 @@ export class UIStage {
         let x = (e.clientX - rect.left) * scaleX;
         let y = (e.clientY - rect.top) * scaleY;
 
-        const scrollTarget = this._findScrollableAt(this.activeRoot, x, y);
-        if (scrollTarget&&scrollTarget.scrollController) {
-          y+= scrollTarget.scrollController.offsetY;
-        }
     const event = { type, x, y}
 if(this.overlayRoot && this.overlayRoot.dispatchEvent(event)) return;
 
