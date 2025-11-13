@@ -68,12 +68,6 @@ export class UIElement {
   
     //   // TARGET phase
        const hit = this.contains(event.x, event.y);
-    //  // console.log(`[${this.id}] hit=${hit} type=${event.type}`);
-    //   for (const child of this.children) {
-    //     const hit = child.contains(event.x, event.y);
-    //    // console.log(`[${child.id}] hit=${hit} type=${event.type}`);
-    //     if (hit && child.dispatchEvent(event)) return true;
-    //   }
       
       if (this.interactive) {
         if (event.type === 'mousemove') {

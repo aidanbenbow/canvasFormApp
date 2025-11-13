@@ -46,7 +46,8 @@ export class UIStage {
       canvas.addEventListener('mousedown', e => this._handleMouseEvent(e, 'mousedown'));
       canvas.addEventListener('mouseup', e => this._handleMouseEvent(e, 'mouseup'));
       canvas.addEventListener('click', e => this._handleMouseEvent(e, 'click'));
-  
+  canvas.addEventListener('wheel', e => this._handleWheelEvent(e));
+
       window.addEventListener('keydown', e => {
         if (UIElement.focusedElement?.handleKeyDown) {
           UIElement.focusedElement.handleKeyDown(e);
@@ -56,24 +57,52 @@ export class UIStage {
   
     _handleMouseEvent(e, type) {
         if (!this.activeRoot) return;
-       // console.log('📍 Mouse event:');
-
+   
         const canvas = this.layoutRenderer.canvas;
         const rect = canvas.getBoundingClientRect();
- //console.log('Mouse Event:', { type, clientX: e.clientX, clientY: e.clientY, rect });
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
       
-        const x = (e.clientX - rect.left) * scaleX;
-        const y = (e.clientY - rect.top) * scaleY;
-    
-if(this.overlayRoot && this.overlayRoot.dispatchEvent({ type, x, y })) {
-  return;
-}
+        let x = (e.clientX - rect.left) * scaleX;
+        let y = (e.clientY - rect.top) * scaleY;
 
-        this.activeRoot.dispatchEvent({ type, x, y });
+        const scrollTarget = this._findScrollableAt(this.activeRoot, x, y);
+        if (scrollTarget&&scrollTarget.scrollController) {
+          y+= scrollTarget.scrollController.offsetY;
+        }
+    const event = { type, x, y}
+if(this.overlayRoot && this.overlayRoot.dispatchEvent(event)) return;
+
+        this.activeRoot.dispatchEvent(event);
       }
       
+      _handleWheelEvent(e) {
+        if (!this.activeRoot) return;
+      
+        const canvas = this.layoutRenderer.canvas;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        const deltaY = e.deltaY;
+        const scrollable = this._findScrollableAt(this.activeRoot, x, y);
+        if (scrollable) {
+          scrollable.handleScroll(deltaY);
+          e.preventDefault();
+        }
+      }
+
+      _findScrollableAt(root, x, y) {
+        for (const child of root.children) {
+          if (child.contains(x, y)) {
+           if(typeof child.handleScroll === 'function')  return child;
+           const nested = this._findScrollableAt(child, x, y);
+if(nested) return nested;         
+          }
+        }
+        return null;
+      }
   
     // -------------------------------
     // Rendering

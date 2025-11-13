@@ -5,6 +5,7 @@ import { createUIComponent } from './createUIComponent.js';
 import { UIInputBox } from './inputBox.js';
 import { LabeledInput } from './labeledInput.js';
 import { PlaceholderPromptOverlay } from './placeHolderOverlay.js';
+import { UIScrollContainer } from './scrollContainer.js';
 import { UIText } from './text.js';
 
 export class CreateForm extends UIElement {
@@ -18,79 +19,95 @@ export class CreateForm extends UIElement {
     this.onSubmit = onSubmit;
 
     this.fieldComponents = new Map();
-    
+    this.formContainer = null;
     this.buildUI();
    this.buildFromManifest();
   }
 
   buildUI() {
+    const UIcontainer = createUIComponent({
+      id: `${this.id}-container`,
+      type: 'container',
+      layout: { x: 30, y: 80, width: 100, height: 300 }
+    }, this.context);
+    UIcontainer.initializeScroll();
+    this.addChild(UIcontainer);
     const saveBtn = createUIComponent({
       id: `${this.id}-saveBtn`,
       type: 'button',
       label: 'Save Form',
-      layout: { x: 20, y: 20, width: 100, height: 40 },
+      
       onClick: () => this.handleSubmit()
-    }, this.context);
+    }, this.context, {place: false});
+    
 const addTitleBtn = createUIComponent({
       id: `${this.id}-addTitle`,
       type: 'button',
       label: 'Add Title',
       layout: { x: 20, y: 100, width: 100, height: 40 },
       onClick: () => this.addCompenent('text')
-    }, this.context);
+    }, this.context, {place: false});
 const addInputBtn = createUIComponent({
       id: `${this.id}-addInput`,
       type: 'button',
       label: 'Add Input',
       layout: { x: 20, y: 160, width: 100, height: 40 },
       onClick: () => this.addCompenent('input')
-    }, this.context);
-
-    this.addChild(addTitleBtn);
-    this.addChild(addInputBtn);
-    this.addChild(saveBtn);
+    }, this.context, {place: false});
+    UIcontainer.addChild(saveBtn);
+    UIcontainer.addChild(addTitleBtn);
+    UIcontainer.addChild(addInputBtn);
 
   }
 
   buildFromManifest() {
+    this.formContainer= createUIComponent({
+      id: `${this.id}-formContainer`,
+      type: 'container',
+      layout: { x: 200, y: 80, width: 600, height: 400 },
+      childSpacing: 15,
+      defaultChildHeight: 70
+    }, this.context);
+    this.formContainer.initializeScroll();
+    this.addChild(this.formContainer);
 
-    this.manifest.fields.forEach(field => {
-      const { id, type, label, placeholder, layout } = field;
-console.log(field);
-switch(type) {
-        case 'text':
-          const title = createUIComponent({
-            id,
-            type: 'text',
-            label,
-            layout
-          }, this.context);
-          this.fieldComponents.set(id, title);
-          this.addChild(title);
-          break;
-        case 'input':
-          const inputBox = createUIComponent({
-            id,
-            type: 'input',
-            label,
-            placeholder,
-            layout
-          }, this.context);
-          this.fieldComponents.set(id, inputBox);
-          this.addChild(inputBox);
-          break;
-          case 'button':
-          const button = createUIComponent({
-            id,
-            type: 'button',
-            label,
-            layout
-          }, this.context);
-          this.fieldComponents.set(id, button);
-          this.addChild(button);
-        }
+//     this.manifest.fields.forEach(field => {
+//       const { id, type, label, placeholder, layout } = field;
+// console.log(field);
+// switch(type) {
+//         case 'text':
+//           const title = createUIComponent({
+//             id,
+//             type: 'text',
+//             label,
+//             layout
+//           }, this.context);
+//           this.fieldComponents.set(id, title);
+//           this.addChild(title);
+//           break;
+//         case 'input':
+//           const inputBox = createUIComponent({
+//             id,
+//             type: 'input',
+//             label,
+//             placeholder,
+//             layout
+//           }, this.context);
+//           this.fieldComponents.set(id, inputBox);
+//           this.addChild(inputBox);
+//           break;
+//           case 'button':
+//           const button = createUIComponent({
+//             id,
+//             type: 'button',
+//             label,
+//             layout
+//           }, this.context);
+//           this.fieldComponents.set(id, button);
+//           this.addChild(button);
+//         }
   
-    });
+//     });
     
   }
 
@@ -101,17 +118,17 @@ switch(type) {
           id: `input-${Date.now()}`,
           type: 'text',
           label: 'New Title',
-          layout: { x: 225, y: 10 + this.fieldComponents.size * 65, width: 450, height: 60 }
+          // layout: { x: 225, y: 10 + this.fieldComponents.size * 65, width: 450, height: 60 }
         };
         this.manifest.fields.push(newField);
         const title = createUIComponent({
           id: newField.id,
           type: 'text',
           label: newField.label,
-          layout: newField.layout
+          // layout: newField.layout
         }, this.context);
         this.fieldComponents.set(newField.id, title);
-         this.addChild(title);
+         this.formContainer.addChild(title);
          break;
       case 'input':
         const newInputField = {
@@ -119,7 +136,7 @@ switch(type) {
             type: 'input',
             label: 'New Input',
             placeholder: 'Enter text here...',
-            layout: { x: 225, y: 10 + this.fieldComponents.size * 65, width: 450, height: 60 }
+           
           };
           this.manifest.fields.push(newInputField);
           const inputBox = createUIComponent({
@@ -127,10 +144,10 @@ switch(type) {
             type: 'input',
             label: newInputField.label,
             placeholder: newInputField.placeholder,
-            layout: newInputField.layout
-          }, this.context);
+          
+          }, this.context, {place: false});
           this.fieldComponents.set(newInputField.id, inputBox);
-          this.addChild(inputBox);
+          this.formContainer.addChild(inputBox);
           break;
         }
 this.context.pipeline.invalidate();

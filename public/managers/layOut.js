@@ -100,6 +100,13 @@ export class LayoutManager {
     getLogicalBounds(id) {
       return this.registry.get(id) || null;
     }
+    setLogicalBounds(id, bounds) {
+      if (this.registry.has(id)) {
+        this.registry.set(id, { ...this.registry.get(id), ...bounds });
+      } else {
+        this.registry.set(id, bounds);
+      }
+    }
     dumpRegistry() {
       console.log('📦 Layout Registry Dump:');
       for (const [id, bounds] of this.registry.entries()) {

@@ -2,23 +2,38 @@ import { ScrollController } from "../controllers/scrollControllrt.js";
 import { UIElement } from "./UiElement.js";
 
 export class UIScrollContainer extends UIElement {
-    constructor({ id, layoutManager, layoutRenderer }) {
+    constructor({ id, layoutManager, layoutRenderer, childSpaceing = 10, defaultChildHeight = 50 }) {
       super({ id, layoutManager, layoutRenderer });
       this.scrollController = null
+      this.childSpacing = childSpaceing || 10;
+      this.defaultChildHeight = defaultChildHeight || 50;
     }
   
     addChild(child) {
       super.addChild(child);
+      this.layoutChildrenVertically(this.childSpacing, this.defaultChildHeight);
+    }
+layoutChildrenVertically(spacing, defaultHeight) {
+      const containerBounds = this.layoutManager.getLogicalBounds(this.id);
+      if (!containerBounds) return;
+      let currentY = containerBounds.y + spacing;
+      for (const child of this.children) {
+        this.layoutManager.setLogicalBounds(child.id, {
+          x: containerBounds.x + spacing,
+          y: currentY,
+          width: containerBounds.width - 2 * spacing,
+          height: defaultHeight
+        });
+        currentY += defaultHeight + spacing;
+      }
       this.updateContentHeight();
     }
-
     initializeScroll() {
         const bounds = this.layoutManager.getLogicalBounds(this.id);
         if (!bounds) {
           console.warn(`UIScrollContainer: Bounds not found for ${this.id}`);
           return;
         }
-        // console.log('Container bounds:', this.layoutManager.getLogicalBounds(this.id));
       
         this.scrollController = new ScrollController({
           contentHeight: 0,
@@ -32,8 +47,6 @@ export class UIScrollContainer extends UIElement {
       const bounds = this.layoutManager.getLogicalBounds(lastChild.id);
       const containerBounds = this.layoutManager.getLogicalBounds(this.id);
       this.scrollController.contentHeight = bounds.y + bounds.height - containerBounds.y;
-      // console.log('Container bounds:', this.layoutManager.getLogicalBounds(this.id));
-      // console.log('Last child bounds:', this.layoutManager.getLogicalBounds(lastChild.id));
     }
   
     handleScroll(deltaY) {
@@ -65,18 +78,5 @@ export class UIScrollContainer extends UIElement {
       ctx.restore();
     }
     
-    // dispatchEvent(event) {
-    //   if (!this.visible || !this.scrollController) return false;
-    
-    //   const offsetY = this.scrollController.offsetY || 0;
-    //   const adjustedEvent = { ...event, y: event.y + offsetY };
-    
-    //   for (const child of this.children) {
-    //     if (child.dispatchEvent?.(adjustedEvent)) return true;
-        
-    //   }
-    
-    //   return false;
-    // }
     
   }

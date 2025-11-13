@@ -18,21 +18,26 @@ constructor({ id, editor, layoutManager, layoutRenderer, label = 'new input', in
         const labelId = `${this.id}-label`;
         const inputId = `${this.id}-input`;
     
+const labelHeight = 16;
+const inputHeight = 28;
+const verticalSpacing = 4;
+const labelOffset = 2;
+
         this.layoutManager.place({
             id: labelId,
             x: 0,
-            y: 0,
+            y: labelOffset,
             width: 400,
-            height: 20,
+            height: labelHeight,
             parent: this.id
         });
     
         this.layoutManager.place({
             id: inputId,
             x: 0,
-            y: 25,
+            y: labelHeight + verticalSpacing,
             width: 400,
-            height: 30,
+            height: inputHeight,
             parent: this.id
         });
 

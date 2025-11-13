@@ -1,5 +1,6 @@
 import { UIButton } from "./button.js";
 import {  LabeledInput } from "./labeledInput.js";
+import { UIScrollContainer } from "./scrollContainer.js";
 import { UIText } from "./text.js";
 
 export function createUIComponent(field, context, {place = true} = {}) {
@@ -10,8 +11,11 @@ export function createUIComponent(field, context, {place = true} = {}) {
     placeholder='',
     layout={},
     interactive = true,
+    childSpacing = 10,
+    defaultChildHeight = 50,
     onChange,
-    onClick
+    onClick,
+    
   } = field;
   const { textEditorController, uiStage, pluginRegistry } = context;
   
@@ -43,6 +47,15 @@ export function createUIComponent(field, context, {place = true} = {}) {
             onChange: onChange || ((value) => { console.log(`Input ${id} changed to:`, value); }),
         });
         break;
+        case 'container':
+            component = new UIScrollContainer({
+                id,
+                layoutManager: uiStage.layoutManager,
+                layoutRenderer: uiStage.layoutRenderer,
+                childSpaceing: childSpacing,
+                defaultChildHeight: defaultChildHeight,
+            });
+            break;
         }  
 
     if (place) {
