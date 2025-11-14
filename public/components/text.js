@@ -11,6 +11,7 @@ export class UIText extends UIElement {
     this.valign = valign;
     this.type = 'uiText';
     this.interactive = true;
+    this.draggable = true
   }
 
   onClick() {

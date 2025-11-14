@@ -68,6 +68,11 @@ export class UIStage {
 
     const event = { type, x, y}
 if(this.overlayRoot && this.overlayRoot.dispatchEvent(event)) return;
+if(event.type === 'mousemove'){
+ if(UIElement.focusedElement?.onMouseMove){
+    UIElement.focusedElement.onMouseMove(x, y);
+  }
+}
 
         this.activeRoot.dispatchEvent(event);
       }

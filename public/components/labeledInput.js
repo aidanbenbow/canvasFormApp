@@ -9,7 +9,7 @@ constructor({ id, editor, layoutManager, layoutRenderer, label = 'new input', in
     this.label = label;
     this.inputType = inputType;
     this.editorController = editor;
-   
+   this.draggable = true;
     this.value = value;
     this.onChange = onChange;
     this.buildLayout();

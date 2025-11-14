@@ -10,11 +10,16 @@ import { UIText } from './text.js';
 
 export class CreateForm extends UIElement {
   constructor({ id = 'createForm', layoutManager, layoutRenderer, context, manifest, onSubmit }) {
-    super({ id, layoutManager, layoutRenderer });
+    super({ id, layoutManager, layoutRenderer, context });
     this.context = context;
     this.editorController = context?.textEditorController;
-    this.manifest = manifest;
-    console.log(manifest);
+    this.manifest = {
+      label: 'new form',
+      fields: [],
+      id: `form-${Date.now()}`,
+      mode: 'create',
+    }
+   
     this.formLabel = manifest.label || 'new form';
     this.onSubmit = onSubmit;
 
@@ -141,24 +146,32 @@ this.context.pipeline.invalidate();
   }
 
   handleSubmit() {
-    const updatedFields = this.manifest.fields.map(field => {
-      const component = this.fieldComponents.get(field.id);
-      if (component instanceof UIInputBox) {
-        return {
-          ...field,
-          placeholder: component.placeholder
-        };
-      }
-      return field;
-    });
+    this.fieldComponents.forEach((component, id) => {
+      const layout = this.context.uiStage.layoutManager.getLogicalBounds(id);
+      this.manifest.fields = this.manifest.fields.map(field => {
+        if(field.id !== id) return field;
+        const updated = { ...field, layout };
+      
+          if (component instanceof LabeledInput) {
+            const labelText = component.getChildById(`${id}-label`)
+            if(labelText instanceof UIText){
+           updated.label = labelText.text;}
+          } else if (component instanceof UIText) {
+            updated.label = component.text;
+          } else if (component instanceof UIButton) {
+            updated.label = component.label;
+          }
+          if(component instanceof UIInputBox){
+            updated.placeholder = component.placeholder;
+          }
+        
+        return updated;
+      });
+      console.log('Updated manifest:', this.manifest);
 
-    const updatedManifest = {
-      ...this.manifest,
-      fields: updatedFields
-    };
-console.log('Form saved with manifest:', updatedManifest);
-    //this.onSubmit?.(updatedManifest);
   }
+    );
+}
 
   onChildEvent(event, child) {
     if (

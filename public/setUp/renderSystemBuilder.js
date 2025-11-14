@@ -1,4 +1,5 @@
 import { UIStage } from "../components/uiStage.js";
+import { DragController } from "../controllers/dragController.js";
 import { TextEditorController } from "../controllers/textEditor.js";
 import { HitManager } from "../managers/hit.js";
 import { interactionManager } from "../managers/interaction.js";
@@ -33,7 +34,7 @@ export class RenderSystemBuilder {
         this.pipeline.setRendererContext(this.canvasManager.getContext());
         this.textEditorController = new TextEditorController(this.pipeline,this.layoutManager, this.layoutRenderer, this.uiStage);
         this.components = {};
-        
+        this.dragController = new DragController(this.pipeline);
         this.attachRendererHooks();
     }
     createRendererContext(layer = 'main') {

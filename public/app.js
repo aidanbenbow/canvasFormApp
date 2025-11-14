@@ -394,11 +394,6 @@ const results = fetchFormResults('msg-1762771379271', 'faithandbelief').then(dat
 //   uiStage.setActiveRoot('dashboard');
 // dashboardOverlay.registerHitRegions(context.hitRegistry);
 
-// const dragController = new DragController({ canvas: mainCanvas,hitManager: context.hitManager, layoutManager, pipeline: context.pipeline,
-// getMousePos: utilsRegister.get('mouse', 'getMousePosition'),
-// normalisePos: utilsRegister.get('normalise', 'normalizePos') });
-
-// context.dragController = dragController;
 
 const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
 system.eventBus.on('hitClick', ({hex}) => {

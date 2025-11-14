@@ -2,11 +2,11 @@
 
 export class UIElement {
     static focusedElement = null;
-    constructor({ id, layoutManager, layoutRenderer }) {
+    constructor({ id, layoutManager, layoutRenderer, context=null }) {
       this.id = id;
       this.layoutManager = layoutManager;
       this.layoutRenderer = layoutRenderer;
-  
+  this.context = context;
       this.children = [];
       this.parent = null;
       this.visible = true;
@@ -23,6 +23,7 @@ export class UIElement {
         child.layoutManager = this.layoutManager;
         child.layoutRenderer = this.layoutRenderer;
       child.parent = this;
+      child.context = this.context;
       this.children.push(child);
     }
 
@@ -79,6 +80,8 @@ while (ancestor) {
   
     //   // TARGET phase
        const hit = this.contains(event.x, event.y);
+      this.lastEventX = event.x;
+      this.lastEventY = event.y;
       
       if (this.interactive) {
         if (event.type === 'mousemove') {
@@ -107,8 +110,26 @@ while (ancestor) {
     onMouseEnter() { this.isHovered = true;
 }
     onMouseLeave() { this.isHovered = false; this.isActive = false; }
-    onMouseDown() { this.isActive = true; }
-    onMouseUp() { this.isActive = false; }
+    onMouseDown() { this.isActive = true; 
+    if(this.draggable&&this.layoutRenderer&&this.layoutManager){
+        const bounds = this.getScaledBounds();
+        const canvas = this.layoutRenderer.canvas;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        const startX = this.lastEventX;
+        const startY = this.lastEventY;
+        this.context.dragController.startDrag(this, startX, startY);
+        
+    }
+    }
+    onMouseUp() { this.isActive = false;
+    this.context.dragController.endDrag();
+    }
+    onMouseMove(x, y) {
+      this.context.dragController.updateDrag(x, y);
+    }
     onClick() {}
     onFocus() { this.isFocused = true; }
     onBlur() { this.isFocused = false; }
