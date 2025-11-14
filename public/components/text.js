@@ -21,7 +21,7 @@ export class UIText extends UIElement {
 
   render() {
     if (!this.visible) return;
-
+this.renderDragHighlight();
     this.layoutRenderer.drawText(
       this.id,
       this.text,

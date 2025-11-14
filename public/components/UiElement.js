@@ -11,12 +11,12 @@ export class UIElement {
       this.parent = null;
       this.visible = true;
       this.interactive = true;
-  
+
       // 🔹 Interaction state flags
       this.isHovered = false;
       this.isActive = false;
       this.isFocused = false;
-      
+      this.isDragging = false;
     }
   
     addChild(child) {
@@ -121,11 +121,12 @@ while (ancestor) {
         const startX = this.lastEventX;
         const startY = this.lastEventY;
         this.context.dragController.startDrag(this, startX, startY);
-        
+        this.isDragging = true;
     }
     }
     onMouseUp() { this.isActive = false;
     this.context.dragController.endDrag();
+    this.isDragging = false;
     }
     onMouseMove(x, y) {
       this.context.dragController.updateDrag(x, y);
@@ -143,6 +144,20 @@ while (ancestor) {
     render() {
       if (!this.visible) return;
       for (const c of this.children) c.render();
+     
+    }
+    renderDragHighlight(ctx) {
+      if (this.isDragging) {
+        const bounds = this.getScaledBounds();
+        const ctx = this.layoutRenderer.ctx;
+        if (bounds) {
+          ctx.save();
+          ctx.strokeStyle = '#00aaff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+          ctx.restore();
+        }
+      }
     }
 
     getChildById(id) {

@@ -7,6 +7,7 @@ export class DragController {
    }
     startDrag(element, startX, startY) {
         this.draggingElement = element;
+        this.draggingElement.isDragging = true;
         const bounds = element.getScaledBounds();
         if (bounds) {
             this.offsetX = startX - bounds.x;
@@ -17,16 +18,25 @@ export class DragController {
         if (!this.draggingElement) return;
         const newX = currentX - this.offsetX;
         const newY = currentY - this.offsetY;
+        const snappedPosition = this.snapToGrid(newX, newY, 10);
         this.draggingElement.layoutManager.setLogicalBounds(this.draggingElement.id, {
-            x: newX,
-            y: newY,
+            x: snappedPosition.x,
+            y: snappedPosition.y,
             width: this.draggingElement.layoutManager.getLogicalBounds(this.draggingElement.id).width,
             height: this.draggingElement.layoutManager.getLogicalBounds(this.draggingElement.id).height
         });
         this.pipeline.invalidate()
     }
     endDrag() {
+      if(!this.draggingElement) return;
+      this.draggingElement.isDragging = false;
         this.draggingElement = null;
+    }
+    snapToGrid(x, y, gridSize = 10) {
+      return {
+        x: Math.round(x / gridSize) * gridSize,
+        y: Math.round(y / gridSize) * gridSize
+      };
     }
 
   }

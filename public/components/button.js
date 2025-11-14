@@ -8,7 +8,7 @@ export class UIButton extends UIElement {
     this.type = 'uiButton';
     this.interactive = true;
     this.colour = colour;
-
+    this.draggable = true
   }
 
   onClick() {
@@ -39,6 +39,7 @@ export class UIButton extends UIElement {
       align: 'left',
       valign: 'middle'
     });
+  
   }
   layout(canvasWidth, canvasHeight) {
    // super.layout(canvasWidth, canvasHeight);

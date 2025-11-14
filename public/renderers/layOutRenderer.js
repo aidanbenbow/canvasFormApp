@@ -69,6 +69,17 @@ export class LayoutRenderer {
       return this.layout.getScaledBounds(id, this.canvas.width, this.canvas.height);
     }
     
+    drawDragOutline(id) {
+      const bounds = this.layout.getScaledBounds(id, this.canvas.width, this.canvas.height);
+      if (!bounds) return;
+  
+      this.ctx.save();
+      this.ctx.strokeStyle = '#ff0000';
+      this.ctx.lineWidth = 2;
+      this.ctx.setLineDash([5, 3]);
+      this.ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      this.ctx.restore();
+    }
   
     // Clear canvas
     clear() {

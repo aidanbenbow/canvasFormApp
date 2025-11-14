@@ -58,6 +58,7 @@ this.draggable = false;
       this.editorController.drawSelection(ctx);
       this.editorController.drawCaret(ctx);
     }
+
   }
   getValue() {
     return this.text
