@@ -13,12 +13,7 @@ export class CreateForm extends UIElement {
     super({ id, layoutManager, layoutRenderer, context });
     this.context = context;
     this.editorController = context?.textEditorController;
-    this.manifest = {
-      label: 'new form',
-      fields: [],
-      id: `form-${Date.now()}`,
-      mode: 'create',
-    }
+    this.manifest = manifest
    
     this.formLabel = manifest.label || 'new form';
     this.onSubmit = onSubmit;
@@ -167,8 +162,8 @@ this.context.pipeline.invalidate();
         
         return updated;
       });
-      console.log('Updated manifest:', this.manifest);
-
+    console.log('Updated manifest:', this.manifest);
+this.onSubmit?.(this.manifest);
   }
     );
 }

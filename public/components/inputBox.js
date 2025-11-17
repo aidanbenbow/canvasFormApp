@@ -17,6 +17,7 @@ this.draggable = false;
 
   // Focus the input box and notify controller
   onClick() {
+    console.log('Input box clicked');
     UIElement.setFocus(this);
     this.editorController.startEditing(this, 'text');
   }

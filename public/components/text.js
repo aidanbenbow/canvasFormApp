@@ -1,8 +1,8 @@
 import { UIElement } from './UiElement.js';
 
 export class UIText extends UIElement {
-  constructor({ id, text, editor, fontSize = 0.04, color = '#000', align = 'left', valign = 'top' }) {
-    super({ id});
+  constructor({ id, text, editor, context, layoutManager,layoutRenderer, fontSize = 0.04, color = '#000', align = 'left', valign = 'top', onClick }) {
+    super({ id, context, layoutManager, layoutRenderer });
     this.text = text;
     this.editorController = editor;
     this.fontSize = fontSize;
@@ -12,11 +12,14 @@ export class UIText extends UIElement {
     this.type = 'uiText';
     this.interactive = true;
     this.draggable = true
+    this.onClick = onClick;
+    this.isSelected = false;
   }
 
   onClick() {
     UIElement.setFocus(this);
-    this.editorController.startEditing(this, 'text');
+    this.onClick?.();
+    //this.editorController.startEditing(this, 'text');
   }
 
   render() {

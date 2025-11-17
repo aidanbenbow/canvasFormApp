@@ -7,6 +7,7 @@ import { UIFormResults } from "./components/formResults.js";
 import { UIInputBox } from "./components/inputBox.js";
 import { PopupKeyboard } from "./components/keyBoard.js";
 import { ResultsPanel } from "./components/resultsPanel.js";
+import { ViewForm } from "./components/viewForm.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { DragController } from "./controllers/dragController.js";
 import { emitFeedback, fetchAllForms, fetchFormResults, loadFormStructure, saveFormStructure, sendLog } from "./controllers/socketController.js";
@@ -121,73 +122,114 @@ dashboardOverlay.registerHitRegions(context.hitRegistry);
 
 context.pipeline.add(context.uiStage);
 
-
-
-// const createForm = new CreateForm({
+// const dashBoardOverlay = new Dashboard({
+//   forms: data,
+//   context,
 //   layoutManager,
 //   layoutRenderer,
-//   context,
-//   manifest: discussionFeedbackFormManifest,
-//   onSubmit: () => {
-//    const fields = discussionFeedbackFormManifest.fields.map(field => {
-//     const component = createForm.fieldComponents.get(field.id);
-//     if( component instanceof UIInputBox) {
-//       return {
-//         ...field,
-//         placeholder: component.placeholder
-//       };
-//     } return field;
-//     }
-//     )
-//     const layout = Object.fromEntries(Array.from(createForm.fieldComponents).map(([id]) => [
-//       id,
-//       createForm.layoutManager.getLogicalBounds(id)
-//     ]));
-//     const payload = {
-//       id: createForm.manifest.id || `form-${Date.now()}`,
-//       label: createForm.manifest.label || 'Untitled Form',
-//       user: 'admin',
-//       formStructure: { fields, layout }
-//     }
-// console.log('Form submitted with payload:', payload);
-//     saveFormStructure(payload);
+//   onCreateForm: (form) => {
+//     system.eventBus.emit('viewForm', form);
+//   },
+//   onEditForm: (form) => {
+//    console.log('Emitting editForm for:', form);
+//   // system.eventBus.emit('editForm', form);
+//   },
+//   onViewResults: (form) => {
+//    // system.eventBus.emit('viewResults', form);
 //   }
 // });
-//  context.uiStage.addRoot(createForm);
-//  context.uiStage.setActiveRoot('createForm');
+// context.uiStage.addRoot( dashBoardOverlay);
+// context.uiStage.setActiveRoot('dashboard');
+// context.pipeline.invalidate();
 
-// const formy = loadFormStructure('discussionFeedbackForm', (data) => {
-//   console.log('Form structure loaded:', data);
-//   const { layout, fields } = data.formData.formStructure;
-//   const form = new FormPanel({
-//     layoutManager,
-//     layoutRenderer,
-//     context,
-//     manifest: {
-//       id: data.formData.id,
-//       label: data.formData.label,
-//       fields: fields,
-//       layout: layout
-//     },
-//     pluginRegistry: pluginRegistry,
-//     onSubmit: (formData) => {
-//       sendLog(formData.id, formData,fields);
-//       // Handle form submission logic here
-//       emitFeedback( {
-//         success: true,
-//         text: "Form submitted successfully ✅",
-//         box: form
-//       })},
-//       onClose: () => {
-//         context.pipeline.remove(form);
-//         context.uiStage.setActiveRoot(''); // or switch to another root as needed
-//         context.pipeline.invalidate();
-//       }
-//   });
-//   context.uiStage.addRoot(form);
-//   context.uiStage.setActiveRoot('formPanel');
-//   context.pipeline.invalidate();
-// });
+const form = [
+  {
+    "id": "form-1763362397631",
+    "formStructure": {
+     "fields": [
+      {
+       "id": "input-1763362399454",
+       "label": "New student",
+       "layout": {
+        "height": 70,
+        "parent": null,
+        "width": 570,
+        "x": 215,
+        "y": 95
+       },
+       "type": "text"
+      },
+      {
+       "id": "input-1763362400477",
+       "label": "Name",
+       "layout": {
+        "height": 70,
+        "width": 570,
+        "x": 215,
+        "y": 180
+       },
+       "placeholder": "Enter text here...",
+       "type": "input"
+      },
+      {
+       "id": "button-1763362401308",
+       "label": "submit",
+       "type": "button"
+      }
+     ],
+     "layout": {
+      "button-1763362401308": {
+       "height": 70,
+       "width": 570,
+       "x": 215,
+       "y": 265
+      },
+      "input-1763362399454": {
+       "height": 70,
+       "parent": null,
+       "width": 570,
+       "x": 215,
+       "y": 95
+      },
+      "input-1763362400477": {
+       "height": 70,
+       "width": 570,
+       "x": 215,
+       "y": 180
+      }
+     }
+    },
+    "label": "new form",
+    "lastModified": "2025-11-17T06:53:40.272Z",
+    "user": "admin"
+   }
+
+]
+
+setTimeout(() => {
+system.eventBus.emit('viewForm', form[0]);
+}, 1000);
+
+system.eventBus.on('viewForm', (formData) => {
+  console.log('Viewing form data:', formData);
+ const formi = new ViewForm({
+    id: `viewForm-${Date.now()}`,
+    context,
+    layoutManager,
+    layoutRenderer,
+    form: formData,
+    onSubmit: () => {
+      system.eventBus.emit('formSubmitted', { formId: 'hi' });
+    }
+ });
+  context.uiStage.addRoot(formi);
+  context.uiStage.setActiveRoot(formi.id);
+  context.pipeline.invalidate();
+});
+
+system.eventBus.on('formSubmitted', ({ formId }) => {
+  console.log('Form submitted with ID:', formId);
+});
 
 function launchFormPanel({layoutManager,
   layoutRenderer, context,manifest, pluginRegistry, emitFeedback}) {
@@ -240,7 +282,7 @@ function launchCreateForm({
         }
         return field;
       });
-
+console.log('Fields after submission:', fields);
       const layout = Object.fromEntries(
         Array.from(createForm.fieldComponents).map(([id]) => [
           id,
@@ -265,30 +307,22 @@ function launchCreateForm({
   context.pipeline.invalidate();
 }
 
-launchCreateForm({
-  layoutManager,
-  layoutRenderer,
-  context,
-  manifest: blankFormManifest,
-  saveFormStructure
-});
+const trialManifest = 
+  {
+    label: 'new form',
+    fields: [],
+    id: `form-${Date.now()}`,
+    mode: 'create',
+  }
 
-const normalizeFormManifest = (form) => {
-  const inputs = form.inputs || {};
-  return {
-    id: inputs.id || form.id || `form-${Date.now()}`,
-    label: inputs.label || 'Untitled Form',
-    user: inputs.user || 'admin',
-    mode: 'results',
-    layout: {
-      title: { x: 20, y: 20, width: 300, height: 40 }
-    },
-    fields: (inputs.fields || []).map(field => ({
-      ...field,
-      layout: field.layout || { width: 300, height: 40 }
-    }))
-  };
-};
+// launchCreateForm({
+//   layoutManager,
+//   layoutRenderer,
+//   context,
+//   manifest: trialManifest,
+//   saveFormStructure
+// });
+
 
 // const formPanel = new FormPanel({
 //   layoutManager,
@@ -314,49 +348,49 @@ const normalizeFormManifest = (form) => {
 // context.uiStage.addRoot(formPanel);
 // context.uiStage.setActiveRoot('formPanel');
 
-registerFieldTypes();
+// registerFieldTypes();
 
-const display = fetchAllForms('admin').then(({user,forms}) => {
-  const allFormsPanel = new AllForms({
-    user,
-    forms,
-    layoutManager,
-    layoutRenderer,
-    onCreateForm: () => {
-launchCreateForm({
-        layoutManager,
-        layoutRenderer,
-        context,
-        manifest: blankFormManifest,
-        saveFormStructure
-      });
-    },
-    onViewForm: (form) => {
-      const mani = normalizeFormManifest(form);
-      launchFormPanel({layoutManager,
-        layoutRenderer, context,manifest:mani, pluginRegistry,
-        emitFeedback});
-    }
-  });
-  context.uiStage.addRoot(allFormsPanel);
- // context.uiStage.setActiveRoot(allFormsPanel.id)
-  context.pipeline.invalidate();
-}).catch(err => {
-  console.error('Error fetching forms:', err);
-});
+// const display = fetchAllForms('admin').then(({user,forms}) => {
+//   const allFormsPanel = new AllForms({
+//     user,
+//     forms,
+//     layoutManager,
+//     layoutRenderer,
+//     onCreateForm: () => {
+// launchCreateForm({
+//         layoutManager,
+//         layoutRenderer,
+//         context,
+//         manifest: blankFormManifest,
+//         saveFormStructure
+//       });
+//     },
+//     onViewForm: (form) => {
+//       const mani = normalizeFormManifest(form);
+//       launchFormPanel({layoutManager,
+//         layoutRenderer, context,manifest:mani, pluginRegistry,
+//         emitFeedback});
+//     }
+//   });
+//   context.uiStage.addRoot(allFormsPanel);
+//  // context.uiStage.setActiveRoot(allFormsPanel.id)
+//   context.pipeline.invalidate();
+// }).catch(err => {
+//   console.error('Error fetching forms:', err);
+// });
 
-const results = fetchFormResults('msg-1762771379271', 'faithandbelief').then(data => {
-  const resultsPanel = new ResultsPanel({
-    results: data,
-    layoutManager,
-    layoutRenderer
-  });
-  context.uiStage.addRoot(resultsPanel);
- // context.uiStage.setActiveRoot(resultsPanel.id)
-  context.pipeline.invalidate();
-}).catch(err => {
-  console.error('Error fetching form results:', err);
-});
+// const results = fetchFormResults('msg-1762771379271', 'faithandbelief').then(data => {
+//   const resultsPanel = new ResultsPanel({
+//     results: data,
+//     layoutManager,
+//     layoutRenderer
+//   });
+//   context.uiStage.addRoot(resultsPanel);
+//  // context.uiStage.setActiveRoot(resultsPanel.id)
+//   context.pipeline.invalidate();
+// }).catch(err => {
+//   console.error('Error fetching form results:', err);
+// });
 
 
   // const loginPlugin = new LoginPlugin({
@@ -374,25 +408,6 @@ const results = fetchFormResults('msg-1762771379271', 'faithandbelief').then(dat
   // uiStage.addRoot(loginPlugin);
   // uiStage.setActiveRoot(loginPlugin.id);
   // loginPlugin.registerHitRegions(context.hitRegistry);
-
-//   const dashboardOverlay = new Dashboard({
-//     forms: data,
-//     layoutManager,
-//     layoutRenderer,
-//     onCreateForm: () => {
-//       system.eventBus.emit('createForm');
-//     },
-//     onEditForm: (form) => {
-//      //console.log('Emitting editForm for:', form);
-//      system.eventBus.emit('editForm', form);
-//     },
-//     onViewResults: (form) => {
-//       system.eventBus.emit('viewResults', form);
-//     }
-//   });
-//   uiStage.addRoot( dashboardOverlay);
-//   uiStage.setActiveRoot('dashboard');
-// dashboardOverlay.registerHitRegions(context.hitRegistry);
 
 
 const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
@@ -488,43 +503,6 @@ system.eventBus.on('hitClick', ({hex}) => {
 
   let activeKeyboard = null;
 
-
-  // system.eventBus.on('showKeyboard', ({ box, field }) => {
-  //   if (activeKeyboard) {
-  //     uiStage.getActiveRoot().removeChild(activeKeyboard);
-  //    // uiRegistry.remove(activeKeyboard);
-  //     activeKeyboard = null;
-  //   }
-  
-  //   const keyboard = new PopupKeyboard({
-  //     layoutManager,
-  //     layoutRenderer,
-  //     editorController: context.textEditorController,
-  //     targetBox: box,
-  //     targetField: field,
-  //   });
- 
-    
-    
-  //  uiStage.getActiveRoot().addChild(keyboard);
-  //   activeKeyboard = keyboard;
-  //   context.pipeline.invalidate();
-  // });
-  
-  
-  
-  // system.eventBus.on('hideKeyboard', () => {
-  //   if (activeKeyboard) {
-  //     adminOverlay.unregister(activeKeyboard);
-  //     context.pipeline.remove(activeKeyboard);
-  //     activeKeyboard = null;
-  //   }
-  //   if (modeState.current !== 'admin') {
-  //     adminCanvas.style.pointerEvents = 'none';
-  //   }
-  //   context.pipeline.invalidate();
-  // });
-  
   system.eventBus.on('loginAttempt', ({ password }) => {
     if (password === 'aa') {
       loginPlugin.onLogin();

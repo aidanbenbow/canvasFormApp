@@ -2,7 +2,7 @@
 
 export class UIElement {
     static focusedElement = null;
-    constructor({ id, layoutManager, layoutRenderer, context=null }) {
+    constructor({ id, context=null, layoutManager, layoutRenderer, }) {
       this.id = id;
       this.layoutManager = layoutManager;
       this.layoutRenderer = layoutRenderer;
@@ -25,9 +25,11 @@ export class UIElement {
       child.parent = this;
       child.context = this.context;
       this.children.push(child);
+    
     }
 
     static setFocus(target) {
+     
         if (UIElement.focusedElement && UIElement.focusedElement !== target) {
           UIElement.focusedElement.onBlur();
         }
@@ -82,7 +84,11 @@ while (ancestor) {
        const hit = this.contains(event.x, event.y);
       this.lastEventX = event.x;
       this.lastEventY = event.y;
-      
+      if(event.type === 'click'){
+
+        console.log(`Event ${event.type} at (${event.x}, ${event.y}) on ${this.id}, hit: ${hit}`);
+      }
+
       if (this.interactive) {
         if (event.type === 'mousemove') {
           if (hit && !this.isHovered) this.onMouseEnter();
@@ -143,11 +149,12 @@ while (ancestor) {
   
     render() {
       if (!this.visible) return;
+      
       for (const c of this.children) c.render();
      
     }
     renderDragHighlight(ctx) {
-      if (this.isDragging) {
+      if (this.isDragging||this.isSelected) {
         const bounds = this.getScaledBounds();
         const ctx = this.layoutRenderer.ctx;
         if (bounds) {

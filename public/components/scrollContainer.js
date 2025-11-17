@@ -2,8 +2,8 @@ import { ScrollController } from "../controllers/scrollControllrt.js";
 import { UIElement } from "./UiElement.js";
 
 export class UIScrollContainer extends UIElement {
-    constructor({ id, layoutManager, layoutRenderer, childSpaceing = 10, defaultChildHeight = 50 }) {
-      super({ id, layoutManager, layoutRenderer });
+    constructor({ id,context, layoutManager, layoutRenderer, childSpaceing = 10, defaultChildHeight = 50 }) {
+      super({ id,context, layoutManager, layoutRenderer });
       this.scrollController = null
       this.childSpacing = childSpaceing || 10;
       this.defaultChildHeight = defaultChildHeight || 50;
@@ -54,6 +54,7 @@ layoutChildrenVertically(spacing, defaultHeight) {
     }
   
     render() {
+    console.log('Rendering UIScrollContainer:', this.id);
       if (!this.visible) return;
   
       const ctx = this.layoutRenderer.ctx;

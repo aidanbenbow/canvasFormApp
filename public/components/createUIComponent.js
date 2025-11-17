@@ -27,6 +27,9 @@ export function createUIComponent(field, context, {place = true} = {}) {
             id,
             label,
             onClick: onClick || (() => { console.log(`Button ${id} clicked`); }),
+            context,
+            layoutManager: uiStage.layoutManager,
+            layoutRenderer: uiStage.layoutRenderer,
             });
             break;
     case 'text':
@@ -34,12 +37,17 @@ export function createUIComponent(field, context, {place = true} = {}) {
             id,
             text: label,
             editor: textEditorController,
+            context,
+            layoutManager: uiStage.layoutManager,
+            layoutRenderer: uiStage.layoutRenderer,
+            onClick: onClick || (() => { console.log(`Text ${id} clicked`); }),
             });
             break;
      case 'input':
         component = new LabeledInput({
             id,
             editor: textEditorController,
+            context,
             layoutManager: uiStage.layoutManager,
             layoutRenderer: uiStage.layoutRenderer,
             label,
@@ -50,6 +58,7 @@ export function createUIComponent(field, context, {place = true} = {}) {
         case 'container':
             component = new UIScrollContainer({
                 id,
+                context,
                 layoutManager: uiStage.layoutManager,
                 layoutRenderer: uiStage.layoutRenderer,
                 childSpaceing: childSpacing,
