@@ -10,7 +10,7 @@ import { ResultsPanel } from "./components/resultsPanel.js";
 import { ViewForm } from "./components/viewForm.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { DragController } from "./controllers/dragController.js";
-import { emitFeedback, fetchAllForms, fetchFormResults, loadFormStructure, saveFormStructure, sendLog } from "./controllers/socketController.js";
+import { emitFeedback, fetchAllForms, fetchFormById, fetchFormResults, loadFormStructure, saveFormStructure, sendLog } from "./controllers/socketController.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
 import { LayoutManager } from "./managers/layOut.js";
@@ -142,73 +142,72 @@ context.pipeline.add(context.uiStage);
 // context.uiStage.setActiveRoot('dashboard');
 // context.pipeline.invalidate();
 
-const form = [
-  {
-    "id": "form-1763362397631",
-    "formStructure": {
-     "fields": [
-      {
-       "id": "input-1763362399454",
-       "label": "New student",
-       "layout": {
-        "height": 70,
-        "parent": null,
-        "width": 570,
-        "x": 215,
-        "y": 95
-       },
-       "type": "text"
-      },
-      {
-       "id": "input-1763362400477",
-       "label": "Name",
-       "layout": {
-        "height": 70,
-        "width": 570,
-        "x": 215,
-        "y": 180
-       },
-       "placeholder": "Enter text here...",
-       "type": "input"
-      },
-      {
-       "id": "button-1763362401308",
-       "label": "submit",
-       "type": "button"
-      }
-     ],
-     "layout": {
-      "button-1763362401308": {
-       "height": 70,
-       "width": 570,
-       "x": 215,
-       "y": 265
-      },
-      "input-1763362399454": {
-       "height": 70,
-       "parent": null,
-       "width": 570,
-       "x": 215,
-       "y": 95
-      },
-      "input-1763362400477": {
-       "height": 70,
-       "width": 570,
-       "x": 215,
-       "y": 180
-      }
-     }
+
+
+const load = ['viewForm', 'dashBoard'];
+
+
+const urlParams = new URLSearchParams(window.location.search);
+const formId = urlParams.get('formId');
+
+if (formId) {
+  // Load a single form for public viewing
+  fetchFormById(formId).then(form => {
+    system.eventBus.emit('viewForm', form);
+  }).catch(err => {
+    console.error('Error loading form:', err);
+  });
+} else {
+  // Load all forms for the current user (e.g. admin)
+  fetchAllForms('admin').then(({ user, forms }) => {
+    system.eventBus.emit('dashBoard', forms);
+  }).catch(err => {
+    console.error('Error fetching forms:', err);
+  });
+}
+
+
+system.eventBus.on('dashBoard', (forms) => {
+  console.log('Loading dashboard with forms:', forms);
+  const dashBoardOverlay = new Dashboard({
+  
+    context,
+    layoutManager,
+    layoutRenderer,
+    forms: forms,
+    onCreateForm: (form) => {
+      system.eventBus.emit('viewForm', form);
     },
-    "label": "new form",
-    "lastModified": "2025-11-17T06:53:40.272Z",
-    "user": "admin"
-   }
+    onEditForm: (form) => {
+     console.log('Emitting editForm for:', form);
+     system.eventBus.emit('editForm', form);
+    },
+    onViewResults: (form) => {
+      system.eventBus.emit('viewResults', form);
+    }
+  });
+  context.uiStage.addRoot( dashBoardOverlay);
+  context.uiStage.setActiveRoot('dashboard');
+  context.pipeline.invalidate();
+});
 
-]
 
-setTimeout(() => {
-system.eventBus.emit('viewForm', form[0]);
-}, 1000);
+system.eventBus.on('viewResults', async (form) => {
+  console.log('Viewing results for form:', form);
+  const results = await fetchFormResults(form.id);
+  const resultsOverlay = new UIFormResults({
+    form,
+    results,
+    context,
+    layoutManager,
+    layoutRenderer,
+    
+  });
+
+  context.uiStage.addRoot(resultsOverlay);
+  context.uiStage.setActiveRoot('formResults');
+  context.pipeline.invalidate();
+});
 
 system.eventBus.on('viewForm', (formData) => {
   console.log('Viewing form data:', formData);
@@ -218,8 +217,8 @@ system.eventBus.on('viewForm', (formData) => {
     layoutManager,
     layoutRenderer,
     form: formData,
-    onSubmit: () => {
-      system.eventBus.emit('formSubmitted', { formId: 'hi' });
+    onSubmit: (form) => {
+      system.eventBus.emit('formSubmitted', { form});
     }
  });
   context.uiStage.addRoot(formi);
@@ -227,8 +226,12 @@ system.eventBus.on('viewForm', (formData) => {
   context.pipeline.invalidate();
 });
 
-system.eventBus.on('formSubmitted', ({ formId }) => {
-  console.log('Form submitted with ID:', formId);
+system.eventBus.on('formSubmitted', ({ form }) => {
+  sendLog('Form submitted:', form);
+});
+
+system.eventBus.on('messageResponse', ({ success, result }) => {
+  console.log('Message response received:', success, result);
 });
 
 function launchFormPanel({layoutManager,
@@ -449,7 +452,7 @@ system.eventBus.on('hitClick', ({hex}) => {
     uiStage.setActiveRoot('createForm');
     createForm.registerHitRegions(context.hitRegistry);
   });
- // system.eventBus.emit('createForm');
+
 
   system.eventBus.on('editForm', (form) => {
     console.log('Editing form:', form);
@@ -475,21 +478,8 @@ system.eventBus.on('hitClick', ({hex}) => {
     uiStage.setActiveRoot('formEditor');
   });
   
- // system.eventBus.emit('editForm', raw[3]);
+ 
 
-  system.eventBus.on('viewResults', async (form) => {
-    console.log('Viewing results for form:', form);
-    const results = await fetchFormResults(form.id);
-    const resultsOverlay = new UIFormResults({
-      layoutManager,
-      layoutRenderer,
-      form,
-      results
-    });
-
-    uiStage.addRoot(resultsOverlay);
-    uiStage.setActiveRoot('formResults');
-  });
 
   system.eventBus.on('modeChanged', (newMode) => {
     boxEditor.setMode(newMode);

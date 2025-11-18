@@ -9,74 +9,11 @@ export class Dashboard extends UIElement {
   constructor({ id = 'dashboard', context,layoutManager,layoutRenderer, forms, onCreateForm, onEditForm, onViewResults }) {
 
     super({ id, context, layoutManager, layoutRenderer });
-    let parsedForms = typeof forms === 'string' ? JSON.parse(forms) : forms;
-// this.forms = Array.isArray(parsedForms)
-//   ? parsedForms.filter(f => f.label && Array.isArray(f.formStructure))
-//   : [];
-this.forms = [
-  {
-    "id": "form-1763362397631",
-    "formStructure": {
-     "fields": [
-      {
-       "id": "input-1763362399454",
-       "label": "New student",
-       "layout": {
-        "height": 70,
-        "parent": null,
-        "width": 570,
-        "x": 215,
-        "y": 95
-       },
-       "type": "text"
-      },
-      {
-       "id": "input-1763362400477",
-       "label": "Name",
-       "layout": {
-        "height": 70,
-        "width": 570,
-        "x": 215,
-        "y": 180
-       },
-       "placeholder": "Enter text here...",
-       "type": "input"
-      },
-      {
-       "id": "button-1763362401308",
-       "label": "submit",
-       "type": "button"
-      }
-     ],
-     "layout": {
-      "button-1763362401308": {
-       "height": 70,
-       "width": 570,
-       "x": 215,
-       "y": 265
-      },
-      "input-1763362399454": {
-       "height": 70,
-       "parent": null,
-       "width": 570,
-       "x": 215,
-       "y": 95
-      },
-      "input-1763362400477": {
-       "height": 70,
-       "width": 570,
-       "x": 215,
-       "y": 180
-      }
-     }
-    },
-    "label": "new form",
-    "lastModified": "2025-11-17T06:53:40.272Z",
-    "user": "admin"
-   }
+this.forms = forms || [];
+  console.log('Dashboard initialized with forms:', this.forms);
 
-]
 this.selectedForm = null;
+this.selectedFormCard = null;
 this.context = context;
 this.layoutManager = layoutManager;
 this.layoutRenderer = layoutRenderer;
@@ -97,6 +34,7 @@ this.buildLayout();
     }, this.context);
     UIcontainer.initializeScroll();
     this.addChild(UIcontainer);
+
     const viewBtn = createUIComponent({
       id: `dashboard-viewBtn`,
       type: 'button',
@@ -111,6 +49,21 @@ this.buildLayout();
       }
     }, this.context, {place: false});
     UIcontainer.addChild(viewBtn);
+
+    const resultsBtn = createUIComponent({
+      id: `dashboard-resultsBtn`,
+      type: 'button',
+      label: 'Results',
+      
+      onClick: () => {
+        if (this.selectedForm) {
+          this.onViewResults(this.selectedForm);
+        } else {
+          console.log('No form selected to view results.');
+        }
+      }
+    }, this.context, {place: false});
+    UIcontainer.addChild(resultsBtn);
 
     this.formsContainer = createUIComponent({
       id: `${this.id}-formsContainer`,
@@ -131,71 +84,30 @@ this.buildLayout();
      
     }, this.context);
     this.formsContainer.addChild(title);
-    const form1 = createUIComponent({
-      id: `formCard-0`,
-      type: 'text',
-      label: this.forms[0]?.label || 'Form 1',
-      onClick: () => {
-        this.selectedForm = this.forms[0];
-      },
-    }, this.context);
-    this.formsContainer.addChild(form1);
-  }
 
-  registerHitRegions(hitRegistry) {
-    hitRegistry.registerPluginHits(this, {
-      createFormButton: 'button',
-    });
+this.forms.forEach((form, index) => {
+  const formCard = createUIComponent({
+    id: `formCard-${index}`,
+    type: 'text',
+    label: form.label || `Form ${index + 1}`,
+    onClick: () => {
+      // Reset previous selection
+      if (this.selectedFormCard) {
+        this.selectedFormCard.setStyle({ bgColor: null });
+      }
 
-    // // Register hits for dynamic form cards
-    // this.forms.forEach((form, index) => {
-    //   hitRegistry.registerPluginHits(this, {
-    //     [`edit-${index}`]: 'button',
-    //     [`view-${index}`]: 'button',
-    //   });
-    // });
-
-      //register granchildren hits
-    const formList = this.getChildById('formList');
-    formList.children.forEach(formCard => {
-      formCard.registerHitRegions?.(hitRegistry);
-    });
-    
-
+      // Set new selection
+      this.selectedForm = form;
+      this.selectedFormCard = formCard;
+      formCard.setStyle({ bgColor: '#d0f0fd' });
+this.context.pipeline.invalidate();
+      console.log('Selected form:', form.label);
     }
-  
 
-  // render() {
-  //  // console.log('Rendering Dashboard');
-  //   // Optional dashboard background
-  //   this.layoutRenderer.drawRect(this.id, { fill: '#fff', stroke: '#ccc', lineWidth: 1 });
+  }, this.context);
+  this.formsContainer.addChild(formCard);
 
-  //   // Render children
-  //   this.children.forEach(child => {
-  //     const ctx = this.layoutRenderer.ctx;
-     
-  //     if (child.scrollController) {
-  //       ctx.save();
-  //       const bounds = this.layoutManager.getScaledBounds(child.id, ctx.canvas.width, ctx.canvas.height);
-      
-  //       ctx.beginPath();
-  //       ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-  //      // ctx.clip();
-  //       child.scrollController.apply(ctx);
-  //       child.children.forEach(grandchild => {
-  //           grandchild.render()});
-  //       ctx.restore();
-  //     } else {
-  //       child.render();
-  //     }
-  //   });
-  // }
+  } );
 
-  // Handle mouse wheel scrolling
-  handleScroll(deltaY) {
-    const formList = this.getChildById('formList');
-    if (formList?.scrollController) {
-      formList.scrollController.scrollBy(deltaY);
-    }
   }
 }

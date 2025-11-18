@@ -8,7 +8,9 @@ export class ViewForm extends UIElement{
         this.form = typeof form === 'string' ? JSON.parse(form) : form;
         console.log('ViewForm initialized with form:', this.form);
         this.formContainer = null;
+        this.inputBoxes = new Map();
         this.onSubmit = onSubmit;
+        this.responseData = {};
         this.buildUI();
         this.buildForm();
     }
@@ -39,6 +41,7 @@ this.formContainer.addChild(title);
             placeholder: field.placeholder || '',
 
         }, this.context);
+        this.inputBoxes.set(field.label, inputBox);
 this.formContainer.addChild(inputBox);
          }
          if(field.type==='button') {
@@ -46,7 +49,18 @@ this.formContainer.addChild(inputBox);
                 id: field.id,
                 type: 'button',
                 label: field.label || 'Submit',
-                onClick: () => this.onSubmit()
+                onClick: () => {
+                    this.responseData = {
+                        formId: this.form.id,
+                        user: this.form.user || 'anonymous',
+                        responses: {}
+                    };
+                    console.log(this.inputBoxes);
+                    this.inputBoxes.forEach((inputBox, label) => {
+                        
+                        this.responseData.responses[label] = inputBox.getValue();
+                    });
+                    this.onSubmit(this.responseData);}
             }, this.context);
     this.formContainer.addChild(submitBtn);
             }

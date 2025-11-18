@@ -86,7 +86,6 @@ while (ancestor) {
       this.lastEventY = event.y;
       if(event.type === 'click'){
 
-        console.log(`Event ${event.type} at (${event.x}, ${event.y}) on ${this.id}, hit: ${hit}`);
       }
 
       if (this.interactive) {

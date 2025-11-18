@@ -1,66 +1,49 @@
 import { UIElement } from "./UiElement.js";
 import { UIButton } from "./button.js";
+import { createUIComponent } from "./createUIComponent.js";
 import { UIText } from "./text.js";
 
 
 export class UIFormResults extends UIElement {
-    constructor({ id='formResults', form, results, layoutManager, layoutRenderer, onClose }) {
-        super({ id, layoutManager, layoutRenderer });
+    constructor({ id='formResults', form, results,context, layoutManager, layoutRenderer, onClose }) {
+        super({ id,context, layoutManager, layoutRenderer });
         this.form = form;
         this.results = results;
         this.onClose = onClose;
     console.log('Form Results:', results);
+    this.resultsContainer = null;
         this.buildLayout();
         this.buildUI();
     }
     
     buildLayout() {
-        this.layoutManager.place({
-        id: `${this.id}-title`,
-        x: 20, y: 20, width: 70, height: 60,
-        parent: this.id
-        });
-    
-        this.layoutManager.place({
-        id: `${this.id}-close`,
-        x: 80, y: 20, width: 15, height: 15,
-        parent: this.id
-        });
-    
-        this.layoutManager.place({
-        id: `${this.id}-results`,
-        x: 20, y: 90, width: 75, height: 70,
-        parent: this.id
-        });
+      this.resultsContainer = createUIComponent({
+        id: `${this.id}-container`,
+        type: 'container',
+        layout: { x: 10, y: 10, width: 600, height: 400 }
+       }, this.context);
+         this.resultsContainer.initializeScroll();
+         this.addChild(this.resultsContainer);
     }
     
     buildUI() {
-        const title = new UIText({
-        id: `${this.id}-title`,
-        text: `Results for: ${this.form.label || 'Untitled Form'}`,
-        fontSize: 0.05,
-        color: '#000',
-        align: 'left',
-        valign: 'middle'
-        });
+        const title = createUIComponent({
+            id: `${this.id}-title`,
+            type: 'text',
+            label: `Results for: ${this.form.label || 'Untitled Form'}`
+        }, this.context);
+        this.resultsContainer.addChild(title);
     
-        const closeButton = new UIButton({
-        id: `${this.id}-close`,
-        label: '✖',
-        onClick: () => this.onClose?.()
-        });
+    this.results.forEach((result, index) => {
+        const resultText = createUIComponent({
+            id: `${this.id}-result-${index}`,
+            type: 'text',
+            label: ` ${JSON.stringify(result.inputs)}`
+        }, this.context);
+        this.resultsContainer.addChild(resultText);
+
+    } )
     
-        const resultsText = new UIText({
-        id: `${this.id}-results`,
-        text: `Total Submissions: ${this.results.length}`,
-        fontSize: 0.04,
-        color: '#000',
-        align: 'left',
-        valign: 'top'
-        });
-    
-        this.addChild(title);
-        this.addChild(closeButton);
-        this.addChild(resultsText);
-    }
-    }
+}
+}
+

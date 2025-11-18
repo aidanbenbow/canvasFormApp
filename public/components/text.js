@@ -7,6 +7,7 @@ export class UIText extends UIElement {
     this.editorController = editor;
     this.fontSize = fontSize;
     this.color = color;
+    this.bgColor = null;
     this.align = align;
     this.valign = valign;
     this.type = 'uiText';
@@ -21,6 +22,13 @@ export class UIText extends UIElement {
     this.onClick?.();
     //this.editorController.startEditing(this, 'text');
   }
+  setStyle({ color, bgColor, fontSize, align, valign }) {
+    if (color) this.color = color;
+    if (bgColor) this.bgColor = bgColor;
+    if (fontSize) this.fontSize = fontSize;
+    if (align) this.align = align;
+    if (valign) this.valign = valign;
+  }
 
   render() {
     if (!this.visible) return;
@@ -31,6 +39,7 @@ this.renderDragHighlight();
       this.fontSize,
       {
         fill: this.color,
+        backgroundFill: this.bgColor,
         align: this.align,
         valign: this.valign
       }

@@ -36,6 +36,10 @@ export class LayoutRenderer {
       const getLogicalFontSize = utilsRegister.get('layout', 'getLogicalFontSize');
       this.ctx.save();
       this.ctx.font = getLogicalFontSize(fontSize, this.canvas.height);
+      this.ctx.fillStyle = style.backgroundFill || null;
+      if (style.backgroundFill) {
+        this.ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      }
       
       this.ctx.fillStyle = style.fill || '#000';
       this.ctx.textAlign = style.align || 'left';

@@ -9,6 +9,8 @@ router.get('/', async (req, res) => {
     res.render('index', {data });
     });
 
+
+
     router.post('/message', async (req, res) => {
       const { formId, inputs } = req.body;
     console.log('Received message data:', req.body);
@@ -23,6 +25,8 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: error.message });
       }
     });
+
+
 
     router.post('/saveFormStructure', async (req, res) => {
         const { id, formStructure, label } = req.body;

@@ -51,6 +51,17 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('getFormById', async ({ formId }) => {
+    console.log(`Fetching form by ID: ${formId}`);
+    try {
+      const formData = await db.getFormDataById(formId);
+      socket.emit('formDataById', { formId, formData });
+    } catch (error) {
+      console.error('Error fetching form by ID:', error);
+      socket.emit('formDataById', { formId, formData: null, error: error.message });
+    }
+  });
+
   socket.on('log', async ({ message, data }) => {
     console.log(`[LOG] ${message}`);
     console.log('Received data:', data);
@@ -58,16 +69,16 @@ io.on('connection', (socket) => {
     try {
       // Save to DB
       const result = await db.saveMessage(
-        message, data
+        data.formId, data.user, data.responses
       );
   
       socket.emit('messageResponse', { success: true, result });
 
       // Fetch updated student count
-    const count = await db.fetchStudentCount();
+   // const count = await db.fetchStudentCount();
 
     // Emit updated count to this client
-    socket.emit('studentCount', { count });
+   // socket.emit('studentCount', { count });
 
     } catch (error) {
       console.error('Error saving log:', error);
@@ -120,6 +131,8 @@ app.get('/', async (req, res) => {
 const data = await db.getFormData();
   res.render('index', { data });
 });
+
+
 
 app.get('/form', (req, res) => {
   const formData = {

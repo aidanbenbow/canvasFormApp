@@ -75,7 +75,7 @@ export function emitFeedback({ success, error, box }) {
     });
   }
   
-export function fetchFormResults(formId, tableName = null) {
+export function fetchFormResults(formId, tableName = 'faithandbelief') {
   console.log('[SOCKET] Emitting getFormResults for:', formId, tableName);
 
   return new Promise((resolve, reject) => {
@@ -87,6 +87,17 @@ export function fetchFormResults(formId, tableName = null) {
     });
 
     // Optional: add timeout or error handling
+  });
+}
+
+export function fetchFormById(formId) {
+  return new Promise((resolve, reject) => {
+    socket.emit('getFormById', { formId });
+
+    socket.once('formDataById', ({ formId, formData, error }) => {
+      if (error) reject(error);
+      else resolve(formData);
+    });
   });
 }
 

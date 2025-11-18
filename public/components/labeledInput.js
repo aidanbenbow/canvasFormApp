@@ -10,6 +10,7 @@ constructor({ id, editor,context, layoutManager, layoutRenderer, label = 'new in
     this.inputType = inputType;
     this.editorController = editor;
    this.draggable = false
+   this.inputElement = null;
     this.value = value;
     this.onChange = onChange;
     this.buildLayout();
@@ -47,12 +48,15 @@ const labelOffset = 2;
             editor: this.editorController,
         });
         this.addChild(labelElement);
-        const inputElement = new UIInputBox({
+        this.inputElement = new UIInputBox({
             id: inputId,
             editor: this.editorController,
            interactive: true,   
         });
-        this.addChild(inputElement);
+        this.addChild(this.inputElement);
 
+    }
+    getValue() {
+        return this.inputElement.getValue();
     }
 }

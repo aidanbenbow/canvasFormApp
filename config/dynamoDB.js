@@ -17,13 +17,14 @@ class DynamoDB {
         this.docClient = DynamoDBDocumentClient.from(client);
         
     }
-    async saveMessage(formId, inputs = []) {
+    async saveMessage(formId,user, inputs = []) {
       try {
         const timestamp = Date.now()
     
         const payload = {
           id: 'msg-' + timestamp,
          formId,
+         user,
           inputs,
           timestamp
         };
@@ -45,22 +46,24 @@ class DynamoDB {
     async getFormData(user) {
       try {
         const params = {
-          TableName: 'faithandbelief',
-          ProjectionExpression: '#id, #label, #formStructure, #resultsTable, #inputs',
+          TableName: 'formStructures',
+          ProjectionExpression: '#id, #label, #formStructure, #resultsTable, #inputs, #user', 
           ExpressionAttributeNames: {
             '#id': 'id',
             '#label': 'label',
             '#formStructure': 'formStructure',
             '#resultsTable': 'resultsTable',
-            '#inputs': 'inputs'
+            '#inputs': 'inputs',
+             '#user': 'user'
           }
         };
     
         const data = await this.docClient.send(new ScanCommand(params));
+        
         const allForms = data.Items || [];
     
         // ✅ Filter by user inside inputs
-        const userForms = allForms.filter(item => item.inputs?.user === user);
+        const userForms = allForms.filter(form => form.user === user);
     
         return userForms;
       } catch (error) {
@@ -151,19 +154,27 @@ async getFormDataById(id) {
       }
 
       async getFormResults(formId, tableName = 'cscstudents') {
-      try{const params = {
-        TableName: tableName,
-        Key: {id: formId },
-      };
-      const data = await this.docClient.send(new GetCommand(params));
-      console.log("Fetched form results:", data.Item);
-      return data.Item ? [data.Item] : [];
-    } catch (error) {
-        console.error("Error fetching form results:", error);
-        throw new Error("Could not fetch form results");
-
+        try {
+          const params = {
+            TableName: tableName,
+            FilterExpression: '#formId = :formIdVal',
+            ExpressionAttributeNames: {
+              '#formId': 'formId'
+            },
+            ExpressionAttributeValues: {
+              ':formIdVal': formId
+            }
+          };
+      
+          const data = await this.docClient.send(new ScanCommand(params));
+          console.log("Fetched form results:", data.Items);
+          return data.Items || [];
+        } catch (error) {
+          console.error("Error fetching form results:", error);
+          throw new Error("Could not fetch form results");
+        }
       }
-      }
+      
     
     
 }
