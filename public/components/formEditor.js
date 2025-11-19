@@ -2,75 +2,160 @@ import { UIElement } from './UiElement.js';
 import { UIText } from './text.js';
 import { UIInputBox } from './inputBox.js';
 import { UIButton } from './button.js';
+import { createFieldComponent, createToolbarButton, createUIComponent } from './createUIComponent.js';
+
+const toolbarManifest = [
+  {
+    label: 'Save Form',
+    action: (editor) => editor.handleSubmit()
+  },
+  {
+    label: 'Add Title',
+    action: (editor) => editor.addComponent('text')
+  },
+  {
+    label: 'Add Input',
+    action: (editor) => editor.addComponent('input')
+  },
+  {
+    label: 'Add Submit Button',
+    action: (editor) => editor.addComponent('button')
+  }
+];
+
+const containerManifest = [
+  {
+    idSuffix: 'container',
+    type: 'container',
+    layout: { x: 10, y: 10, width: 100, height: 300 },
+    scroll: true,
+    assignTo: 'uiContainer'
+  },
+  {
+    idSuffix: 'formContainer',
+    type: 'container',
+    layout: { x: 120, y: 10, width: 400, height: 300 },
+    scroll: true,
+    assignTo: 'formContainer'
+  }
+];
 
 export class FormEditor extends UIElement {
-  constructor({ id = 'formEditor', layoutManager, layoutRenderer, context, form, onSubmit }) {
-    super({ id, layoutManager, layoutRenderer });
+  constructor({ id = 'formEditor',context, layoutManager, layoutRenderer,  form, onSubmit }) {
+    super({ id,context, layoutManager, layoutRenderer });
     this.editorController = context?.textEditorController;
-    this.originalForm = form;
+    this.form = form;
     this.onSubmit = onSubmit;
 
-    this.formLabel = form.label;
-    this.formStructure = [...form.formStructure]; // clone for editing
-console.log('FormEditor initialized with form:', this.formStructure[0].layout);
+this.formContainer = null;
+this.uiContainer = null;
     this.buildLayout();
-    this.buildUI();
+   this.buildUI();
   }
 
   buildLayout() {
-    this.layoutManager.place({ id: `${this.id}-title`, x: 20, y: 20, width: 200, height: 40 });
-    this.layoutManager.place({ id: `${this.formStructure[0].id}`, x: this.formStructure[0].layout.x, y: this.formStructure[0].layout.y, width: this.formStructure[0].layout.width, height: this.formStructure[0].layout.height });
-    this.layoutManager.place({ id: `${this.id}-submitButton`, x: 400, y: 20, width: 100, height: 40 });
-    // You can add layout for editing fields here
+  //  this.uiContainer = createUIComponent({
+  //     id: `${this.id}-container`,
+  //     type: 'container',
+  //     layout: { x: 10, y: 10, width: 100, height: 300 }
+  //    }, this.context);
+  //      this.uiContainer.initializeScroll();
+  //      this.addChild(this.uiContainer);
+
+  //      this.formContainer = createUIComponent({
+  //       id: `${this.id}-formContainer`,
+  //       type: 'container',
+  //       layout: { x: 120, y: 10, width: 400, height: 300 }
+  //      }, this.context);
+  //        this.formContainer.initializeScroll();
+  //        this.addChild(this.formContainer);
+this.buildContainersFromManifest(containerManifest);
+         this.buildToolbar(toolbarManifest);
+        //  const saveBtn = createToolbarButton('Save Form', () => { this.handleSubmit() }
+        //   , this.context);
+          
+        //   const addTitleBtn = createToolbarButton('Add Title', () => { this.addComponent('text') }, this.context);
+        //   const addInputBtn = createToolbarButton('Add Input', () => { this.addComponent('input') }, this.context);
+        //   const addSubmitBtn = createToolbarButton('Add Submit Button', () => { this.addComponent('button') }, this.context);
+        //   this.uiContainer.addChild(saveBtn);
+        //   this.uiContainer.addChild(addTitleBtn);
+        //   this.uiContainer.addChild(addInputBtn);
+        //   this.uiContainer.addChild(addSubmitBtn);
+       
+  }
+  buildToolbar(manifest) {
+    manifest.forEach(({ label, action }) => {
+      const button = createToolbarButton(label, () => action(this), this.context);
+      this.uiContainer.addChild(button);
+    });
+  }
+  buildContainersFromManifest(manifest) {
+    manifest.forEach(({ idSuffix, type, layout, scroll, assignTo }) => {
+      const component = createUIComponent({
+        id: `${this.id}-${idSuffix}`,
+        type,
+        layout
+      }, this.context);
+  
+      if (scroll) component.initializeScroll();
+      this.addChild(component);
+      if (assignTo) this[assignTo] = component;
+    });
+  }
+
+  addComponent(type) {
+    const { field, component } = createFieldComponent(type, this.context);
+    console.log('Adding component:', field);
+    this.form?.formStructure.fields.push(field);
+    this.formContainer.addChild(component);
+    //this.formContainer.layoutChildrenVertically(10, 50);
+    this.context.pipeline.invalidate()
   }
 
   buildUI() {
-    this.addChild(new UIText({
-      id: `${this.id}-title`,
-      text:     `Edit Form ${this.formLabel}`,
-      fontSize: 0.03,
-      color: '#333',
-      align: 'left',
-      valign: 'top'
-    }));
+    const title = createUIComponent({
+        id: `${this.id}-title`,
+        type: 'text',
+        label: `Editing Form: ${this.form?.label || 'Untitled Form'}`
+    }, this.context);
+    this.formContainer.addChild(title);
 
-    const labelInput = new UIInputBox({
-      id: `${this.formStructure[0].id}`,
-      editorController: this.editorController,
-      placeholder: 'Form Label',
-      onChange: value => { this.formLabel = value; }
+    this.form?.formStructure.fields.forEach((field, index) => {
+        const fieldComponent = createUIComponent(field, this.context);
+        this.formContainer.addChild(fieldComponent);
     });
-labelInput.draggable = true;
-    // Pre-fill the label
-    this.editorController?.startEditing(labelInput, 'text');
-    this.editorController.activeBox.text = this.formStructure[0]?.placeholder || '';
 
-    const submitButton = new UIButton({
-      id: `${this.id}-submitButton`,
-      label: 'Save',
-      onClick: () => {
-        if (this.formLabel?.trim()) {
-          const updatedForm = {
-            ...this.originalForm,
-            label: this.formLabel,
-            formStructure: this.formStructure
-          };
-          this.onSubmit?.(updatedForm);
-        }
+  }
+
+  handleSubmit() {
+    const updatedForm = {
+      ...this.form,
+      formStructure: {
+        fields: [],
+        layout: {}
       }
+    };
+  
+    this.formContainer.children.forEach(child => {
+      const id = child.id;
+      const layout = this.context.uiStage.layoutManager.getLogicalBounds(id);
+      const field = {
+        id,
+        type: child.type,
+        label: child.label || '',
+        layout
+      };
+  
+      if (child.placeholder) {
+        field.placeholder = child.placeholder;
+      }
+  
+      updatedForm.formStructure.fields.push(field);
+      updatedForm.formStructure.layout[id] = layout;
     });
-
-    this.addChild(labelInput);
-    this.addChild(submitButton);
+  
+    this.onSubmit?.(updatedForm);
   }
 
-  registerHitRegions(hitRegistry) {
-    this.children.forEach(child => {
-      hitRegistry.register(child.id, {
-        plugin: this,
-        region: 'button',
-        box: child
-      });
-    });
-  }
+ 
 }

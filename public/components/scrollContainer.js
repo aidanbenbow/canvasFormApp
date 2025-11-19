@@ -54,7 +54,7 @@ layoutChildrenVertically(spacing, defaultHeight) {
     }
   
     render() {
-    console.log('Rendering UIScrollContainer:', this.id);
+    
       if (!this.visible) return;
   
       const ctx = this.layoutRenderer.ctx;

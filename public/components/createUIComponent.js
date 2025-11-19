@@ -3,6 +3,63 @@ import {  LabeledInput } from "./labeledInput.js";
 import { UIScrollContainer } from "./scrollContainer.js";
 import { UIText } from "./text.js";
 
+
+export function createToolbarButton(label, onClick, context) {
+    const { field, component } = createFieldComponent('button', context);
+    
+    field.label = label;
+    field.onClick = onClick;
+    component.label = label;
+    component.onClick = onClick;
+    return component;
+  }
+
+export function createFieldComponent(type, context) {
+    
+    const id = `${type}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  
+    const baseField = {
+      id,
+      type,
+      label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+    };
+  
+    switch (type) {
+      case 'text':
+        return {
+          field: baseField,
+          component: createUIComponent(baseField, context)
+        };
+  
+      case 'input':
+        return {
+          field: {
+            ...baseField,
+            placeholder: 'Enter text here...'
+          },
+          component: createUIComponent({
+            ...baseField,
+            placeholder: 'Enter text here...'
+          }, context, { place: false })
+        };
+  
+      case 'button':
+        return {
+          field: {
+            ...baseField,
+            label: 'Submit'
+          },
+          component: createUIComponent({
+            ...baseField,
+            label: 'Submit'
+          }, context, { place: false })
+        };
+  
+      default:
+        throw new Error(`Unsupported field type: ${type}`);
+    }
+  }
+
 export function createUIComponent(field, context, {place = true} = {}) {
   const {
     id,

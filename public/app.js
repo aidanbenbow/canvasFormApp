@@ -170,7 +170,6 @@ if (formId) {
 system.eventBus.on('dashBoard', (forms) => {
   console.log('Loading dashboard with forms:', forms);
   const dashBoardOverlay = new Dashboard({
-  
     context,
     layoutManager,
     layoutRenderer,
@@ -180,7 +179,7 @@ system.eventBus.on('dashBoard', (forms) => {
     },
     onEditForm: (form) => {
      console.log('Emitting editForm for:', form);
-     system.eventBus.emit('editForm', form);
+    system.eventBus.emit('editForm', form);
     },
     onViewResults: (form) => {
       system.eventBus.emit('viewResults', form);
@@ -188,6 +187,32 @@ system.eventBus.on('dashBoard', (forms) => {
   });
   context.uiStage.addRoot( dashBoardOverlay);
   context.uiStage.setActiveRoot('dashboard');
+  context.pipeline.invalidate();
+});
+
+system.eventBus.on('editForm', (form) => {
+  console.log('Editing form:', form);
+  const editor = new FormEditor({
+    context,
+    layoutManager,
+    layoutRenderer,
+    
+    form,
+    onSubmit: updatedForm => {
+      console.log('✅ Form updated:', updatedForm);
+     
+      const payload = {
+        id: updatedForm.id,
+        formStructure: updatedForm.formStructure,
+        label: updatedForm.label,
+        user: updatedForm.user,
+    }
+     // saveFormStructure(payload);
+    }
+  });
+
+  context.uiStage.addRoot(editor);
+  context.uiStage.setActiveRoot('formEditor');
   context.pipeline.invalidate();
 });
 
@@ -200,10 +225,8 @@ system.eventBus.on('viewResults', async (form) => {
     results,
     context,
     layoutManager,
-    layoutRenderer,
-    
+    layoutRenderer,   
   });
-
   context.uiStage.addRoot(resultsOverlay);
   context.uiStage.setActiveRoot('formResults');
   context.pipeline.invalidate();
@@ -454,29 +477,7 @@ system.eventBus.on('hitClick', ({hex}) => {
   });
 
 
-  system.eventBus.on('editForm', (form) => {
-    console.log('Editing form:', form);
-    const editor = new FormEditor({
-      layoutManager,
-      layoutRenderer,
-      context,
-      form,
-      onSubmit: updatedForm => {
-        console.log('✅ Form updated:', updatedForm);
-       
-        const payload = {
-          id: updatedForm.id,
-          formStructure: updatedForm.formStructure,
-          label: updatedForm.label,
-          user: updatedForm.user,
-      }
-        saveFormStructure(payload);
-      }
-    });
   
-    uiStage.addRoot(editor);
-    uiStage.setActiveRoot('formEditor');
-  });
   
  
 
