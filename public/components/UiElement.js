@@ -84,9 +84,6 @@ while (ancestor) {
        const hit = this.contains(event.x, event.y);
       this.lastEventX = event.x;
       this.lastEventY = event.y;
-      if(event.type === 'click'){
-
-      }
 
       if (this.interactive) {
         if (event.type === 'mousemove') {
@@ -184,6 +181,5 @@ while (ancestor) {
           child.layout(canvasWidth, canvasHeight);
         }
       }
-      
       
   }

@@ -74,12 +74,6 @@ io.on('connection', (socket) => {
   
       socket.emit('messageResponse', { success: true, result });
 
-      // Fetch updated student count
-   // const count = await db.fetchStudentCount();
-
-    // Emit updated count to this client
-   // socket.emit('studentCount', { count });
-
     } catch (error) {
       console.error('Error saving log:', error);
       socket.emit('messageResponse', { success: false, error: error.message });

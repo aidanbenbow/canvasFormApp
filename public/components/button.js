@@ -5,7 +5,7 @@ export class UIButton extends UIElement {
     super({ id, context, layoutManager, layoutRenderer });
     this.label = label;
     this.onClickHandler = onClick;
-    this.type = 'uiButton';
+    this.type = 'button';
     this.interactive = true;
     this.colour = colour;
     this.draggable = true

@@ -1,3 +1,4 @@
+import { UIOverlay } from "./components/UiOverlay.js";
 import { AllForms } from "./components/allForms.js";
 import { CreateForm } from "./components/createForm.js";
 import { Dashboard } from "./components/dashBoard.js";
@@ -10,7 +11,7 @@ import { ResultsPanel } from "./components/resultsPanel.js";
 import { ViewForm } from "./components/viewForm.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { DragController } from "./controllers/dragController.js";
-import { emitFeedback, fetchAllForms, fetchFormById, fetchFormResults, loadFormStructure, saveFormStructure, sendLog } from "./controllers/socketController.js";
+import { emitFeedback, fetchAllForms, fetchFormById, fetchFormResults, loadFormStructure, onMessageResponse, saveFormStructure, sendLog } from "./controllers/socketController.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
 import { LayoutManager } from "./managers/layOut.js";
@@ -207,7 +208,7 @@ system.eventBus.on('editForm', (form) => {
         label: updatedForm.label,
         user: updatedForm.user,
     }
-     // saveFormStructure(payload);
+      saveFormStructure(payload);
     }
   });
 
@@ -251,11 +252,42 @@ system.eventBus.on('viewForm', (formData) => {
 
 system.eventBus.on('formSubmitted', ({ form }) => {
   sendLog('Form submitted:', form);
+  onMessageResponse(({ success, result, error }) => {
+    if (success) {
+      const overlay = new UIOverlay({
+        context,
+        layoutManager: context.uiStage.layoutManager,
+        layoutRenderer: context.uiStage.layoutRenderer
+      });
+      
+      context.uiStage.overlayRoot = overlay;
+      
+      overlay.showMessage({
+        text: '✅ Form submitted successfully!',
+        color: '#0a0',
+        duration: 3000
+      });
+    } else {
+      const overlay = new UIOverlay({
+        context,
+        layoutManager: context.uiStage.layoutManager,
+        layoutRenderer: context.uiStage.layoutRenderer
+      });
+      
+      context.uiStage.overlayRoot = overlay;
+      
+      overlay.showMessage({
+        text: `❌ Error submitting form: ${error}`,
+        color: '#a00',
+        duration: 5000
+      });
+    }
+  
+  });
+  
 });
 
-system.eventBus.on('messageResponse', ({ success, result }) => {
-  console.log('Message response received:', success, result);
-});
+
 
 function launchFormPanel({layoutManager,
   layoutRenderer, context,manifest, pluginRegistry, emitFeedback}) {
@@ -505,129 +537,6 @@ system.eventBus.on('hitClick', ({hex}) => {
       });
     }
   });
-  
-  system.eventBus.on('boxDeleted', (id) => {
-    context.pipeline.remove(activeKeyboard);
-    activeKeyboard = null;
-    context.pipeline.remove(...Array.from(context.pipeline.drawables).filter(d => d.id === id));
-    context.pipeline.invalidate();
-  });
+ 
 
-export async function init(data) {
-    const info = JSON.parse(data);
-    const form = info[1];
-    if (!Array.isArray(info)) {
-      console.error('Expected array, got:', info);
-      return;
-    }
-
-  const registry = context.pipeline.renderManager.registry;
-    const textSizerPlugin = new TextSizerPlugin({rendererRegistry:registry});
-    const canvasWidth = canvas.layers['main'].canvas.width;
-    const canvasHeight = canvas.layers['main'].canvas.height;
-      
-      for (const item of form.formStructure) {
-        
-        item.id = item.id || `box-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      
-        const createBox = utilsRegister.get('box', 'createBoxFromFormItem');
-        const renderer = context.pipeline.renderManager
-        const box = createBox(item, renderer, canvasWidth, canvasHeight);
-
-        box.autoResize = true;
-        box.textSizerPlugin = textSizerPlugin;
-        context.pipeline.add(box);
-        
-      }
-    boxEditor.setBoxes(Array.from(context.pipeline.drawables).filter(d => d.type === 'textBox' || d.type === 'inputBox' || d.type === 'imageBox'));
-    boxEditor.setMode(modeState.current);
-    // console.log('Boxes set in BoxEditor:', boxEditor.getBoxes());
-    context.textEditorController.setBoxes(boxEditor.getBoxes());
-  }
-
- //await init(data);
-
-// utilsRegister.on('onRegister', (ns, name, fn) => {
-//     console.log(`[UTILS] Registered ${name} in ${ns}`);
-//   });
-
- // let studentCount = 0;
-// const messagePlugin = adminOverlay.plugins.find(p => p.type === 'messageOverlay');
-// if (messagePlugin) {
-//   messagePlugin.setLiveMessage(() => `👥 Students: ${studentCount}`, { x: 20, y: 160 });
-// }
-
-// system.eventBus.on('updateStudentCount', (count) => {
-//   studentCount = count;
-//   context.pipeline.invalidate();
-// });
-
-
-// export function setupAdminPlugins({ adminOverlay, hitRegistry, hitCtx, logicalWidth, boxEditor, renderer }) {
-  
-//  let saveButtonPlugin = new SaveButtonPlugin({
-//     ctx: adminCtx,
-//     logicalWidth,
-//     boxes: boxEditor,
-//     onSave: async (boxes) => {
-//       const formStructure = boxes
-//         .filter(box => ['textBox', 'inputBox', 'imageBox'].includes(box.type))
-//         .map(box => box.serialize());
-    
-//         if (formStructure.length === 0) {
-//           emitFeedback( {
-//             success: false,
-//             text: "Nothing to save ❌",
-//             box: saveButtonPlugin
-//           });
-//           return;
-//         }
-//         const payload = {
-//           id: boxEditor.formMeta.id||`form-${Date.now()}`,
-//           formStructure,
-//           label: boxEditor.formMeta.label||'Untitled Form',
-//           resultsTable: boxEditor.formMeta.resultsTable||'cscstudents'
-//         };
-      
-//       saveFormStructure(payload, saveButtonPlugin);
-//       }
-//   });
-
-
-//   const addInputPlugin = new AddBoxPlugin({
-//     ctx: adminCtx,
-//     logicalWidth,
-//     boxEditor,
-//     renderer,
-//     boxType: 'inputBox', 
-//     yOffset: 50
-//   });
-
-//   const addTextPlugin = new AddBoxPlugin({
-//     ctx: adminCtx,
-//     logicalWidth,
-//     boxEditor,
-//     renderer,
-//     boxType: 'textBox'
-//   });
-
-//   const addImagePlugin = new AddBoxPlugin({
-//     ctx: adminCtx,
-//     logicalWidth,
-//     boxEditor,
-//     renderer,
-//     boxType: 'imageBox',
-//     yOffset: 90
-//   });
-//   adminOverlay.register(addImagePlugin);
-  
-
-//   adminOverlay.register(saveButtonPlugin);
-//   adminOverlay.register(addInputPlugin);
-//   adminOverlay.register(addTextPlugin);
-
-//   adminOverlay.registerHitRegions(hitRegistry);
-//   adminOverlay.drawHitRegions(hitCtx);
-
-//   return { saveButtonPlugin, addInputPlugin };
-// }
+ 

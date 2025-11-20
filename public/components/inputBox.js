@@ -7,7 +7,7 @@ export class UIInputBox extends UIElement {
     this.editorController = editor;
     this.placeholder = placeholder;
     this.label = label;
-    this.type = 'uiInputBox';
+    this.type = 'input';
     this.text = '';
     this.interactive = interactive
 this.visible = true;

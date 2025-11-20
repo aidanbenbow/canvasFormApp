@@ -6,7 +6,9 @@ import { UIText } from "./text.js";
 export class LabeledInput extends UIElement{
 constructor({ id, editor,context, layoutManager, layoutRenderer, label = 'new input', inputType = 'text', value = '', onChange = null }) {
     super({ id,context, layoutManager, layoutRenderer });
-    this.label = label;
+    this.type = 'input';
+    this.label2 = label;
+    this.labelElement = null;
     this.inputType = inputType;
     this.editorController = editor;
    this.draggable = false
@@ -42,12 +44,12 @@ const labelOffset = 2;
             parent: this.id
         });
 
-        const labelElement = new UIText({
+       this.labelElement = new UIText({
             id: labelId,
-            text: this.label,
+            text: this.label2,
             editor: this.editorController,
         });
-        this.addChild(labelElement);
+        this.addChild(this.labelElement);
         this.inputElement = new UIInputBox({
             id: inputId,
             editor: this.editorController,

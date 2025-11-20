@@ -10,17 +10,17 @@ export class UIText extends UIElement {
     this.bgColor = null;
     this.align = align;
     this.valign = valign;
-    this.type = 'uiText';
+    this.type = 'text';
     this.interactive = true;
     this.draggable = true
-    this.onClick = onClick;
+    this.onClickHandler = onClick;
     this.isSelected = false;
   }
 
   onClick() {
     UIElement.setFocus(this);
-    this.onClick?.();
-    //this.editorController.startEditing(this, 'text');
+    this.onClickHandler?.();
+    this.editorController.startEditing(this, 'text');
   }
   setStyle({ color, bgColor, fontSize, align, valign }) {
     if (color) this.color = color;
@@ -45,7 +45,7 @@ this.renderDragHighlight();
       }
     );
 
-    if(this.editorController.activeBox === this) {
+    if(this.editorController?.activeBox === this) {
       const ctx = this.layoutRenderer.ctx; // assuming layoutRenderer exposes canvas context
       this.editorController.drawSelection(ctx);
       this.editorController.drawCaret(ctx);

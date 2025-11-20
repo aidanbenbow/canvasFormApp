@@ -10,7 +10,7 @@ const toolbarManifest = [
     action: (editor) => editor.handleSubmit()
   },
   {
-    label: 'Add Title',
+    label: 'Add Text',
     action: (editor) => editor.addComponent('text')
   },
   {
@@ -44,9 +44,9 @@ export class FormEditor extends UIElement {
   constructor({ id = 'formEditor',context, layoutManager, layoutRenderer,  form, onSubmit }) {
     super({ id,context, layoutManager, layoutRenderer });
     this.editorController = context?.textEditorController;
-    this.form = form;
+    this.form = form
     this.onSubmit = onSubmit;
-
+this.title = null;
 this.formContainer = null;
 this.uiContainer = null;
     this.buildLayout();
@@ -54,34 +54,8 @@ this.uiContainer = null;
   }
 
   buildLayout() {
-  //  this.uiContainer = createUIComponent({
-  //     id: `${this.id}-container`,
-  //     type: 'container',
-  //     layout: { x: 10, y: 10, width: 100, height: 300 }
-  //    }, this.context);
-  //      this.uiContainer.initializeScroll();
-  //      this.addChild(this.uiContainer);
-
-  //      this.formContainer = createUIComponent({
-  //       id: `${this.id}-formContainer`,
-  //       type: 'container',
-  //       layout: { x: 120, y: 10, width: 400, height: 300 }
-  //      }, this.context);
-  //        this.formContainer.initializeScroll();
-  //        this.addChild(this.formContainer);
 this.buildContainersFromManifest(containerManifest);
          this.buildToolbar(toolbarManifest);
-        //  const saveBtn = createToolbarButton('Save Form', () => { this.handleSubmit() }
-        //   , this.context);
-          
-        //   const addTitleBtn = createToolbarButton('Add Title', () => { this.addComponent('text') }, this.context);
-        //   const addInputBtn = createToolbarButton('Add Input', () => { this.addComponent('input') }, this.context);
-        //   const addSubmitBtn = createToolbarButton('Add Submit Button', () => { this.addComponent('button') }, this.context);
-        //   this.uiContainer.addChild(saveBtn);
-        //   this.uiContainer.addChild(addTitleBtn);
-        //   this.uiContainer.addChild(addInputBtn);
-        //   this.uiContainer.addChild(addSubmitBtn);
-       
   }
   buildToolbar(manifest) {
     manifest.forEach(({ label, action }) => {
@@ -89,36 +63,23 @@ this.buildContainersFromManifest(containerManifest);
       this.uiContainer.addChild(button);
     });
   }
-  buildContainersFromManifest(manifest) {
-    manifest.forEach(({ idSuffix, type, layout, scroll, assignTo }) => {
-      const component = createUIComponent({
-        id: `${this.id}-${idSuffix}`,
-        type,
-        layout
-      }, this.context);
-  
-      if (scroll) component.initializeScroll();
-      this.addChild(component);
-      if (assignTo) this[assignTo] = component;
-    });
-  }
+
 
   addComponent(type) {
     const { field, component } = createFieldComponent(type, this.context);
     console.log('Adding component:', field);
     this.form?.formStructure.fields.push(field);
     this.formContainer.addChild(component);
-    //this.formContainer.layoutChildrenVertically(10, 50);
     this.context.pipeline.invalidate()
   }
 
   buildUI() {
-    const title = createUIComponent({
+    this.title = createUIComponent({
         id: `${this.id}-title`,
         type: 'text',
-        label: `Editing Form: ${this.form?.label || 'Untitled Form'}`
+        label: `${this.form?.label || 'Untitled Form'}`
     }, this.context);
-    this.formContainer.addChild(title);
+    this.formContainer.addChild(this.title);
 
     this.form?.formStructure.fields.forEach((field, index) => {
         const fieldComponent = createUIComponent(field, this.context);
@@ -129,10 +90,12 @@ this.buildContainersFromManifest(containerManifest);
 
   handleSubmit() {
     const updatedForm = {
-      ...this.form,
+      id: this.form?.id || `form-${Date.now()}`,
+      label: this.title.text|| 'Untitled',
+      user: this.form?.user || 'admin',
+      lastModified: new Date().toISOString(),
       formStructure: {
         fields: [],
-        layout: {}
       }
     };
   
@@ -142,16 +105,12 @@ this.buildContainersFromManifest(containerManifest);
       const field = {
         id,
         type: child.type,
-        label: child.label || '',
+        label: child.text || child.label || child.labelElement?.text || '',
         layout
       };
   
-      if (child.placeholder) {
-        field.placeholder = child.placeholder;
-      }
-  
       updatedForm.formStructure.fields.push(field);
-      updatedForm.formStructure.layout[id] = layout;
+    
     });
   
     this.onSubmit?.(updatedForm);
