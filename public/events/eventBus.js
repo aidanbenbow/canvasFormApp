@@ -11,17 +11,23 @@ export class EventBus {
     }
   
     off(event, handler) {
-      const handlers = this.listeners.get(event);
-      if (handlers) {
-        this.listeners.set(event, handlers.filter(h => h !== handler));
-      }
+      const handlers = this.listeners.get(event)||[];
+        this.listeners.set(event, handlers.filter(h => h !== handler)); 
     }
   
     emit(event, payload) {
       const handlers = this.listeners.get(event);
-      if (handlers) {
-        handlers.forEach(handler => handler(payload));
+      if(!handlers || handlers.length === 0){
+          console.warn(`No handlers for event: ${event}`);
+          return;
       }
+      handlers.slice().forEach(handler => {
+        try {
+          handler(payload);
+        } catch (error) {
+          console.error(`Error in handler for event: ${event}`, error);
+        }
+      });
     }
   
     clear() {

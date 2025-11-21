@@ -1,6 +1,8 @@
-export const Actions = {
+export const ACTIONS = {
     DASHBOARD: {
         SHOW: 'dashboard:show',
+        FORM_SELECTED: 'dashboard:form_selected',
+        CREATE: 'dashboard:create',
     },
     FORM: {
         VIEW: 'form:view',
@@ -13,4 +15,8 @@ export const Actions = {
         UPDATE: 'form:update',
         ADD: 'form:add',
     },
+    STORE: {
+        FORM_FORMS: 'STORE/FORM/FORMS',
+        FORM_ACTIVE: 'STORE/FORM/ACTIVE',
+    }
 };

@@ -3,12 +3,20 @@ export class EventBusManager {
         this.eventBus = eventBus;
         this.registry = new Map();
     }
-    on(event, handler,namespace='global') {
-        this.eventBus.on(event, handler);
+    _ensureNamespace(namespace) {
         if (!this.registry.has(namespace)) {
             this.registry.set(namespace, []);
         }
-        this.registry.get(namespace).push({ event, handler });
+    }
+    on(event, handler,namespace='global') {
+        this._ensureNamespace(namespace);
+        const entries = this.registry.get(namespace);
+        if(entries.some(e => e.event === event && e.handler === handler)){
+            console.warn(`Handler already registered for event: ${event} in namespace: ${namespace}`);
+            return;
+        }
+        entries.push({ event, handler });
+        this.eventBus.on(event, handler);
     }
     emit(event, payload) {
         console.log(`Emitting event: ${event} with payload:`, payload);
@@ -24,5 +32,10 @@ export class EventBusManager {
             this.eventBus.off(event, handler);
         }
         this.registry.delete(namespace);
+    }
+    clearAll() {
+        for(const namespace of this.registry.keys()){
+            this.clearNamespace(namespace);
+        }
     }
 }
