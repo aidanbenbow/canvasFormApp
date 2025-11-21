@@ -12,6 +12,7 @@ import { ViewForm } from "./components/viewForm.js";
 import { canvasConfig, createPluginManifest } from "./constants.js";
 import { DragController } from "./controllers/dragController.js";
 import { emitFeedback, fetchAllForms, fetchFormById, fetchFormResults, loadFormStructure, onMessageResponse, saveFormStructure, sendLog } from "./controllers/socketController.js";
+import { FormStore } from "./events/formStore.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
 import { LayoutManager } from "./managers/layOut.js";
@@ -151,9 +152,12 @@ const load = ['viewForm', 'dashBoard'];
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
 
+const store = new FormStore(system.eventBus);
+
 if (formId) {
   // Load a single form for public viewing
   fetchFormById(formId).then(form => {
+    store.setForms([form]);
     system.eventBus.emit('viewForm', form);
   }).catch(err => {
     console.error('Error loading form:', err);
@@ -161,6 +165,7 @@ if (formId) {
 } else {
   // Load all forms for the current user (e.g. admin)
   fetchAllForms('admin').then(({ user, forms }) => {
+    store.setForms(forms);
     system.eventBus.emit('dashBoard', forms);
   }).catch(err => {
     console.error('Error fetching forms:', err);
@@ -174,7 +179,7 @@ system.eventBus.on('dashBoard', (forms) => {
     context,
     layoutManager,
     layoutRenderer,
-    forms: forms,
+    store,
     onCreateForm: (form) => {
       system.eventBus.emit('viewForm', form);
     },

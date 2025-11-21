@@ -4,6 +4,7 @@ import { UIText } from './text.js';
 import { UIScrollContainer } from './scrollContainer.js';
 import { UIFormCard } from './formCard.js';
 import { createUIComponent } from './createUIComponent.js';
+import { ManifestUI } from './manifestUI.js';
 
 export const dashboardUIManifest = {
   containers: [
@@ -26,6 +27,7 @@ export const dashboardUIManifest = {
     {
       idSuffix: 'viewBtn',
       label: 'View',
+      type: 'button',
       action: (dashboard) => {
         if (dashboard.selectedForm) {
           dashboard.onCreateForm(dashboard.selectedForm);
@@ -37,6 +39,7 @@ export const dashboardUIManifest = {
     {
       idSuffix: 'resultsBtn',
       label: 'Results',
+      type: 'button',
       action: (dashboard) => {
         if (dashboard.selectedForm) {
           dashboard.onViewResults(dashboard.selectedForm);
@@ -48,6 +51,7 @@ export const dashboardUIManifest = {
     {
       idSuffix: 'createEditBtn',
       label: 'Create/Edit',
+      type: 'button',
       action: (dashboard) => {
         dashboard.onEditForm(dashboard.selectedForm || null);
       }
@@ -55,147 +59,29 @@ export const dashboardUIManifest = {
   ]
 };
 
-export class Dashboard extends UIElement {
-  constructor({ id = 'dashboard', context,layoutManager,layoutRenderer, forms, onCreateForm, onEditForm, onViewResults }) {
-
+export class Dashboard extends ManifestUI{
+  constructor({ id = 'dashboard', context,layoutManager,layoutRenderer, store, ...handlers }) {
     super({ id, context, layoutManager, layoutRenderer });
-this.forms = forms || [];
-  console.log('Dashboard initialized with forms:', this.forms);
-
-this.selectedForm = null;
-this.selectedFormCard = null;
-this.context = context;
-this.layoutManager = layoutManager;
-this.layoutRenderer = layoutRenderer;
-    this.onCreateForm = onCreateForm;
-    this.onEditForm = onEditForm;
-    this.onViewResults = onViewResults;
-this.formsContainer = null;
-this.buildUI();
-this.buildLayout();
-
-  }
-  buildUIFromManifest(manifest) {
-    manifest.containers.forEach(({ idSuffix, type, layout, scroll, assignTo }) => {
-      const component = createUIComponent({
-        id: `${this.id}-${idSuffix}`,
-        type,
-        layout
-      }, this.context);
-      if (scroll) component.initializeScroll();
-      this.addChild(component);
-      if (assignTo) this[assignTo] = component;
-    });
+    this.store = store;
+    this.onCreateForm = handlers.onCreateForm;
+    this.onEditForm = handlers.onEditForm;
+    this.onViewResults = handlers.onViewResults;
   
-    manifest.buttons.forEach(({ idSuffix, label, action }) => {
-      const button = createUIComponent({
-        id: `${this.id}-${idSuffix}`,
-        type: 'button',
-        label,
-        onClick: () => action(this)
-      }, this.context, { place: false });
-      this.uiContainer.addChild(button);
-    });
+    // Subscribe to store updates
+    // this.context.eventBus.on('forms:updated', (forms) => {
+    //   this.forms = forms;
+    //   this.buildLayout(); // rebuild UI when forms change
+    //   this.context.pipeline.invalidate();
+    // });
+    
+    this.buildUI();
+    this.buildLayout();
   }
-
   buildUI() {
-    this.buildUIFromManifest(dashboardUIManifest);
-    // const UIcontainer = createUIComponent({
-    //   id: `dashboard-container`,
-    //   type: 'container',
-    //   layout: { x: 10, y: 20, width: 200, height: 300 }
-    // }, this.context);
-    // UIcontainer.initializeScroll();
-    // this.addChild(UIcontainer);
-
-    // const viewBtn = createUIComponent({
-    //   id: `dashboard-viewBtn`,
-    //   type: 'button',
-    //   label: 'View',
-      
-    //   onClick: () => {
-    //     if (this.selectedForm) {
-    //       this.onCreateForm(this.selectedForm);
-    //     } else {
-    //       console.log('No form selected to view results.');
-    //     }
-    //   }
-    // }, this.context, {place: false});
-    // UIcontainer.addChild(viewBtn);
-
-    // const resultsBtn = createUIComponent({
-    //   id: `dashboard-resultsBtn`,
-    //   type: 'button',
-    //   label: 'Results',
-      
-    //   onClick: () => {
-    //     if (this.selectedForm) {
-    //       this.onViewResults(this.selectedForm);
-    //     } else {
-    //       console.log('No form selected to view results.');
-    //     }
-    //   }
-    // }, this.context, {place: false});
-    // UIcontainer.addChild(resultsBtn);
-
-    // const createEditBtn = createUIComponent({
-    //   id: `dashboard-createEditBtn`,
-    //   type: 'button',
-    //   label: 'Create/Edit',
-      
-    //   onClick: () => {
-    //     if (this.selectedForm) {
-    //       this.onEditForm(this.selectedForm);
-    //     } else {
-    //      this.onEditForm(null);
-    //     }
-    //   }
-    // }, this.context, {place: false});
-    // UIcontainer.addChild(createEditBtn);
-
-    // this.formsContainer = createUIComponent({
-    //   id: `${this.id}-formsContainer`,
-    //   type: 'container',
-    //   layout: { x: 300, y: 20, width: 280, height: 500 },
-      
-    // }, this.context);
-    // this.formsContainer.initializeScroll();
-    // this.addChild(this.formsContainer);
+    this.buildContainersFromManifest(dashboardUIManifest.containers);
+    this.buildChildrenFromManifest(dashboardUIManifest.buttons, this.uiContainer)
   }
-  
-
   buildLayout() {
-    const title = createUIComponent({
-      id: `${this.id}-title`,
-      type: 'text',
-      label: `welcome ${this.forms[0]?.user || 'user'}`,
-     
-    }, this.context);
-    this.formsContainer.addChild(title);
-
-this.forms.forEach((form, index) => {
-  const formCard = createUIComponent({
-    id: `formCard-${index}`,
-    type: 'text',
-    label: form.label || `Form ${index + 1}`,
-    onClick: () => {
-      // Reset previous selection
-      if (this.selectedFormCard) {
-        this.selectedFormCard.setStyle({ bgColor: null });
-      }
-
-      // Set new selection
-      this.selectedForm = form;
-      this.selectedFormCard = formCard;
-      formCard.setStyle({ bgColor: '#d0f0fd' });
-this.context.pipeline.invalidate();
-      console.log('Selected form:', form.label);
-    }
-
-  }, this.context);
-  this.formsContainer.addChild(formCard);
-
-  } );
-
+    this.displayFormsLabels(this.store.getForms(), this.formsContainer, { onSelect: null });
   }
 }
