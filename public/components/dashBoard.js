@@ -68,11 +68,11 @@ export class Dashboard extends ManifestUI{
     this.onViewResults = handlers.onViewResults;
   
     // Subscribe to store updates
-    // this.context.eventBus.on('forms:updated', (forms) => {
-    //   this.forms = forms;
-    //   this.buildLayout(); // rebuild UI when forms change
-    //   this.context.pipeline.invalidate();
-    // });
+    this.store.eventManager.on('forms:updated', (forms) => {
+      this.forms = forms;
+      this.buildLayout();
+      this.context.pipeline.invalidate();
+    });
     
     this.buildUI();
     this.buildLayout();
@@ -82,6 +82,9 @@ export class Dashboard extends ManifestUI{
     this.buildChildrenFromManifest(dashboardUIManifest.buttons, this.uiContainer)
   }
   buildLayout() {
-    this.displayFormsLabels(this.store.getForms(), this.formsContainer, { onSelect: null });
+    this.displayFormsLabels(this.store.getForms(), this.formsContainer, { onSelect: (form) => {
+      this.store.eventManager.emit('view', form);
+    } });
+  
   }
 }

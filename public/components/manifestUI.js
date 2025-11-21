@@ -62,13 +62,13 @@ export class ManifestUI extends UIElement{
           this.buildFormFromManifest(form, targetContainer, { onSubmit });
         });
       }
-      displayFormsLabels(forms, targetContainer, { onSelectForm }) {
+      displayFormsLabels(forms, targetContainer, { onSelect }) {
         forms.forEach(form => {
           const button = createUIComponent({
             id: `${this.id}-formButton-${form.id}`,
             type: 'button',
             label: form.formStructure.title || `Form ${form.id}`,
-            onClick: () => onSelectForm?.(form)
+            onClick: () => onSelect?.(form)
           }, this.context, { place: false });
           targetContainer.addChild(button);
         });

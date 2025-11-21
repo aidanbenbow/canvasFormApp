@@ -1,27 +1,18 @@
 export class ActionDispatcher {
-    constructor({ context, registry = new Map() }) {
-      this.context = context;
-      this.registry = registry;
+    constructor(eventBusManager) {
+      this.bus = eventBusManager;
+    }
+    dispatch(actionType, payload, namespace='global') {
+        console.log(`Dispatching action: ${actionType} with payload:`, payload, `in namespace: ${namespace}`);
+      this.bus.emit(actionType, payload, namespace);
+    }
+
+    on(actionType, handler, namespace='global') {
+        this.bus.on(actionType, handler, namespace);
+    }
+
+    clear(namespace) {
+        this.bus.clearNamespace(namespace);
     }
   
-    register(actionName, handler) {
-      this.registry.set(actionName, handler);
-    }
-  
-    dispatch(actionName, payload) {
-      const handler = this.registry.get(actionName);
-      if (!handler) {
-        console.warn(`No handler registered for action: ${actionName}`);
-        return;
-      }
-      handler(payload, this.context);
-    }
-  
-    unregister(actionName) {
-      this.registry.delete(actionName);
-    }
-  
-    clear() {
-      this.registry.clear();
-    }
   }
