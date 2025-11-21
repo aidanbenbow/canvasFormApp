@@ -35,7 +35,7 @@ export class RenderSystemBuilder {
         this.textEditorController = new TextEditorController(this.pipeline,this.layoutManager, this.layoutRenderer, this.uiStage);
         this.components = {};
         this.dragController = new DragController(this.pipeline);
-        this.attachRendererHooks();
+       
     }
     createRendererContext(layer = 'main') {
         const context = new RendererContext({

@@ -28,11 +28,11 @@ export class FormStore {
         }, this.namespace);
     }
     _setList(forms){
-        this.state.forms = {...this.state, forms: Array.isArray(forms) ? [...forms] : []};
+        this.state = {...this.state, forms: Array.isArray(forms)? [...forms] : []};
         this._emitForms();
     }
 _setActive(form){
-        this.state.activeForm = {...this.state, activeForm: form || null};
+        this.state = {...this.state, activeForm: form || null};
         this._emitActiveForm();
     }
 

@@ -1,10 +1,7 @@
-import { UIElement } from './UiElement.js';
-import { UIButton } from './button.js';
-import { UIText } from './text.js';
-import { UIScrollContainer } from './scrollContainer.js';
-import { UIFormCard } from './formCard.js';
-import { createUIComponent } from './createUIComponent.js';
+
 import { ManifestUI } from './manifestUI.js';
+import { BaseScreen } from './baseScreen.js';
+import { ACTIONS } from '../events/actions.js';
 
 export const dashboardUIManifest = {
   containers: [
@@ -59,32 +56,56 @@ export const dashboardUIManifest = {
   ]
 };
 
-export class Dashboard extends ManifestUI{
-  constructor({ id = 'dashboard', context,layoutManager,layoutRenderer, store, ...handlers }) {
-    super({ id, context, layoutManager, layoutRenderer });
+export class DashBoardScreen extends BaseScreen {
+  constructor({ context, dispatcher, eventBusManager, store }) {
+    super({ id:'dashboard', context, dispatcher, eventBusManager });
     this.store = store;
-    this.onCreateForm = handlers.onCreateForm;
-    this.onEditForm = handlers.onEditForm;
-    this.onViewResults = handlers.onViewResults;
-  
-    // Subscribe to store updates
-    this.store.eventManager.on('forms:updated', (forms) => {
+    this.context = context;
+    this.manifestUI = new ManifestUI({ id: 'dashboardUI', context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
+    this.buildUI();
+this.rootElement.addChild(this.manifestUI);
+    this.listenEvent('forms:updated', (forms) => {
       this.forms = forms;
       this.buildLayout();
       this.context.pipeline.invalidate();
-    });
-    
-    this.buildUI();
+    } );
+  }
+
+  buildUI() {
+    this.manifestUI.buildContainersFromManifest(dashboardUIManifest.containers);
+    this.manifestUI.buildChildrenFromManifest(dashboardUIManifest.buttons, this.manifestUI.uiContainer);
+  }
+
+  onEnter() {
     this.buildLayout();
   }
-  buildUI() {
-    this.buildContainersFromManifest(dashboardUIManifest.containers);
-    this.buildChildrenFromManifest(dashboardUIManifest.buttons, this.uiContainer)
-  }
+
   buildLayout() {
-    this.displayFormsLabels(this.store.getForms(), this.formsContainer, { onSelect: (form) => {
-      this.store.eventManager.emit('view', form);
-    } });
-  
+    this.manifestUI.displayFormsLabels(this.store.getForms(), this.manifestUI.formsContainer, {
+      onSelectForm: (form) => this._onSelect(form)
+    });
   }
+
+  _onSelect(form) {
+    this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace);
 }
+_onView() {
+  const active = this.store.getActiveForm();
+  if(!active) return;
+  this.dispatcher.dispatch(ACTIONS.FORM.VIEW, active, this.namespace);
+
+}
+_onResults() {
+  const active = this.store.getActiveForm();
+  if(!active) return;
+  this.dispatcher.dispatch(ACTIONS.FORM.RESULTS, active, this.namespace);
+}
+
+_onCreateEdit() {
+  const active = this.store.getActiveForm();
+  this.dispatcher.dispatch(ACTIONS.FORM.EDIT, active || null, this.namespace);
+}
+
+}
+
+

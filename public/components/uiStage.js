@@ -30,6 +30,13 @@ export class UIStage {
       this.activeRoot = root;
     
     }
+
+    removeRoot(rootId) {
+      this.roots.delete(rootId);
+      if (this.activeRoot && this.activeRoot.id === rootId) {
+        this.activeRoot = null;
+      }
+    }
   
     getActiveRoot() {
       return this.activeRoot;
