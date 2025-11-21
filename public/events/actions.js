@@ -8,5 +8,9 @@ export const Actions = {
         EDIT: 'form:edit',
         DELETE: 'form:delete',
         RESULTS: 'form:results',
+        SET_ACTIVE: 'form:set_active',
+        SET_LIST: 'form:set_list',
+        UPDATE: 'form:update',
+        ADD: 'form:add',
     },
 };

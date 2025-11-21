@@ -1,31 +1,44 @@
+import { Actions } from "./actions.js";
+
 export class FormStore {
-    constructor(eventManager) {
-      this.forms = [];
-      this.activeForm = null;
-      this.eventManager = eventManager;
+    constructor(dispatcher, namespace='formStore') {
+      this.dispatcher = dispatcher;
+      this.namespace = namespace;
+
+        this.state = {
+            forms: [],
+            activeForm: null
+        };
+
+        dispatcher.on(Actions.FORM.SET_LIST,(forms)=>{
+            this.state.forms = [...forms];
+            this._emit('forms');
+        }, this.namespace);
+
+        dispatcher.on(Actions.FORM.SET_ACTIVE,(form)=>{
+            this.state.activeForm = form;
+this._emit('activeForm');
+        }, this.namespace);
+
+        dispatcher.on(Actions.FORM.UPDATE,(updatedForm)=>{
+            this.state.forms = this.state.forms.map(form=>
+                form.id === updatedForm.id ? updatedForm : form
+            );
+            this._emit('forms');
+        }, this.namespace);
+
+        dispatcher.on(Actions.FORM.ADD,(form)=>{
+            this.state.forms = [...this.state.forms, form];
+            this._emit('forms');
+        }, this.namespace);
     }
-  
-    setForms(forms) {
-      this.forms = forms;
-      this.eventManager.emit('forms:updated', this.forms);
+    getForms(){
+        return this.state.forms;
     }
-    getForms() {
-        console.log('Getting forms:', this.forms);
-        return this.forms;
-        }
-  
-    addForm(form) {
-      this.forms.push(form);
-      this.eventManager.emit('forms:updated', this.forms);
+    getActiveForm(){
+        return this.state.activeForm;
     }
-  
-    setActiveForm(form) {
-      this.activeForm = form;
-      this.eventManager.emit('form:active', form);
-    }
-  
-    updateForm(updatedForm) {
-      this.forms = this.forms.map(f => f.id === updatedForm.id ? updatedForm : f);
-      this.eventManager.emit('forms:updated', this.forms);
+    _emit(type){
+        this.dispatcher.dispatch(`STORE/FORM/${type.toUpperCase()}`, {[type]: this.state[type]}, this.namespace);
     }
   }
