@@ -25,33 +25,19 @@ export const dashboardUIManifest = {
       idSuffix: 'viewBtn',
       label: 'View',
       type: 'button',
-      action: (dashboard) => {
-        if (dashboard.selectedForm) {
-          dashboard.onCreateForm(dashboard.selectedForm);
-        } else {
-          console.log('No form selected to view.');
-        }
-      }
+      action: (dashboard) => dashboard._onView(),
     },
     {
       idSuffix: 'resultsBtn',
       label: 'Results',
       type: 'button',
-      action: (dashboard) => {
-        if (dashboard.selectedForm) {
-          dashboard.onViewResults(dashboard.selectedForm);
-        } else {
-          console.log('No form selected to view results.');
-        }
-      }
+      action: (dashboard) => dashboard._onResults(),
     },
     {
       idSuffix: 'createEditBtn',
       label: 'Create/Edit',
       type: 'button',
-      action: (dashboard) => {
-        dashboard.onEditForm(dashboard.selectedForm || null);
-      }
+      action: (dashboard) => dashboard._onCreateEdit(),
     }
   ]
 };
@@ -62,8 +48,10 @@ export class DashBoardScreen extends BaseScreen {
     this.store = store;
     this.context = context;
     this.manifestUI = new ManifestUI({ id: 'dashboardUI', context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
+    this.manifestUI.dashBoardScreen = this;
     this.buildUI();
 this.rootElement.addChild(this.manifestUI);
+console.log(this.rootElement);
     this.listenEvent('forms:updated', (forms) => {
       this.forms = forms;
       this.buildLayout();
@@ -77,16 +65,18 @@ this.rootElement.addChild(this.manifestUI);
   }
 
   onEnter() {
+  
     this.buildLayout();
   }
 
   buildLayout() {
     this.manifestUI.displayFormsLabels(this.store.getForms(), this.manifestUI.formsContainer, {
-      onSelectForm: (form) => this._onSelect(form)
+      onSelect: (form) => this._onSelect(form)
     });
   }
 
   _onSelect(form) {
+    
     this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace);
 }
 _onView() {

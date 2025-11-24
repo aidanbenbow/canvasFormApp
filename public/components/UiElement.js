@@ -49,6 +49,7 @@ export class UIElement {
   
     contains(x, y) {
       const b = this.getScaledBounds();
+     // console.log(`Checking contains for ${this.id} at (${x}, ${y}) with bounds:`, b);
       if (!b) return false;
       
 let scrollOffsetY = 0;
@@ -68,15 +69,28 @@ while (ancestor) {
     // 🔹 Extended event dispatch
     dispatchEvent(event) {
       if (!this.visible) return false;
-    
+ 
       // CAPTURE phase — go through children
-      for (const child of this.children) {
-        if (child.contains(event.x, event.y)) {
-          if (child.dispatchEvent(event)) return true;
-        } else if (event.type === 'mousemove' && child.isHovered) {
-          // Mouse left child
-          child.onMouseLeave();
+      // for (const child of this.children) {
+     
+      //   if (child.contains(event.x, event.y)) {
+      //     if (child.dispatchEvent(event)) return true;
+      //   } else if (event.type === 'mousemove' && child.isHovered) {
+      //     // Mouse left child
+      //     child.onMouseLeave();
           
+      //   }
+      // }
+      for (const child of this.children) {
+        const hit = child.contains(event.x, event.y);
+      
+        // If child is a container, recurse regardless
+        if (child.children.length > 0 || hit) {
+          if (child.dispatchEvent(event)) return true;
+        }
+      
+        if (event.type === 'mousemove' && child.isHovered && !hit) {
+          child.onMouseLeave();
         }
       }
   
@@ -84,7 +98,7 @@ while (ancestor) {
        const hit = this.contains(event.x, event.y);
       this.lastEventX = event.x;
       this.lastEventY = event.y;
-
+//console.log(`Event ${event.type} at (${event.x}, ${event.y}) on ${this.id}, hit: ${hit}`);
       if (this.interactive) {
         if (event.type === 'mousemove') {
           if (hit && !this.isHovered) this.onMouseEnter();

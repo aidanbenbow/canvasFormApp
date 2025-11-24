@@ -8,7 +8,8 @@ export class FormStore {
 
         this.state = {
             forms: [],
-            activeForm: null
+            activeForm: null,
+            results: {}
         };
 
         dispatcher.on(ACTIONS.FORM.SET_LIST,(forms)=>{
@@ -26,6 +27,15 @@ export class FormStore {
         dispatcher.on(ACTIONS.FORM.ADD,(form)=>{
             this._add(form);
         }, this.namespace);
+
+        dispatcher.on(ACTIONS.FORM.RESULTS_SET,( {formId, results} )=>{
+            this._setResults(formId, results);
+        }, this.namespace);
+
+dispatcher.on(ACTIONS.FORM.ADD_RESULTS,( {formId, newResults} )=>{
+            this._addResults(formId, newResults);
+        }, this.namespace);
+
     }
     _setList(forms){
         this.state = {...this.state, forms: Array.isArray(forms)? [...forms] : []};
@@ -35,7 +45,18 @@ _setActive(form){
         this.state = {...this.state, activeForm: form || null};
         this._emitActiveForm();
     }
+    _setResults(formId, results){
+        this.state.results[formId] = results;
+        this._emitResults(formId);
+    }
 
+_addResults(formId, newResults){
+        if(!this.state.results[formId]){
+            this.state.results[formId] = [];
+        }
+        this.state.results[formId] = [...this.state.results[formId], ...newResults];
+        this._emitResults(formId);
+    }
     _add(form){
         this.state = {...this.state, forms: [...this.state.forms, form]};
         this._emitForms();
@@ -60,6 +81,9 @@ _setActive(form){
 
     getForms(){
         return this.state.forms.slice();
+    }
+    getFormResults(formId){
+        return this.state.results[formId] ? this.state.results[formId].slice() : [];
     }
     getActiveForm(){
         return this.state.activeForm;

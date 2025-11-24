@@ -1,49 +1,50 @@
 import { UIElement } from "./UiElement.js";
+import { BaseScreen } from "./baseScreen.js";
 import { UIButton } from "./button.js";
 import { createUIComponent } from "./createUIComponent.js";
+import { ManifestUI } from "./manifestUI.js";
 import { UIText } from "./text.js";
 
+const resultFormManifest = {
+    containers: [
+        {
+            idSuffix: 'resultsContainer',
+            type: 'container',
+            layout: { x: 10, y: 10, width: 600, height: 400 },
+            scroll: true,
+            assignTo: 'resultsContainer'
+        }
+    ],
+    header: [
+        {
+            idSuffix: 'title',
+            type: 'text',
+            label: form=>`results for: ${form.label}` || 'Form Results'
+        },
+        {
+            idSuffix: 'closeBtn',
+            label: 'Close',
+            type: 'button',
+            action: (screen) => {
+                screen.onClose?.();
+            }
+        }
+    ]
+}
 
-export class UIFormResults extends UIElement {
-    constructor({ id='formResults', form, results,context, layoutManager, layoutRenderer, onClose }) {
-        super({ id,context, layoutManager, layoutRenderer });
-        this.form = form;
-        this.results = results;
-        this.onClose = onClose;
-    console.log('Form Results:', results);
-    this.resultsContainer = null;
-        this.buildLayout();
+export class UIFormResults extends BaseScreen {
+    constructor({ id='formResults', context,dispatcher, eventBusManager, results}) {
+        super({ id, context,dispatcher, eventBusManager });
+        this.form = 
+        this.results = results || [];
+this.manifestUI = new ManifestUI({ id: `${this.id}-manifestUI`, context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
+this.rootElement.addChild(this.manifestUI);
+
         this.buildUI();
     }
-    
-    buildLayout() {
-      this.resultsContainer = createUIComponent({
-        id: `${this.id}-container`,
-        type: 'container',
-        layout: { x: 10, y: 10, width: 600, height: 400 }
-       }, this.context);
-         this.resultsContainer.initializeScroll();
-         this.addChild(this.resultsContainer);
-    }
-    
     buildUI() {
-        const title = createUIComponent({
-            id: `${this.id}-title`,
-            type: 'text',
-            label: `Results for: ${this.form.label || 'Untitled Form'}`
-        }, this.context);
-        this.resultsContainer.addChild(title);
-    
-    this.results.forEach((result, index) => {
-        const resultText = createUIComponent({
-            id: `${this.id}-result-${index}`,
-            type: 'text',
-            label: ` ${JSON.stringify(result.inputs)}`
-        }, this.context);
-        this.resultsContainer.addChild(resultText);
+        this.manifestUI.buildContainersFromManifest(resultFormManifest.containers);
+    }
+}
 
-    } )
-    
-}
-}
 

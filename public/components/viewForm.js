@@ -1,4 +1,5 @@
 import { UIElement } from "./UiElement.js";
+import { BaseScreen } from "./baseScreen.js";
 import { createUIComponent } from "./createUIComponent.js";
 import { ManifestUI } from "./manifestUI.js";
 
@@ -12,22 +13,26 @@ const formViewManifest = [
     }
 ];
 
-export class ViewForm extends ManifestUI{
-    constructor({ id, context, layoutManager, layoutRenderer, form, onSubmit }) {
-        super({ id, context, layoutManager, layoutRenderer });
-        this.form = typeof form === 'string' ? JSON.parse(form) : form;
-        console.log('ViewForm initialized with form:', this.form);
-        this.inputBoxes = new Map();
+export class ViewForm extends BaseScreen{
+    constructor({id, context, dispatcher, eventBusManager, store,  onSubmit }) {
+        super({id, context, dispatcher, eventBusManager });
+        this.store = store;
         this.onSubmit = onSubmit;
-        this.responseData = {};
+        this.inputBoxes = new Map();
+        this.manifestUI = new ManifestUI({ id: `${this.id}-manifestUI`, context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
         this.buildUI();
-        this.buildForm();
+        this.rootElement.addChild(this.manifestUI);
+        this.buildLayout();
     }
     buildUI() {
-        this.buildContainersFromManifest(formViewManifest);
+        this.manifestUI.buildContainersFromManifest(formViewManifest);
     }
-    buildForm() {
-         this.buildFormFromManifest(this.form, this.formContainer, { onSubmit: this.onSubmit });
+    buildLayout() {
+        const activeForm = this.store.getActiveForm();
+        this.manifestUI.buildFormFromManifest(activeForm, this.manifestUI.formContainer, {
+            onSubmit: this.onSubmit
+        });
     }
+
 }
 

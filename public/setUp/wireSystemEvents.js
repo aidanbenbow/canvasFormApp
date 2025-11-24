@@ -1,3 +1,4 @@
+import { UIFormResults } from "../components/formResults.js";
 import { ViewForm } from "../components/viewForm.js";
 import { ACTIONS } from "../events/actions.js";
 
@@ -12,15 +13,28 @@ export function wireSystemEvents(system, context, store ={}) {
     dispatcher.on(ACTIONS.FORM.VIEW, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
 
-        const view = new ViewForm({ context, dispatcher, eventBusManager: bus, store, form });
+        const view = new ViewForm({ id: 'viewFormScreen', context, 
+    layoutManager: context.uiStage.layoutManager,
+    layoutRenderer: context.uiStage.layoutRenderer,
+    store,
+    onSubmit: (responseData) => {
+        dispatcher.dispatch(ACTIONS.FORM.SUBMIT, { form: store.getActiveForm(), responseData });}
+    });
         view.attachToStage(context.uiStage);
+        context.pipeline.invalidate();
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
+      const results = store.getFormResults(form.id);
+      const resultView = new UIFormResults({ id: 'formResultsScreen', context,
+      dispatcher,
+      eventBusManager: bus,
+        form,
+        results
+        });      resultView.attachToStage(context.uiStage);
+        context.pipeline.invalidate();
 
-        // Placeholder for ResultsFormScreen
-        console.log("ResultsFormScreen is not implemented yet.");
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.EDIT, async (form) => {

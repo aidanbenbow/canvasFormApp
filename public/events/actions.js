@@ -12,6 +12,8 @@ export const ACTIONS = {
         RESULTS: 'form:results',
         SET_ACTIVE: 'form:set_active',
         SET_LIST: 'form:set_list',
+        RESULTS_SET: 'form:results_set',
+        ADD_RESULTS: 'form:add_results',
         UPDATE: 'form:update',
         ADD: 'form:add',
     },

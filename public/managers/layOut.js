@@ -98,6 +98,7 @@ export class LayoutManager {
       };
     }
     getLogicalBounds(id) {
+ 
       return this.registry.get(id) || null;
     }
     setLogicalBounds(id, bounds) {

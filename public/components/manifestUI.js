@@ -23,7 +23,11 @@ export class ManifestUI extends UIElement{
                 ...def,
                 id: `${this.id}-${def.idSuffix || def.id || Math.random().toString(36).substr(2, 9)}`
             };
+            
           const component = createUIComponent(fullDef, this.context);
+          if(def.action){
+            component.onClick = () => def.action(this.dashBoardScreen);
+          }console.log("Adding component:", component);
           targetContainer.addChild(component);
         });
       }
@@ -63,9 +67,10 @@ export class ManifestUI extends UIElement{
         });
       }
       displayFormsLabels(forms, targetContainer, { onSelect }) {
+        targetContainer.clearChildren();
         forms.forEach(form => {
           const button = createUIComponent({
-            id: `${this.id}-formButton-${form.id}`,
+            id: `${this.id}-form-${form.id}`,
             type: 'button',
             label: form.formStructure.title || `Form ${form.id}`,
             onClick: () => onSelect?.(form)

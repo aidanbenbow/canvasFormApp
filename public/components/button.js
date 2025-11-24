@@ -12,6 +12,7 @@ export class UIButton extends UIElement {
   }
 
   onClick() {
+    console.log(`Button ${this.id} clicked.`);
     this.onClickHandler?.();
     this.isActive = true;
 
