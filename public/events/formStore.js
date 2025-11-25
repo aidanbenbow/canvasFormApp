@@ -63,11 +63,20 @@ _addResults(formId, newResults){
     }
 
     _update(updatedForm){
-        this.state= {
-            ...this.state,
-            forms: this.state.forms.map(form=>
-                form.id === updatedForm.id ? updatedForm : form
-            )
+        console.log("Updating form:", updatedForm);
+        if(!updatedForm.id){
+            updatedForm.id = this._generateId();
+        }
+       let found = false;
+       this.state.forms = this.state.forms.map(f => {
+            if(f.id === updatedForm.id){
+                found = true;
+                return updatedForm;
+            }
+            return f;
+        } );
+        if(!found){
+            this.state.forms = [...this.state.forms, updatedForm];
         }
         this._emitForms();
         if(this.state.activeForm && this.state.activeForm.id === updatedForm.id){
@@ -103,8 +112,14 @@ _addResults(formId, newResults){
         this.eventBusManager.emit(ACTIONS.STORE.FORM_ACTIVE, {activeForm: this.getActiveForm()});
     }
 
+    _emitResults(formId){
+        this.eventBusManager.emit(ACTIONS.STORE.FORM_RESULTS, { formId, results: this.getFormResults(formId) });
+    }
     destroy(){
         this.dispatcher.clear(this.namespace);
         this.eventBusManager.clearNamespace(this.namespace);
+    }
+    _generateId(){
+        return 'form-' + Math.random().toString(36).substr(2, 9);
     }
   }

@@ -84,6 +84,8 @@ wireSystemEvents(system, context, store);
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
 
+const uiOverlay = new UIOverlay({ context, layoutManager, layoutRenderer });
+context.uiStage.addRoot(uiOverlay);
 
 
 if (formId) {
@@ -95,130 +97,16 @@ if (formId) {
   const {forms} = await fetchAllForms('admin');
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, forms, 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
+for(const f of forms){
+  const results = await fetchFormResults(f.id, f.resultsTable || 'faithandbelief');
+system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
+}
+
   const dash = new DashBoardScreen({ context, dispatcher: system.actionDispatcher, eventBusManager: system.eventBusManager, store });
   dash.attachToStage(context.uiStage);
   context.pipeline.invalidate();
 }
 
-
-// system.eventBus.on('dashBoard', (forms) => {
-//   console.log('Loading dashboard with forms:', forms);
-//   const dashBoardOverlay = new Dashboard({
-//     context,
-//     layoutManager,
-//     layoutRenderer,
-//     store,
-//     onCreateForm: (form) => {
-//       system.eventBus.emit('viewForm', form);
-//     },
-//     onEditForm: (form) => {
-//      console.log('Emitting editForm for:', form);
-//     system.eventBus.emit('editForm', form);
-//     },
-//     onViewResults: (form) => {
-//       system.eventBus.emit('viewResults', form);
-//     }
-//   });
-//   context.uiStage.addRoot( dashBoardOverlay);
-//   context.uiStage.setActiveRoot('dashboard');
-//   context.pipeline.invalidate();
-// });
-
-// system.eventBus.on('editForm', (form) => {
-//   console.log('Editing form:', form);
-//   const editor = new FormEditor({
-//     context,
-//     layoutManager,
-//     layoutRenderer,
-    
-//     form,
-//     onSubmit: updatedForm => {
-//       console.log('✅ Form updated:', updatedForm);
-     
-//       const payload = {
-//         id: updatedForm.id,
-//         formStructure: updatedForm.formStructure,
-//         label: updatedForm.label,
-//         user: updatedForm.user,
-//     }
-//       saveFormStructure(payload);
-//     }
-//   });
-
-//   context.uiStage.addRoot(editor);
-//   context.uiStage.setActiveRoot('formEditor');
-//   context.pipeline.invalidate();
-// });
-
-
-// system.eventBus.on('viewResults', async (form) => {
-//   console.log('Viewing results for form:', form);
-//   const results = await fetchFormResults(form.id);
-//   const resultsOverlay = new UIFormResults({
-//     form,
-//     results,
-//     context,
-//     layoutManager,
-//     layoutRenderer,   
-//   });
-//   context.uiStage.addRoot(resultsOverlay);
-//   context.uiStage.setActiveRoot('formResults');
-//   context.pipeline.invalidate();
-// });
-
-// system.eventBus.on('viewForm', (formData) => {
-//   console.log('Viewing form data:', formData);
-//  const formi = new ViewForm({
-//     id: `viewForm-${Date.now()}`,
-//     context,
-//     layoutManager,
-//     layoutRenderer,
-//     form: formData,
-//     onSubmit: (form) => {
-//       system.eventBus.emit('formSubmitted', { form});
-//     }
-//  });
-//   context.uiStage.addRoot(formi);
-//   context.uiStage.setActiveRoot(formi.id);
-//   context.pipeline.invalidate();
-// });
-
-// system.eventBus.on('formSubmitted', ({ form }) => {
-//   sendLog('Form submitted:', form);
-//   onMessageResponse(({ success, result, error }) => {
-//     if (success) {
-//       const overlay = new UIOverlay({
-//         context,
-//         layoutManager: context.uiStage.layoutManager,
-//         layoutRenderer: context.uiStage.layoutRenderer
-//       });
-      
-//       context.uiStage.overlayRoot = overlay;
-      
-//       overlay.showMessage({
-//         text: '✅ Form submitted successfully!',
-//         color: '#0a0',
-//         duration: 3000
-//       });
-//     } else {
-//       const overlay = new UIOverlay({
-//         context,
-//         layoutManager: context.uiStage.layoutManager,
-//         layoutRenderer: context.uiStage.layoutRenderer
-//       });
-      
-//       context.uiStage.overlayRoot = overlay;
-      
-//       overlay.showMessage({
-//         text: `❌ Error submitting form: ${error}`,
-//         color: '#a00',
-//         duration: 5000
-//       });
-//     }
-  
-//   });
-  
-// });
 
 const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
 system.eventBus.on('hitClick', ({hex}) => {
@@ -233,8 +121,7 @@ system.eventBus.on('hitClick', ({hex}) => {
 
   system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);
-    adminOverlay.showMessage(text, position, duration);
-    context.pipeline.invalidate();
+    uiOverlay.showMessage({ text, duration, fontSize: 0.04 });
   });
 
   system.eventBus.on('createForm', () => {

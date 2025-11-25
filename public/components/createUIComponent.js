@@ -67,6 +67,7 @@ export function createUIComponent(field, context, {place = true} = {}) {
     label='',
     placeholder='',
     layout={},
+    color,
     interactive = true,
     childSpacing = 10,
     defaultChildHeight = 50,
@@ -83,6 +84,7 @@ export function createUIComponent(field, context, {place = true} = {}) {
         component = new UIButton({
             id,
             label,
+            color: color || '#007bff',
             onClick: onClick || (() => { console.log(`Button ${id} clicked`); }),
             context,
             layoutManager: uiStage.layoutManager,

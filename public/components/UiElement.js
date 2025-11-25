@@ -124,8 +124,10 @@ while (ancestor) {
   
     // 🔹 Event hooks (can be overridden)
     onMouseEnter() { this.isHovered = true;
+      this.context.pipeline.invalidate();
 }
-    onMouseLeave() { this.isHovered = false; this.isActive = false; }
+    onMouseLeave() { this.isHovered = false; this.isActive = false;
+      this.context.pipeline.invalidate();}
     onMouseDown() { this.isActive = true; 
     if(this.draggable&&this.layoutRenderer&&this.layoutManager){
         const bounds = this.getScaledBounds();
@@ -147,9 +149,15 @@ while (ancestor) {
     onMouseMove(x, y) {
       this.context.dragController.updateDrag(x, y);
     }
-    onClick() {}
-    onFocus() { this.isFocused = true; }
-    onBlur() { this.isFocused = false; }
+    onClick() {
+      UIElement.setFocus(this);
+      this.isActive = true;
+      this.context.pipeline.invalidate();
+    }
+    onFocus() { this.isFocused = true; 
+    this.context.pipeline.invalidate();}
+    onBlur() { this.isFocused = false;
+    this.context.pipeline.invalidate();}
   
     onChildEvent(event, child) {
      

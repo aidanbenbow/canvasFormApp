@@ -1,148 +1,99 @@
 import { UIElement } from './UiElement.js';
+import { BaseScreen } from './baseScreen.js';
 
 import { UIButton } from './button.js';
 import { createUIComponent } from './createUIComponent.js';
 import { UIInputBox } from './inputBox.js';
 import { LabeledInput } from './labeledInput.js';
+import { ManifestUI } from './manifestUI.js';
 import { PlaceholderPromptOverlay } from './placeHolderOverlay.js';
 import { UIScrollContainer } from './scrollContainer.js';
 import { UIText } from './text.js';
 
-export class CreateForm extends UIElement {
-  constructor({ id = 'createForm', layoutManager, layoutRenderer, context, manifest, onSubmit }) {
-    super({ id, layoutManager, layoutRenderer, context });
-    this.context = context;
-    this.editorController = context?.textEditorController;
-    this.manifest = manifest
-   
-    this.formLabel = manifest.label || 'new form';
-    this.onSubmit = onSubmit;
-
-    this.fieldComponents = new Map();
-    this.formContainer = null;
-    this.buildUI();
-   this.buildFromManifest();
-  }
-
-  buildUI() {
-    const UIcontainer = createUIComponent({
-      id: `${this.id}-container`,
+export const createFormManifest = {
+  containers: [
+    {
+      idSuffix: 'editorContainer',
       type: 'container',
-      layout: { x: 30, y: 80, width: 100, height: 300 }
-    }, this.context);
-    UIcontainer.initializeScroll();
-    this.addChild(UIcontainer);
-    const saveBtn = createUIComponent({
-      id: `${this.id}-saveBtn`,
-      type: 'button',
-      label: 'Save Form',
-      
-      onClick: () => this.handleSubmit()
-    }, this.context, {place: false});
-    
-const addTitleBtn = createUIComponent({
-      id: `${this.id}-addTitle`,
-      type: 'button',
-      label: 'Add Title',
-      layout: { x: 20, y: 100, width: 100, height: 40 },
-      onClick: () => this.addCompenent('text')
-    }, this.context, {place: false});
-const addInputBtn = createUIComponent({
-      id: `${this.id}-addInput`,
-      type: 'button',
-      label: 'Add Input',
-      layout: { x: 20, y: 160, width: 100, height: 40 },
-      onClick: () => this.addCompenent('input')
-    }, this.context, {place: false});
-    const addSubmitBtn = createUIComponent({
-      id: `${this.id}-addSubmit`,
-      type: 'button',
-      label: 'Add Submit Button',
-      layout: { x: 20, y: 220, width: 100, height: 40 },
-      onClick: () => this.addCompenent('button')
-    }, this.context, {place: false});
-    UIcontainer.addChild(saveBtn);
-    UIcontainer.addChild(addTitleBtn);
-    UIcontainer.addChild(addInputBtn);
-    UIcontainer.addChild(addSubmitBtn);
-
-  }
-
-  buildFromManifest() {
-    this.formContainer= createUIComponent({
-      id: `${this.id}-formContainer`,
+      layout: { x: 30, y: 80, width: 150, height: 300 },
+      scroll: true,
+      assignTo: 'editorContainer'
+    },
+    {
+      idSuffix: 'formContainer',
       type: 'container',
       layout: { x: 200, y: 80, width: 600, height: 400 },
-      childSpacing: 15,
-      defaultChildHeight: 70
-    }, this.context);
-    this.formContainer.initializeScroll();
-    this.addChild(this.formContainer)
-    
-  }
+      scroll: true,
+      assignTo: 'formContainer'
+    }
+  ],
+  buttons: [
+    {
+      idSuffix: 'saveBtn',
+      label: 'Save Form',
+      type: 'button',
+      action: (screen) => screen.handleSubmit()
+    },
+    {
+      idSuffix: 'addTitleBtn',
+      label: 'Add Title',
+      type: 'button',
+      action: (screen) => screen.addComponent('text')
+    },
+    {
+      idSuffix: 'addInputBtn',
+      label: 'Add Input',
+      type: 'button',
+      action: (screen) => screen.addComponent('input')
+    },
+    {
+      idSuffix: 'addSubmitBtn',
+      label: 'Add Submit Button',
+      type: 'button',
+      action: (screen) => screen.addComponent('button')
+    }
+  ]
+};
 
-  addCompenent(type) {
-    switch(type) {
-      case 'text':
-     const newField = {
-          id: `input-${Date.now()}`,
-          type: 'text',
-          label: 'New Title',
-          // layout: { x: 225, y: 10 + this.fieldComponents.size * 65, width: 450, height: 60 }
-        };
-        this.manifest.fields.push(newField);
-        const title = createUIComponent({
-          id: newField.id,
-          type: 'text',
-          label: newField.label,
-          // layout: newField.layout
-        }, this.context);
-        this.fieldComponents.set(newField.id, title);
-         this.formContainer.addChild(title);
-         break;
-      case 'input':
-        const newInputField = {
-            id: `input-${Date.now()}`,
-            type: 'input',
-            label: 'New Input',
-            placeholder: 'Enter text here...',
-           
-          };
-          this.manifest.fields.push(newInputField);
-          const inputBox = createUIComponent({
-            id: newInputField.id,
-            type: 'input',
-            label: newInputField.label,
-            placeholder: newInputField.placeholder,
-          
-          }, this.context, {place: false});
-          this.fieldComponents.set(newInputField.id, inputBox);
-          this.formContainer.addChild(inputBox);
-          break;
-          case 'button':
-          const newButtonField = {
-              id: `button-${Date.now()}`,
-              type: 'button',
-              label: 'submit',
-             
-            };
-            this.manifest.fields.push(newButtonField);
-            const button = createUIComponent({
-              id: newButtonField.id,
-              type: 'button',
-              label: newButtonField.label,
-             
-            }, this.context, {place: false});
-            this.fieldComponents.set(newButtonField.id, button);
-            this.formContainer.addChild(button);
-            break;
-        }
-this.context.pipeline.invalidate();
+export class CreateForm extends BaseScreen{
+  constructor({ id='createForm', context, dispatcher, eventBusManager, store, onSubmit }) {
+    super({ id, context, dispatcher, eventBusManager });
+    this.store = store;
+    this.context = context;
+    this.manifest = {label: 'new form', fields: [] };
+    this.onSubmit = onSubmit;
+    this.fieldComponents = new Map();
+    this.manifestUI = new ManifestUI({ id: `${this.id}-manifestUI`, context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
+    this.manifestUI.createFormScreen = this;
+    this.rootElement.addChild(this.manifestUI);
+    this.buildUI();
   }
-
+  buildUI() {
+    this.manifestUI.buildContainersFromManifest(createFormManifest.containers);
+    this.manifestUI.buildChildrenFromManifest(createFormManifest.buttons, this.manifestUI.editorContainer);
+  }
+  addComponent(type) {
+    const newField = {
+      id: `${type}-${Date.now()}`,
+      type,
+      label: type === 'text' ? 'New Title' : type === 'input' ? 'New Input' : 'submit',
+      placeholder: type === 'input' ? 'Enter text here...' : undefined,
+    };
+    this.manifest.fields.push(newField);
+    const component = createUIComponent({
+      id: newField.id,
+      type: newField.type,
+      label: newField.label,
+      placeholder: newField.placeholder,
+    }, this.context, { place: false });
+    this.fieldComponents.set(newField.id, component);
+    this.manifestUI.formContainer.addChild(component);
+    this.context.pipeline.invalidate();
+  }
   handleSubmit() {
     this.fieldComponents.forEach((component, id) => {
       const layout = this.context.uiStage.layoutManager.getLogicalBounds(id);
+      
       this.manifest.fields = this.manifest.fields.map(field => {
         if(field.id !== id) return field;
         const updated = { ...field, layout };
@@ -162,42 +113,9 @@ this.context.pipeline.invalidate();
         
         return updated;
       });
+      this.manifest.label = this.manifest.fields[0]?.label || 'new form';
     console.log('Updated manifest:', this.manifest);
 this.onSubmit?.(this.manifest);
-  }
-    );
-}
-
-  onChildEvent(event, child) {
-    if (
-      event.type === 'click' &&
-      child instanceof UIInputBox &&
-      child.interactive === false
-    ) {
-      const overlay = new PlaceholderPromptOverlay({
-        targetBox: child,
-        layoutManager: this.layoutManager,
-        layoutRenderer: this.layoutRenderer,
-        context: this.context,
-        onConfirm: newText => {
-          child.label = newText;
-          this.manifest.fields = this.manifest.fields.map(field => {
-            if (field.id === child.id) {
-              return { ...field, label: newText };
-            }
-            return field;
-          });
-          this.context.pipeline.invalidate();
-        }
-      });
-
-      this.context.uiStage.overlayRoot = overlay;
-      overlay.registerHitRegions(this.context.hitRegistry);
-      this.context.pipeline.invalidate();
-      return true;
-    }
-
-    return super.onChildEvent?.(event, child);
+    });
   }
 }
-

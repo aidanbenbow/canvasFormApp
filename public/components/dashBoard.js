@@ -51,7 +51,7 @@ export class DashBoardScreen extends BaseScreen {
     this.manifestUI.dashBoardScreen = this;
     this.buildUI();
 this.rootElement.addChild(this.manifestUI);
-console.log(this.rootElement);
+
     this.listenEvent('forms:updated', (forms) => {
       this.forms = forms;
       this.buildLayout();

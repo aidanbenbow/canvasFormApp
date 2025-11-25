@@ -26,8 +26,9 @@ export class ManifestUI extends UIElement{
             
           const component = createUIComponent(fullDef, this.context);
           if(def.action){
-            component.onClick = () => def.action(this.dashBoardScreen);
-          }console.log("Adding component:", component);
+            const screenRef = this.dashBoardScreen || this.createFormScreen;
+            component.onClick = () => def.action(screenRef);
+          }
           targetContainer.addChild(component);
         });
       }
@@ -72,10 +73,41 @@ export class ManifestUI extends UIElement{
           const button = createUIComponent({
             id: `${this.id}-form-${form.id}`,
             type: 'button',
-            label: form.formStructure.title || `Form ${form.id}`,
+            label: form.label || `Form ${form.id}`,
+            color: '#28a745',
             onClick: () => onSelect?.(form)
           }, this.context, { place: false });
           targetContainer.addChild(button);
+        });
+      }
+
+      displayResultsTable(results, targetContainer) {
+        targetContainer.clearChildren();
+        if (results.length === 0) {
+          const noResultsText = createUIComponent({
+            id: `${this.id}-no-results`,
+            type: 'text',
+            label: 'No results available.'
+          }, this.context, { place: false });
+          targetContainer.addChild(noResultsText);
+          return;
+        }
+      
+        const title = createUIComponent({
+          id: `${this.id}-results-title`,
+          type: 'text',
+          label: 'Form Results'
+        }, this.context, { place: false });
+        targetContainer.addChild(title);
+
+        results.forEach((result, index) => {
+          const inputs = Object.entries(result.inputs).map(([key, value]) => `${key}: ${value}`).join(', ');
+          const resultText = createUIComponent({
+            id: `${this.id}-result-${index}`,
+            type: 'text',
+            label: `Result ${index + 1}: ${inputs}`
+          }, this.context, { place: false });
+          targetContainer.addChild(resultText);
         });
       }
     

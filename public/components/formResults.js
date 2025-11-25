@@ -33,18 +33,22 @@ const resultFormManifest = {
 }
 
 export class UIFormResults extends BaseScreen {
-    constructor({ id='formResults', context,dispatcher, eventBusManager, results}) {
+    constructor({ id='formResults', context,dispatcher, eventBusManager,store, results}) {
         super({ id, context,dispatcher, eventBusManager });
-        this.form = 
+        this.store = store;
+        this.form = this.store.getActiveForm();
         this.results = results || [];
 this.manifestUI = new ManifestUI({ id: `${this.id}-manifestUI`, context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
 this.rootElement.addChild(this.manifestUI);
 
         this.buildUI();
+        this.buildLayout();
     }
     buildUI() {
         this.manifestUI.buildContainersFromManifest(resultFormManifest.containers);
     }
+    buildLayout() {
+        this.manifestUI.displayResultsTable( this.results, this.manifestUI.resultsContainer);
 }
-
+}
 

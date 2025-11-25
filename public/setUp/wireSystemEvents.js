@@ -1,5 +1,7 @@
+import { CreateForm } from "../components/createForm.js";
 import { UIFormResults } from "../components/formResults.js";
 import { ViewForm } from "../components/viewForm.js";
+import { saveFormStructure } from "../controllers/socketController.js";
 import { ACTIONS } from "../events/actions.js";
 
 export function wireSystemEvents(system, context, store ={}) {
@@ -30,7 +32,7 @@ export function wireSystemEvents(system, context, store ={}) {
       const resultView = new UIFormResults({ id: 'formResultsScreen', context,
       dispatcher,
       eventBusManager: bus,
-        form,
+        store,
         results
         });      resultView.attachToStage(context.uiStage);
         context.pipeline.invalidate();
@@ -40,8 +42,19 @@ export function wireSystemEvents(system, context, store ={}) {
     dispatcher.on(ACTIONS.FORM.EDIT, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
 
-        // Placeholder for EditFormScreen
-        console.log("EditFormScreen is not implemented yet.");
+        const creator = new CreateForm({ id: 'createFormScreen', context,dispatcher, eventBusManager: bus,store,
+        onSubmit: (updatedForm) => {
+            console.log("Form created/edited:", updatedForm);
+            dispatcher.dispatch(ACTIONS.FORM.UPDATE, updatedForm);
+            saveFormStructure({
+                id: updatedForm.id||`form-${Date.now()}`,
+                formStructure: { fields: updatedForm.fields || [] },
+                label: updatedForm.label,
+                user: updatedForm.user,
+            });
+        } });
+        creator.attachToStage(context.uiStage);
+        context.pipeline.invalidate();
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData, onSubmit }) => {
