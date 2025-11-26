@@ -3,7 +3,6 @@ export class ActionDispatcher {
       this.bus = eventBusManager;
     }
     dispatch(actionType, payload, namespace='global') {
-        console.log(`Dispatching action: ${actionType} with payload:`, payload, `in namespace: ${namespace}`);
       this.bus.emit(actionType, payload, namespace);
     }
 

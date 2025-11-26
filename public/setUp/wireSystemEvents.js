@@ -47,11 +47,11 @@ export function wireSystemEvents(system, context, store ={}) {
         onSubmit: (updatedForm) => {
             dispatcher.dispatch(ACTIONS.FORM.ADD, updatedForm);
             saveFormStructure({
-                id: updatedForm.id||`form-${Date.now()}`,
-                formStructure: { fields: updatedForm.fields || [] },
+                id: updatedForm.id,
+                formStructure: updatedForm.formStructure,
                 label: updatedForm.label,
                 user: updatedForm.user,
-            });
+              });
         } });
         creator.attachToStage(context.uiStage);
         context.pipeline.invalidate();

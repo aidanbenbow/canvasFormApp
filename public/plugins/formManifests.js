@@ -12,13 +12,12 @@ export const pluginRegistry = {
   };
 
   export function normalizeForm(form) {
+    const fields = form.fields || form.formStructure?.fields || [];
     return {
       id: form.id || `form-${Date.now()}`,
-      label: form.label || 'Untitled',
-      fields: Array.isArray(form.fields) ? form.fields : [],
-      user: form.user || 'admin',
-      createdAt: form.createdAt || Date.now(),
-      updatedAt: Date.now()
+      label: fields[0].label || 'Untitled Form',
+      user: form.user || 'anonymous',
+      formStructure: { fields }
     };
   }
 

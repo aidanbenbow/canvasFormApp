@@ -63,7 +63,7 @@ export class CreateForm extends BaseScreen{
     super({ id, context, dispatcher, eventBusManager });
     this.store = store;
     this.context = context;
-    this.manifest = {id:`form-${Date.now()}`,label: 'new form',fields: [] };
+    this.manifest = {id:`form-${Date.now()}`,label: 'new form',formStructure:{fields:[]}, user:'admin' };
     this.onSubmit = onSubmit;
     this.fieldComponents = new Map();
     this.manifestUI = new ManifestUI({ id: `${this.id}-manifestUI`, context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
@@ -82,9 +82,9 @@ export class CreateForm extends BaseScreen{
       label: type === 'text' ? 'New Title' : type === 'input' ? 'New Input' : 'submit',
       placeholder: type === 'input' ? 'Enter text here...' : undefined,
     };
-    this.manifest.fields.push(newField);
+    this.manifest.formStructure.fields.push(newField);
    this.manifestUI.formContainer.clearChildren();
-   this.manifestUI.buildFormFromManifest({id:this.manifest.id,user:this.manifest.user, formStructure:{fields:this.manifest.fields}}, this.manifestUI.formContainer, {
+   this.manifestUI.buildFormFromManifest(this.manifest, this.manifestUI.formContainer, {
       onSubmit: (responseData) => {
         this.handleSubmit(responseData);
       }

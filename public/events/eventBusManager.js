@@ -19,7 +19,6 @@ export class EventBusManager {
         this.eventBus.on(event, handler);
     }
     emit(event, payload) {
-        console.log(`Emitting event: ${event} with payload:`, payload);
         this.eventBus.emit(event, payload);
     }
    clearNamespace(namespace) {
