@@ -11,6 +11,17 @@ export const pluginRegistry = {
     }
   };
 
+  export function normalizeForm(form) {
+    return {
+      id: form.id || `form-${Date.now()}`,
+      label: form.label || 'Untitled',
+      fields: Array.isArray(form.fields) ? form.fields : [],
+      user: form.user || 'admin',
+      createdAt: form.createdAt || Date.now(),
+      updatedAt: Date.now()
+    };
+  }
+
 
 export const formManifest = {
     id: 'userSurvey',

@@ -7,6 +7,7 @@ export const ACTIONS = {
     FORM: {
         VIEW: 'form:view',
         SUBMIT: 'form:submit',
+        CREATE: 'form:create',
         EDIT: 'form:edit',
         DELETE: 'form:delete',
         RESULTS: 'form:results',

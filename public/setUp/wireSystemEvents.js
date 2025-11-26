@@ -1,7 +1,8 @@
 import { CreateForm } from "../components/createForm.js";
+import { EditForm } from "../components/editForm.js";
 import { UIFormResults } from "../components/formResults.js";
 import { ViewForm } from "../components/viewForm.js";
-import { saveFormStructure } from "../controllers/socketController.js";
+import { saveFormStructure, sendLog } from "../controllers/socketController.js";
 import { ACTIONS } from "../events/actions.js";
 
 export function wireSystemEvents(system, context, store ={}) {
@@ -39,13 +40,12 @@ export function wireSystemEvents(system, context, store ={}) {
 
     }, 'wiring');
 
-    dispatcher.on(ACTIONS.FORM.EDIT, async (form) => {
+    dispatcher.on(ACTIONS.FORM.CREATE, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
 
         const creator = new CreateForm({ id: 'createFormScreen', context,dispatcher, eventBusManager: bus,store,
         onSubmit: (updatedForm) => {
-            console.log("Form created/edited:", updatedForm);
-            dispatcher.dispatch(ACTIONS.FORM.UPDATE, updatedForm);
+            dispatcher.dispatch(ACTIONS.FORM.ADD, updatedForm);
             saveFormStructure({
                 id: updatedForm.id||`form-${Date.now()}`,
                 formStructure: { fields: updatedForm.fields || [] },
@@ -57,10 +57,25 @@ export function wireSystemEvents(system, context, store ={}) {
         context.pipeline.invalidate();
     }, 'wiring');
 
-    dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData, onSubmit }) => {
-        console.log("Form submitted:", form, responseData);
-        if (typeof onSubmit === 'function') {
-            onSubmit(responseData);
-        }
+    dispatcher.on(ACTIONS.FORM.EDIT, async (form) => {
+        dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
+
+        const editor = new EditForm({ id: 'editFormScreen', context, dispatcher, eventBusManager: bus, store,
+        onSubmit: (updatedForm) => {
+            dispatcher.dispatch(ACTIONS.FORM.UPDATE, updatedForm);
+            saveFormStructure({
+                id: updatedForm.id,
+                formStructure: { fields: updatedForm.fields || [] },
+                label: updatedForm.label,
+                user: updatedForm.user,
+            });
+        } });
+        editor.attachToStage(context.uiStage);
+        context.pipeline.invalidate();
+    }, 'wiring');
+
+    dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData}) => {
+            sendLog(`Form ${form.id} submitted with data: ${JSON.stringify(responseData)}`, responseData);
+        
     }, 'wiring');
 }

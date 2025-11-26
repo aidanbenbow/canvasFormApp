@@ -1,8 +1,11 @@
+import { ACTIONS } from '../events/actions.js';
+import { normalizeForm } from '../plugins/formManifests.js';
 import { UIElement } from './UiElement.js';
 import { BaseScreen } from './baseScreen.js';
 
 import { UIButton } from './button.js';
 import { createUIComponent } from './createUIComponent.js';
+
 import { UIInputBox } from './inputBox.js';
 import { LabeledInput } from './labeledInput.js';
 import { ManifestUI } from './manifestUI.js';
@@ -60,7 +63,7 @@ export class CreateForm extends BaseScreen{
     super({ id, context, dispatcher, eventBusManager });
     this.store = store;
     this.context = context;
-    this.manifest = {label: 'new form', fields: [] };
+    this.manifest = {id:`form-${Date.now()}`,label: 'new form',fields: [] };
     this.onSubmit = onSubmit;
     this.fieldComponents = new Map();
     this.manifestUI = new ManifestUI({ id: `${this.id}-manifestUI`, context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
@@ -80,42 +83,20 @@ export class CreateForm extends BaseScreen{
       placeholder: type === 'input' ? 'Enter text here...' : undefined,
     };
     this.manifest.fields.push(newField);
-    const component = createUIComponent({
-      id: newField.id,
-      type: newField.type,
-      label: newField.label,
-      placeholder: newField.placeholder,
-    }, this.context, { place: false });
-    this.fieldComponents.set(newField.id, component);
-    this.manifestUI.formContainer.addChild(component);
+   this.manifestUI.formContainer.clearChildren();
+   this.manifestUI.buildFormFromManifest({id:this.manifest.id,user:this.manifest.user, formStructure:{fields:this.manifest.fields}}, this.manifestUI.formContainer, {
+      onSubmit: (responseData) => {
+        this.handleSubmit(responseData);
+      }
+   });
     this.context.pipeline.invalidate();
   }
   handleSubmit() {
-    this.fieldComponents.forEach((component, id) => {
-      const layout = this.context.uiStage.layoutManager.getLogicalBounds(id);
-      
-      this.manifest.fields = this.manifest.fields.map(field => {
-        if(field.id !== id) return field;
-        const updated = { ...field, layout };
-      
-          if (component instanceof LabeledInput) {
-            const labelText = component.getChildById(`${id}-label`)
-            if(labelText instanceof UIText){
-           updated.label = labelText.text;}
-          } else if (component instanceof UIText) {
-            updated.label = component.text;
-          } else if (component instanceof UIButton) {
-            updated.label = component.label;
-          }
-          if(component instanceof UIInputBox){
-            updated.placeholder = component.placeholder;
-          }
-        
-        return updated;
-      });
-      this.manifest.label = this.manifest.fields[0]?.label || 'new form';
-    console.log('Updated manifest:', this.manifest);
-this.onSubmit?.(this.manifest);
-    });
+    const normalizedForm = normalizeForm(this.manifest);
+    this.onSubmit?.(normalizedForm);
+    this.dispatcher.dispatch(
+      ACTIONS.FORM.ADD,
+      normalizedForm
+    );
   }
 }

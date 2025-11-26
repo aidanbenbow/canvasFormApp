@@ -34,10 +34,16 @@ export const dashboardUIManifest = {
       action: (dashboard) => dashboard._onResults(),
     },
     {
-      idSuffix: 'createEditBtn',
-      label: 'Create/Edit',
+      idSuffix: 'createBtn',
+      label: 'Create',
       type: 'button',
-      action: (dashboard) => dashboard._onCreateEdit(),
+      action: (dashboard) => dashboard._onCreate(),
+    },
+    {
+      idSuffix: 'editBtn',
+      label: 'Edit',
+      type: 'button',
+      action: (dashboard) => dashboard._onEdit(),
     }
   ]
 };
@@ -91,9 +97,13 @@ _onResults() {
   this.dispatcher.dispatch(ACTIONS.FORM.RESULTS, active, this.namespace);
 }
 
-_onCreateEdit() {
+_onCreate() {
+  this.dispatcher.dispatch(ACTIONS.FORM.CREATE, null, this.namespace);
+}
+_onEdit() {
   const active = this.store.getActiveForm();
-  this.dispatcher.dispatch(ACTIONS.FORM.EDIT, active || null, this.namespace);
+  if(!active) return;
+  this.dispatcher.dispatch(ACTIONS.FORM.EDIT, active, this.namespace);
 }
 
 }

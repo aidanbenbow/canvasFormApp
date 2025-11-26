@@ -1,3 +1,4 @@
+import { normalizeForm } from "../plugins/formManifests.js";
 import { ACTIONS } from "./actions.js";
 
 export class FormStore {
@@ -63,26 +64,23 @@ _addResults(formId, newResults){
     }
 
     _update(updatedForm){
-        console.log("Updating form:", updatedForm);
-        if(!updatedForm.id){
-            updatedForm.id = this._generateId();
-        }
+        const formWithId = normalizeForm(updatedForm);
        let found = false;
        this.state.forms = this.state.forms.map(f => {
-            if(f.id === updatedForm.id){
+            if(f.id === formWithId.id){
                 found = true;
-                return updatedForm;
+                return formWithId;
             }
             return f;
         } );
         if(!found){
-            this.state.forms = [...this.state.forms, updatedForm];
+            this.state.forms = [...this.state.forms, formWithId];
         }
         this._emitForms();
-        if(this.state.activeForm && this.state.activeForm.id === updatedForm.id){
+        if(this.state.activeForm && this.state.activeForm.id === formWithId.id){
             this.state = {
                 ...this.state,
-                activeForm: updatedForm
+                activeForm: formWithId
             }
             this._emitActiveForm();
         }
