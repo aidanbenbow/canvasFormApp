@@ -44,6 +44,14 @@ export const dashboardUIManifest = {
       label: 'Edit',
       type: 'button',
       action: (dashboard) => dashboard._onEdit(),
+    },
+    {
+      idSuffix: 'deleteBtn',
+      label: 'Delete',
+      type: 'button',
+      action: (dashboard) => {
+        dashboard._onDelete();
+      },
     }
   ]
 };
@@ -104,6 +112,12 @@ _onEdit() {
   const active = this.store.getActiveForm();
   if(!active) return;
   this.dispatcher.dispatch(ACTIONS.FORM.EDIT, active, this.namespace);
+}
+_onDelete() {
+  const active = this.store.getActiveForm();
+  if(!active) return;
+  this.dispatcher.dispatch(ACTIONS.FORM.DELETE, active, this.namespace);
+ 
 }
 
 }

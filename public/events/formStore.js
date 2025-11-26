@@ -37,6 +37,11 @@ dispatcher.on(ACTIONS.FORM.ADD_RESULTS,( {formId, newResults} )=>{
             this._addResults(formId, newResults);
         }, this.namespace);
 
+dispatcher.on(ACTIONS.FORM.DELETE,( formId )=>{
+            this.removeForm(formId);
+            
+        }, this.namespace);
+
     }
     _setList(forms){
         this.state = {...this.state, forms: Array.isArray(forms)? [...forms] : []};
@@ -119,5 +124,13 @@ _addResults(formId, newResults){
     }
     _generateId(){
         return 'form-' + Math.random().toString(36).substr(2, 9);
+    }
+    removeForm(formId){
+        this.state.forms = this.state.forms.filter(f => f.id !== formId);
+        if(this.state.activeForm && this.state.activeForm.id === formId){
+            this.state.activeForm = null;
+            this._emitActiveForm();
+        }
+        this._emitForms();
     }
   }
