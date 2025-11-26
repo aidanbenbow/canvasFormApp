@@ -1,17 +1,10 @@
 import { ACTIONS } from '../events/actions.js';
 import { normalizeForm } from '../plugins/formManifests.js';
-import { UIElement } from './UiElement.js';
+
 import { BaseScreen } from './baseScreen.js';
 
-import { UIButton } from './button.js';
-import { createUIComponent } from './createUIComponent.js';
-
-import { UIInputBox } from './inputBox.js';
-import { LabeledInput } from './labeledInput.js';
 import { ManifestUI } from './manifestUI.js';
-import { PlaceholderPromptOverlay } from './placeHolderOverlay.js';
-import { UIScrollContainer } from './scrollContainer.js';
-import { UIText } from './text.js';
+
 
 export const createFormManifest = {
   containers: [
@@ -37,9 +30,10 @@ export const createFormManifest = {
       type: 'button',
       action: (screen) => screen.handleSubmit()
     },
+    
     {
       idSuffix: 'addTitleBtn',
-      label: 'Add Title',
+      label: 'Add Text',
       type: 'button',
       action: (screen) => screen.addComponent('text')
     },
@@ -63,7 +57,19 @@ export class CreateForm extends BaseScreen{
     super({ id, context, dispatcher, eventBusManager });
     this.store = store;
     this.context = context;
-    this.manifest = {id:`form-${Date.now()}`,label: 'new form',formStructure:{fields:[]}, user:'admin' };
+    this.manifest = {
+      id:`form-${Date.now()}`,
+      label: 'new form',
+      formStructure:{
+        fields:[
+          {
+            id: `title-${Date.now()}`,
+            type: 'text',
+            label: 'Form Title'
+          }
+        ]
+      }, 
+      user:'admin' };
     this.onSubmit = onSubmit;
     this.fieldComponents = new Map();
     this.manifestUI = new ManifestUI({ id: `${this.id}-manifestUI`, context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
@@ -74,6 +80,11 @@ export class CreateForm extends BaseScreen{
   buildUI() {
     this.manifestUI.buildContainersFromManifest(createFormManifest.containers);
     this.manifestUI.buildChildrenFromManifest(createFormManifest.buttons, this.manifestUI.editorContainer);
+    this.manifestUI.buildFormFromManifest(this.manifest, this.manifestUI.formContainer, {
+      onSubmit: (responseData) => {
+        this.handleSubmit(responseData);
+      }
+    });
   }
   addComponent(type) {
     const newField = {
@@ -86,13 +97,30 @@ export class CreateForm extends BaseScreen{
    this.manifestUI.formContainer.clearChildren();
    this.manifestUI.buildFormFromManifest(this.manifest, this.manifestUI.formContainer, {
       onSubmit: (responseData) => {
-        this.handleSubmit(responseData);
+        this.handleSubmit(responseData)
+      },
+      onDelete: (fieldId) => {
+        this.deleteComponent(fieldId);
+      }
+   });
+    this.context.pipeline.invalidate();
+  }
+  deleteComponent(fieldId) {
+    this.manifest.formStructure.fields = this.manifest.formStructure.fields.filter(field => field.id !== fieldId);
+    this.manifestUI.formContainer.clearChildren();
+    this.manifestUI.buildFormFromManifest(this.manifest, this.manifestUI.formContainer, {
+      onSubmit: (responseData) => {
+        this.handleSubmit(responseData)
+      },
+      onDelete: (fieldId) => {
+        this.deleteComponent(fieldId);
       }
    });
     this.context.pipeline.invalidate();
   }
   handleSubmit() {
     const normalizedForm = normalizeForm(this.manifest);
+   
     this.onSubmit?.(normalizedForm);
     this.dispatcher.dispatch(
       ACTIONS.FORM.ADD,

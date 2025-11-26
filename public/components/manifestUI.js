@@ -1,4 +1,5 @@
 import { UIElement } from "./UiElement.js";
+import { UIButton } from "./button.js";
 import { createUIComponent } from "./createUIComponent.js";
 
 
@@ -33,7 +34,7 @@ export class ManifestUI extends UIElement{
         });
       }
 
-      buildFormFromManifest(manifest, targetContainer, { onSubmit }) {
+      buildFormFromManifest(manifest, targetContainer, { onSubmit, onDelete } = {}) {
         const inputBoxes = new Map();
       
         manifest.formStructure.fields.forEach(field => {
@@ -56,8 +57,23 @@ export class ManifestUI extends UIElement{
               onSubmit?.(responseData);
             };
           }
-      
-          targetContainer.addChild(component);
+
+          const deleteBtn = createUIComponent({
+            id: `${this.id}-delete-btn-${field.id}`,
+            type: 'button',
+            label: 'Delete',
+            color: '#dc3545',
+            layout: { x: component.layout.width + 10, y: component.layout.y, width: 60, height: component.layout.height },
+            onClick: () => {
+              onDelete?.(field.id);
+              targetContainer.removeChild(component);
+              targetContainer.removeChild(deleteBtn);
+            }
+          }, this.context);
+   
+targetContainer.addChild(component);
+targetContainer.addChild(deleteBtn)
+
         });
       
         return inputBoxes;

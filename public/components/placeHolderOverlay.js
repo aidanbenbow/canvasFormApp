@@ -2,7 +2,7 @@ import { UIElement } from "./UiElement.js";
 import { UIButton } from "./button.js";
 import { UIInputBox } from "./inputBox.js";
 
-export class PlaceholderPromptOverlay extends UIElement {
+ class PlaceholderPromptOverlay extends UIElement {
     constructor({ targetBox, layoutManager, layoutRenderer, context, onConfirm }) {
       super({ id: 'placeholderPrompt', layoutManager, layoutRenderer });
       this.targetBox = targetBox;

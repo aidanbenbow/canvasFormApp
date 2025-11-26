@@ -56,6 +56,7 @@ this.renderDragHighlight();
   }
   updateText(newText) {
     this.text = newText;
+    this.label = newText;
     this.onChange?.(newText);
   }
 }

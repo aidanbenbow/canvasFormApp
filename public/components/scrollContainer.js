@@ -18,6 +18,7 @@ layoutChildrenVertically(spacing, defaultHeight) {
       if (!containerBounds) return;
       let currentY = containerBounds.y + spacing;
       for (const child of this.children) {
+        
         this.layoutManager.setLogicalBounds(child.id, {
           x: containerBounds.x + spacing,
           y: currentY,

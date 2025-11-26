@@ -65,7 +65,7 @@ export function wireSystemEvents(system, context, store ={}) {
             dispatcher.dispatch(ACTIONS.FORM.UPDATE, updatedForm);
             saveFormStructure({
                 id: updatedForm.id,
-                formStructure: { fields: updatedForm.fields || [] },
+                formStructure: updatedForm.formStructure,
                 label: updatedForm.label,
                 user: updatedForm.user,
             });

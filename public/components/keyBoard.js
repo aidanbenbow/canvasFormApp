@@ -38,8 +38,11 @@ export class PopupKeyboard extends UIElement {
         const button = new UIButton({
           id,
           label: key,
-          colour: '#28a74599',
-          onClick: () => this.handleKeyPress(key)
+          color: '#28a74599',
+          onClick: () => this.handleKeyPress(key),
+          context: this.context,
+          layoutManager: this.layoutManager,
+          layoutRenderer: this.layoutRenderer
         });
         this.addChild(button);
       });
