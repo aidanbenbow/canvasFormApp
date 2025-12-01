@@ -1,5 +1,5 @@
 import { DescribeTableCommand, DynamoDBClient,  } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand, QueryCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand, QueryCommand, GetCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -78,7 +78,7 @@ async getFormDataById(id) {
                 Key: { id },
             };
             const data = await this.docClient.send(new GetCommand(params));
-            console.log("Fetched form data by ID:", data.Item);
+            
             return data.Item || null;
         } catch (error) {
             console.error("Error fetching form data by ID:", error);
@@ -113,6 +113,22 @@ async getFormDataById(id) {
         }
       }
     
+async deleteFormData(id) {
+        try {
+          const params = {
+            TableName: 'formStructures',
+            Key: { id },
+          };
+    console.log('Deleting form data with params:', params)
+          const result = await this.docClient.send(new DeleteCommand(params));
+          console.log('Form deleted:', result);
+          return result;
+        } catch (error) {
+          console.error('Error deleting form data:', error);
+          throw new Error('Could not delete form data');
+        }
+      }
+
       async upsertFormData(id, formStructure, label = 'Untitled', user = 'admin') {
         try {
           const item = {
@@ -167,7 +183,7 @@ async getFormDataById(id) {
           };
       
           const data = await this.docClient.send(new ScanCommand(params));
-          console.log("Fetched form results:", data.Items);
+         
           return data.Items || [];
         } catch (error) {
           console.error("Error fetching form results:", error);

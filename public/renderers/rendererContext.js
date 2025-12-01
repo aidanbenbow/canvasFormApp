@@ -1,5 +1,7 @@
+import { UIOverlayManager } from "../managers/UiOverlayManager.js";
+
 export class RendererContext {
-    constructor({ ctx, hitCtx, hitRegistry, hitManager, pipeline, textEditorController, selectionController, interactionManager, focusManager, boxManager, boxHitManager, assetRegistry, canvas, uiStage, dragController }) {
+    constructor({ ctx, hitCtx, hitRegistry, hitManager, pipeline, textEditorController, selectionController, focusManager,assetRegistry, canvas, uiStage, dragController }) {
         this.ctx = ctx;
         this.hitCtx = hitCtx;
         this.hitRegistry = hitRegistry;
@@ -7,13 +9,12 @@ export class RendererContext {
         this.pipeline = pipeline;
         this.textEditorController = textEditorController;
         this.selectionController = selectionController;
-        this.interactionManager = interactionManager;
+      
         this.focusManager = focusManager;
-        this.boxManager = boxManager;
-        this.boxHitManager = boxHitManager;
         this.assetRegistry = assetRegistry;
         this.canvas = canvas;
         this.uiStage = uiStage;
         this.dragController = dragController;
+        this.overlayManager = new UIOverlayManager({ context: this });
     }
 }

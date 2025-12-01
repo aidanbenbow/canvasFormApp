@@ -1,9 +1,10 @@
 import { UIElement } from './UiElement.js';
 
 export class UIText extends UIElement {
-  constructor({ id, text, editor, context, layoutManager,layoutRenderer, fontSize = 0.04, color = '#000', align = 'left', valign = 'top', onClick }) {
+  constructor({ id, text,fieldRef, editor, context, layoutManager,layoutRenderer, fontSize = 0.04, color = '#000', align = 'left', valign = 'top', onClick }) {
     super({ id, context, layoutManager, layoutRenderer });
     this.text = text;
+    this.fieldRef = fieldRef;
     this.editorController = editor;
     this.fontSize = fontSize;
     this.color = color;
@@ -57,6 +58,9 @@ this.renderDragHighlight();
   updateText(newText) {
     this.text = newText;
     this.label = newText;
+    if(this.fieldRef) {
+      this.fieldRef.label = newText;
+    }
     this.onChange?.(newText);
   }
 }

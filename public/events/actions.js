@@ -21,5 +21,11 @@ export const ACTIONS = {
     STORE: {
         FORM_FORMS: 'STORE/FORM/FORMS',
         FORM_ACTIVE: 'STORE/FORM/ACTIVE',
-    }
+    },
+    KEYBOARD: {
+        SHOW: 'keyboard:show',
+        HIDE: 'keyboard:hide',
+        PRESS: 'keyboard:press',
+        SUBMIT: 'keyboard:submit',
+    },
 };

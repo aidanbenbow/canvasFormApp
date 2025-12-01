@@ -1,10 +1,13 @@
+import { dispatcher } from '../app.js';
+import { ACTIONS } from '../events/actions.js';
 import { UIElement } from './UiElement.js';
 import { UIButton } from './button.js';
 
 export class PopupKeyboard extends UIElement {
-  constructor({ layoutManager, layoutRenderer, editorController }) {
-    super({ id: 'popupKeyboard', layoutManager, layoutRenderer });
+  constructor({ layoutManager, layoutRenderer,context, editorController }) {
+    super({ id: 'popupKeyboard',context, layoutManager, layoutRenderer });
     this.editorController = editorController;
+    this.context = context;
     this.type = 'popupKeyboard';
     this.keyLayout = [
       ['Q','W','E','R','T','Y','U','i','O','P'],
@@ -65,11 +68,7 @@ export class PopupKeyboard extends UIElement {
   
 
   handleKeyPress(key) {
-    const ec = this.editorController;
-    if (key === 'Space') ec.insertChar(' ');
-    else if (key === '←') ec.deleteChar();
-    else if (key === '↵') system.eventBus.emit('submit');
-    else ec.insertChar(key);
+   dispatcher.dispatch(ACTIONS.KEYBOARD.PRESS, { key });
   }
 
   render() {

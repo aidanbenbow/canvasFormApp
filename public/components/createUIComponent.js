@@ -95,6 +95,7 @@ export function createUIComponent(field, context, {place = true} = {}) {
         component = new UIText({
             id,
             text: label,
+            fieldRef: field,
             editor: textEditorController,
             context,
             layoutManager: uiStage.layoutManager,

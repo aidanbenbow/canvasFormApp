@@ -52,6 +52,25 @@ export function emitFeedback({ success, error, box }) {
     });
   }
 
+
+  export function onDelete(payload, boxRef = null) {
+    socket.emit('deleteTheForm',  payload);
+  console.log('[SOCKET] Emitting deleteForm for:', payload);
+    socket.on('formDeletedResponse', (response) => {
+      emitFeedback({
+        success: response.success,
+        error: response.error,
+        box: boxRef
+      });
+  
+      if (response.success) {
+        console.log('Form deleted successfully:', response);
+      } else {
+        console.error('Delete failed:', response.error);
+      }
+    });
+  }
+
   export function loadFormStructure(formId, callback) {
     console.log('[SOCKET] Emitting loadFormStructure for:', formId);
   
@@ -76,8 +95,7 @@ export function emitFeedback({ success, error, box }) {
   }
   
 export function fetchFormResults(formId, tableName = 'faithandbelief') {
-  console.log('[SOCKET] Emitting getFormResults for:', formId, tableName);
-
+ 
   return new Promise((resolve, reject) => {
     socket.emit('getFormResults', { formId, tableName });
 

@@ -2,7 +2,7 @@ import { CreateForm } from "../components/createForm.js";
 import { EditForm } from "../components/editForm.js";
 import { UIFormResults } from "../components/formResults.js";
 import { ViewForm } from "../components/viewForm.js";
-import { saveFormStructure, sendLog } from "../controllers/socketController.js";
+import { onDelete, saveFormStructure, sendLog } from "../controllers/socketController.js";
 import { ACTIONS } from "../events/actions.js";
 
 export function wireSystemEvents(system, context, store ={}) {
@@ -52,6 +52,7 @@ export function wireSystemEvents(system, context, store ={}) {
                 label: updatedForm.label,
                 user: updatedForm.user,
               });
+              context.overlayManager.showSuccess(`Form ${updatedForm.label} created successfully!`);
         } });
         creator.attachToStage(context.uiStage);
         context.pipeline.invalidate();
@@ -77,5 +78,14 @@ export function wireSystemEvents(system, context, store ={}) {
     dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData}) => {
             sendLog(`Form ${form.id} submitted with data: ${JSON.stringify(responseData)}`, responseData);
         
+    }, 'wiring');
+
+    dispatcher.on(ACTIONS.FORM.DELETE, async (form) => {
+        dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
+        // Here you might want to add confirmation dialog before deletion
+   console.log(`Deleting form with id: ${form.id}`);
+        onDelete({id: form.id});
+        //store.removeForm(form.id);
+        context.pipeline.invalidate();
     }, 'wiring');
 }

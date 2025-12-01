@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
  // console.log('A user connected:', socket.id);
 
  socket.on('getAllForms', async ({ user }) => {
-  console.log(`Fetching all forms for user: ${user}`);
+  
     try {
       const forms = await db.getFormData(user);
    
@@ -88,6 +88,20 @@ io.on('connection', (socket) => {
       socket.emit('formSavedResponse', { success: true, result });
     } catch (error) {
       socket.emit('formSavedResponse', {
+        success: false,
+        error: error.message || 'Unknown error'
+      });
+    }
+  });
+
+  socket.on('deleteTheForm', async (payload) => {
+   const {id} = payload;
+  console.log('Deleting form with ID:', payload)
+    try {
+      const result = await db.deleteFormData(id);
+      socket.emit('formDeletedResponse', { success: true, result });
+    } catch (error) {
+      socket.emit('formDeletedResponse', {
         success: false,
         error: error.message || 'Unknown error'
       });

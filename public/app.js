@@ -8,6 +8,7 @@ import { canvasConfig, createPluginManifest } from "./constants.js";
 import { fetchAllForms, fetchFormById, fetchFormResults,  onMessageResponse, saveFormStructure, sendLog } from "./controllers/socketController.js";
 import { ACTIONS } from "./events/actions.js";
 import { FormStore } from "./events/formStore.js";
+import { UIOverlayManager } from "./managers/UiOverlayManager.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { interactionManager } from "./managers/interaction.js";
 import { LayoutManager } from "./managers/layOut.js";
@@ -22,17 +23,6 @@ import {  utilsRegister } from "./utils/register.js";
 
 const canvas = new CanvasManager(canvasConfig)
 
-// const modeState = {
-//   current: 'fill',
-//   switchTo(newMode) {
-//     this.current = newMode;
-//     system.eventBus.emit('modeChanged', newMode);
-//   },
-//   isAdmin() {
-//     return this.current === 'admin';
-//   }
-// };
-
 const canvasBuilder = new CanvasSystemBuilder(canvas)
 
 const mainCanvas = canvas.layers['main'].canvas;
@@ -42,6 +32,7 @@ const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
 
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 export const eventBus = system.eventBus;
+export const dispatcher = system.actionDispatcher;
   
 const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 
@@ -51,15 +42,8 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
   context.firstScreen = false;
   
   utilsRegister.registerPlugin(coreUtilsPlugin(context))
-context.interactionManager = new interactionManager(canvas, context.hitManager);
-context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
-
-// const myPluginManifest = createPluginManifest({ eventBus: system.eventBus, 
-//  textEditorController: context.textEditorController,
-//  layoutManager,canvas: mainCanvas });
-
-//renderBuild.registerFromManifest(myPluginManifest)
-
+//context.interactionManager = new interactionManager(canvas, context.hitManager);
+//context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
 
 const rendererSystem = renderBuild.createRendererSystem()
 rendererSystem.start();
@@ -73,8 +57,6 @@ wireSystemEvents(system, context, store);
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
 
-const uiOverlay = new UIOverlay({ context, layoutManager, layoutRenderer });
-context.uiStage.addRoot(uiOverlay);
 
 
 if (formId) {
@@ -89,6 +71,8 @@ if (formId) {
 for(const f of forms){
   const results = await fetchFormResults(f.id, f.resultsTable || 'faithandbelief');
 system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
+
+context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
 }
 
   const dash = new DashBoardScreen({ context, dispatcher: system.actionDispatcher, eventBusManager: system.eventBusManager, store });
@@ -97,56 +81,11 @@ system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, resul
 }
 
 
-// const hitRouter = new HitRouter(context.hitRegistry, modeState, context.textEditorController, renderBuild.actionRegistry, layoutManager, mainCanvas.width, mainCanvas.height);
-// system.eventBus.on('hitClick', ({hex}) => {
-//   hitRouter.routeHit(hex);
-//   });
-
-//   system.eventBus.on('loadForm', (data) => {
-//     console.log('Loading form data:', data);
-    
-//     context.pipeline.invalidate();
-//   });
-
   system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);
-    uiOverlay.showMessage({ text, duration, fontSize: 0.04 });
+   context.overlayManager.showSuccess(text, position, duration);
   });
 
-  // system.eventBus.on('createForm', () => {
-  //   console.log('Creating new form...');
-  //   const createForm = new CreateForm({
-  //     layoutManager,
-  //     layoutRenderer,
-  //     context,
-  //     onSubmit: newForm => {
-  //       console.log('✅ New form created:', newForm);
-  //       const payload = {
-  //         id: newForm.id,
-  //         formStructure: newForm.formStructure,
-  //         label: newForm.label,
-  //         user: newForm.user,
-  //     }
-  //       saveFormStructure(payload);
-  //     }
-  //   });
-  
-  //   uiStage.addRoot(createForm);
-  //   uiStage.setActiveRoot('createForm');
-  //   createForm.registerHitRegions(context.hitRegistry);
-  // });
-
-
-  
-  
- 
-
-
-  system.eventBus.on('modeChanged', (newMode) => {
-    boxEditor.setMode(newMode);
-   
-    context.pipeline.invalidate();
-  });
 
   system.eventBus.on('formResultsUpdated', () => {
     context.pipeline.invalidate();

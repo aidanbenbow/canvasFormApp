@@ -108,6 +108,8 @@ export class LayoutManager {
         this.registry.set(id, bounds);
       }
     }
+
+
     dumpRegistry() {
       console.log('📦 Layout Registry Dump:');
       for (const [id, bounds] of this.registry.entries()) {

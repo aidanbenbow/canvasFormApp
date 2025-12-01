@@ -2,7 +2,7 @@ import { UIStage } from "../components/uiStage.js";
 import { DragController } from "../controllers/dragController.js";
 import { TextEditorController } from "../controllers/textEditor.js";
 import { HitManager } from "../managers/hit.js";
-import { interactionManager } from "../managers/interaction.js";
+
 import { RenderManager } from "../managers/render.js";
 import { ActionRegistry } from "../registries/actionRegistry.js";
 import { AssetRegistry } from "../registries/assetRegistry.js";
@@ -26,9 +26,7 @@ export class RenderSystemBuilder {
         this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
         this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus, this.actionRegistry);
-        //this.interactionManager = new interactionManager(this.canvasManager, this.hitManager);
-         
-
+        
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
@@ -46,10 +44,8 @@ export class RenderSystemBuilder {
             pipeline: this.pipeline,
             textEditorController: this.textEditorController|| null,
             selectionController: this.selectionController|| null,
-            interactionManager:  null,
             focusManager: this.focusManager|| null,
-            boxManager: this.boxManager|| null,
-            boxHitManager: this.boxHitManager || null,
+            
             assetRegistry: this.assetRegistry || null,
             canvas: this.canvasManager ,
             uiStage: this.uiStage || null,
@@ -58,6 +54,9 @@ export class RenderSystemBuilder {
         
           this.components.rendererContext = context;
           return context;
+      }
+
+      createInteractionContext() {
       }
 
       createRendererSystem() {

@@ -8,12 +8,12 @@ export class UIOverlay extends UIElement {
     this.timeoutId = null;
   }
 
-  showMessage({ text, color = '#000', duration = 2000, fontSize = 0.05 }) {
+  showMessage({ text, color = '#000', duration = 4000, fontSize = 0.05 }) {
     if (this.messageText) {
       this.removeChild(this.messageText);
       this.messageText = null;
     }
-
+console.log('UIOverlay showMessage:', text, color, duration, fontSize);
     this.messageText = new UIText({
       id: `${this.id}-message`,
       text,
@@ -28,13 +28,20 @@ export class UIOverlay extends UIElement {
 
     this.addChild(this.messageText);
 
-    this.layoutManager.place({
-      id: this.messageText.id,
-      x: 200,
-      y: 150,
-      width: 400,
-      height: 100
-    });
+    // ✅ Get stage size from layoutManager
+  const { logicalWidth, logicalHeight } = this.layoutManager;
+
+  const boxWidth = 400;
+  const boxHeight = 100;
+
+  this.layoutManager.place({
+    id: this.messageText.id,
+    x: (logicalWidth - boxWidth) / 2,   // center horizontally
+    y: (logicalHeight - boxHeight) / 2, // center vertically
+    width: boxWidth,
+    height: boxHeight
+  });
+
 
     this.context.pipeline.invalidate();
 
@@ -49,6 +56,13 @@ export class UIOverlay extends UIElement {
       this.removeChild(this.messageText);
       this.messageText = null;
       this.context.pipeline.invalidate();
+    }
+  }
+  render() {
+    // Overlay might have a semi-transparent background in future
+    // For now, just render children
+    for (const child of this.children) {
+      child.render();
     }
   }
 }
