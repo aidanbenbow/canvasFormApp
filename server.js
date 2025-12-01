@@ -1,7 +1,7 @@
 import  express from "express";
 const app = express();
 
-import crypto from 'crypto';
+
 import http from "http";
 import { Server } from "socket.io";
 
@@ -20,8 +20,6 @@ const io = new Server(server, {
   }
 });
 
-import indexRoutes from './routes/index.js';
-
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -30,11 +28,6 @@ app.set('view engine', 'ejs');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// app.use((req, res, next) => {
-//   console.log(`[${req.method}] ${req.url}`);
-//   next();
-// });
 
 io.on('connection', (socket) => {
  // console.log('A user connected:', socket.id);

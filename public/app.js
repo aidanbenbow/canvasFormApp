@@ -42,8 +42,7 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
   context.firstScreen = false;
   
   utilsRegister.registerPlugin(coreUtilsPlugin(context))
-//context.interactionManager = new interactionManager(canvas, context.hitManager);
-//context.hitManager.setHitHexFunction(utilsRegister.get('hit', 'getHitHexFromEvent'));
+
 
 const rendererSystem = renderBuild.createRendererSystem()
 rendererSystem.start();

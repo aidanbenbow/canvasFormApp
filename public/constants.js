@@ -19,12 +19,6 @@ export const canvasConfig = {
         bg: 'grey',
         hitBg: 'red',
     },
-    overlay: {
-        mainId: '#adminOverlayCanvas',
-        hitId: '#adminOverlayHitCanvas',
-        bg: 'transparent',
-        hitBg: 'transparent',
-    }
 }
 
 export const myPluginManifest = {
