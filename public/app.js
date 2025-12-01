@@ -56,7 +56,7 @@ wireSystemEvents(system, context, store);
 
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
-
+console.log(context)
 
 
 if (formId) {

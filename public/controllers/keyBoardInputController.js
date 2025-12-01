@@ -37,6 +37,7 @@ export class KeyBoardInputController {
             case 'ArrowRight':
                 event.preventDefault();
                 this.editor.moveCaretLinearly(1, event.shiftKey);
+                break;
             case 'ArrowUp':
                 event.preventDefault();
                 this.editor.moveCaretUp(event.shiftKey);

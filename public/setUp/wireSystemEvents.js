@@ -88,4 +88,6 @@ export function wireSystemEvents(system, context, store ={}) {
         //store.removeForm(form.id);
         context.pipeline.invalidate();
     }, 'wiring');
+
+ 
 }

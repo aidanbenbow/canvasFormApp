@@ -8,6 +8,15 @@ export class TextModel{
         const field = this.editor.activeField;
         return typeof box[field] === 'string' ? box[field] : '';
     }
+    setText(newText){
+        const box = this.editor.activeBox;
+        const field = this.editor.activeField;
+        box[field] = newText;
+        if(typeof box.updateText === 'function'){
+            box.updateText(newText);
+        }
+        this.editor.pipeline.invalidate();
+    }
     replaceSelection(newText){
         const box = this.editor.activeBox;
         const field = this.editor.activeField;
@@ -16,7 +25,7 @@ export class TextModel{
         const before = original.slice(0, caret.selectionStart);
         const after = original.slice(caret.selectionEnd);
         const updated = before + newText + after;
-        box[field] = updated;
+        this.setText(updated);
         const newCaretPos = before.length + newText.length;
         caret.caretIndex = newCaretPos;
         caret.selectionStart = newCaretPos;
@@ -31,7 +40,7 @@ export class TextModel{
         this.replaceSelection(text);
     }
     backSpace(){
-        const caret = this.editor.caret
+        const caret = this.editor.caretController
         if(caret.selectionStart !== caret.selectionEnd){
             this.replaceSelection('');
             return;

@@ -4,8 +4,8 @@ export class CaretController {
     constructor(editor){
         this.editor = editor;
         this.caretIndex = 0;
-        this.selectionStart = null;
-        this.selectionEnd = null;
+        this.selectionStart = 0
+        this.selectionEnd = 0
     }
     setCaretToEnd(text) {
         const length = text.length;
