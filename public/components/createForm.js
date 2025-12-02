@@ -1,10 +1,7 @@
 import { ACTIONS } from '../events/actions.js';
 import { normalizeForm } from '../plugins/formManifests.js';
-
 import { BaseScreen } from './baseScreen.js';
-
 import { ManifestUI } from './manifestUI.js';
-
 
 export const createFormManifest = {
   containers: [
@@ -42,12 +39,6 @@ export const createFormManifest = {
       label: 'Add Input',
       type: 'button',
       action: (screen) => screen.addComponent('input')
-    },
-    {
-      idSuffix: 'addSubmitBtn',
-      label: 'Add Submit Button',
-      type: 'button',
-      action: (screen) => screen.addComponent('button')
     }
   ]
 };
@@ -66,6 +57,11 @@ export class CreateForm extends BaseScreen{
             id: `title-${Date.now()}`,
             type: 'text',
             label: 'Form Title'
+          },
+          {
+            id: `submit-${Date.now()}`,
+            type: 'button',
+            label: 'Submit'
           }
         ]
       }, 

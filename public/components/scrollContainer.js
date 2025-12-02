@@ -18,14 +18,15 @@ layoutChildrenVertically(spacing, defaultHeight) {
       if (!containerBounds) return;
       let currentY = containerBounds.y + spacing;
       for (const child of this.children) {
-        
+        const childBounds = this.layoutManager.getLogicalBounds(child.id);
+        const childHeight = childBounds ? childBounds.height : defaultHeight;
         this.layoutManager.setLogicalBounds(child.id, {
           x: containerBounds.x + spacing,
           y: currentY,
           width: containerBounds.width - 2 * spacing,
-          height: defaultHeight
+          height: childHeight
         });
-        currentY += defaultHeight + spacing;
+        currentY +=childHeight + spacing;
       }
       this.updateContentHeight();
     }
@@ -44,10 +45,19 @@ layoutChildrenVertically(spacing, defaultHeight) {
   
     updateContentHeight() {
       if (!this.children.length) return;
-      const lastChild = this.children[this.children.length - 1];
-      const bounds = this.layoutManager.getLogicalBounds(lastChild.id);
       const containerBounds = this.layoutManager.getLogicalBounds(this.id);
-      this.scrollController.contentHeight = bounds.y + bounds.height - containerBounds.y;
+      let maxBottom = containerBounds.y;
+      for (const child of this.children) {
+        const bounds = this.layoutManager.getLogicalBounds(child.id);
+        if (bounds) {
+          maxBottom = Math.max(maxBottom, bounds.y + bounds.height);
+        }
+      }
+      this.scrollController.contentHeight = maxBottom - containerBounds.y;
+      // const lastChild = this.children[this.children.length - 1];
+      // const bounds = this.layoutManager.getLogicalBounds(lastChild.id);
+      // const containerBounds = this.layoutManager.getLogicalBounds(this.id);
+      // this.scrollController.contentHeight = bounds.y + bounds.height - containerBounds.y;
     }
   
     handleScroll(deltaY) {

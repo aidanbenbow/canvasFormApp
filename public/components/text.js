@@ -1,6 +1,6 @@
 import { UIElement } from './UiElement.js';
 
-export class UIText extends UIElement {
+ class UIText extends UIElement {
   constructor({ id, text,fieldRef, editor, context, layoutManager,layoutRenderer, fontSize = 0.04, color = '#000', align = 'left', valign = 'top', onClick }) {
     super({ id, context, layoutManager, layoutRenderer });
     this.text = text;

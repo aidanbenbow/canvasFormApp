@@ -1,5 +1,6 @@
 import { UIElement } from './UiElement.js';
-import { UIText } from './text.js';
+import { UiText } from './UiText.js';
+
 
 export class UIOverlay extends UIElement {
   constructor({ id = 'uiOverlay', context, layoutManager, layoutRenderer }) {
@@ -14,16 +15,16 @@ export class UIOverlay extends UIElement {
       this.messageText = null;
     }
 console.log('UIOverlay showMessage:', text, color, duration, fontSize);
-    this.messageText = new UIText({
-      id: `${this.id}-message`,
-      text,
-      fontSize,
-      color,
-      align: 'center',
-      valign: 'middle',
+    this.messageText = new UiText({
+      id: `${this.id}_message`,
+      text: text,
       context: this.context,
       layoutManager: this.layoutManager,
-      layoutRenderer: this.layoutRenderer
+      layoutRenderer: this.layoutRenderer,
+      fontSize: fontSize,
+      color: color,
+      align: 'center',
+      valign: 'middle'
     });
 
     this.addChild(this.messageText);

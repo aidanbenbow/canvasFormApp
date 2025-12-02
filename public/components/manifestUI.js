@@ -1,4 +1,5 @@
 import { UIElement } from "./UiElement.js";
+import { UIFieldContainer } from "./UiFieldContainer.js";
 import { UIButton } from "./button.js";
 import { createUIComponent } from "./createUIComponent.js";
 
@@ -37,8 +38,14 @@ export class ManifestUI extends UIElement{
       buildFormFromManifest(manifest, targetContainer, { onSubmit, onDelete } = {}) {
         const inputBoxes = new Map();
       
+// Guard against invalid manifest
+if (!manifest || !manifest.formStructure || !Array.isArray(manifest.formStructure.fields)) {
+  console.warn("Invalid manifest passed to buildFormFromManifest:", manifest);
+  return inputBoxes;
+}
+
         manifest.formStructure.fields.forEach(field => {
-          const component = createUIComponent(field, this.context);
+          const component = createUIComponent(field, this.context, { place: false });
       
           if (field.type === 'input') {
             inputBoxes.set(field.label, component);
@@ -58,22 +65,30 @@ export class ManifestUI extends UIElement{
             };
           }
 
-          const deleteBtn = createUIComponent({
-            id: `${this.id}-delete-btn-${field.id}`,
-            type: 'button',
-            label: 'Delete',
-            color: '#dc3545',
-            layout: { x: component.layout.width + 10, y: component.layout.y, width: 60, height: component.layout.height },
-            onClick: () => {
-              onDelete?.(field.id);
-              targetContainer.removeChild(component);
-              targetContainer.removeChild(deleteBtn);
-            }
-          }, this.context);
-   
-targetContainer.addChild(component);
-targetContainer.addChild(deleteBtn)
+          // const deleteBtn = createUIComponent({
+          //   id: `${this.id}-delete-btn-${field.id}`,
+          //   type: 'button',
+          //   label: 'Delete',
+          //   color: '#dc3545',
+          //   layout: { x: component.layout.width + 10, y: component.layout.y, width: 60, height: component.layout.height },
+          //   onClick: () => {
+          //     onDelete?.(field.id);
+          //     targetContainer.removeChild(component);
+          //     targetContainer.removeChild(deleteBtn);
+          //   }
+          // }, this.context);
 
+          const fieldContainer = new UIFieldContainer({
+            id: `${this.id}-field-container-${field.id}`,
+            context: this.context,
+            layoutManager: this.layoutManager,
+            layoutRenderer: this.layoutRenderer,
+            bgColor: 'rgba(0,0,0,0.2)' //transparent background
+          });
+          
+          // fieldContainer.addChild(deleteBtn);
+          targetContainer.addChild(fieldContainer);
+          fieldContainer.addChild(component);
         });
       
         return inputBoxes;

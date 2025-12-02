@@ -1,8 +1,7 @@
+import { UIInput } from "./UiInput.js";
+import { UiText } from "./UiText.js";
 import { UIButton } from "./button.js";
-import {  LabeledInput } from "./labeledInput.js";
 import { UIScrollContainer } from "./scrollContainer.js";
-import { UIText } from "./text.js";
-
 
 export function createToolbarButton(label, onClick, context) {
     const { field, component } = createFieldComponent('button', context);
@@ -92,28 +91,26 @@ export function createUIComponent(field, context, {place = true} = {}) {
             });
             break;
     case 'text':
-        component = new UIText({
+      
+        component = new UiText({
             id,
             text: label,
-            fieldRef: field,
             editor: textEditorController,
             context,
             layoutManager: uiStage.layoutManager,
             layoutRenderer: uiStage.layoutRenderer,
-            onClick: onClick || (() => { console.log(`Text ${id} clicked`); }),
             });
             break;
      case 'input':
-        component = new LabeledInput({
+        component = new UIInput({
             id,
             editor: textEditorController,
+            placeholder,
+            label,
             context,
             layoutManager: uiStage.layoutManager,
             layoutRenderer: uiStage.layoutRenderer,
-            label,
-            interactive,
-            onChange: onChange || ((value) => { console.log(`Input ${id} changed to:`, value); }),
-        });
+            });
         break;
         case 'container':
             component = new UIScrollContainer({

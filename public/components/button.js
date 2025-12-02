@@ -9,7 +9,7 @@ export class UIButton extends UIElement {
     this.interactive = true;
     this.colour = color;
    
-    this.draggable = true
+    this.draggable = false
   }
 
   onClick() {
