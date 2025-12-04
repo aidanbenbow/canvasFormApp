@@ -21,23 +21,26 @@ this.uiStage = uiStage;
         this.keyboardInput = new KeyBoardInputController(this);
         this.caretController = new CaretController(this);
        
-      dispatcher.on(ACTIONS.KEYBOARD.PRESS, (key) => {
-        console.log(this.activeBox, "active box in text editor controller");
-        if (this.activeBox) {
-          if (key === 'Backspace') {
-            this.backspace();
-          } else {
-            this.insertText(key);
+        dispatcher.on(ACTIONS.KEYBOARD.PRESS, ({ key }) => {
+          if (this.activeBox) {
+            if (key === 'Backspace' || key === '←') {
+              this.backspace();
+            } else if (key === 'Space') {
+              this.insertText(' ');
+            } else if (key === '↵') {
+              this.insertText('\n');
+            } else {
+              this.insertText(key);
+            }
           }
-        }
-      });
+        });
         this.initCaretBlink();
       
     }
 
     
     startEditing(box, field = 'text') {
-      
+      console.log("Starting editing for box:", box, "field:", field);
         this.activeBox = box;
         this.activeField = field;
 

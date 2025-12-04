@@ -19,13 +19,21 @@ layoutChildrenVertically(spacing, defaultHeight) {
       let currentY = containerBounds.y + spacing;
       for (const child of this.children) {
         const childBounds = this.layoutManager.getLogicalBounds(child.id);
-        const childHeight = childBounds ? childBounds.height : defaultHeight;
-        this.layoutManager.setLogicalBounds(child.id, {
-          x: containerBounds.x + spacing,
-          y: currentY,
-          width: containerBounds.width - 2 * spacing,
-          height: childHeight
-        });
+        const childHeight = childBounds && childBounds.height
+      ? childBounds.height
+      : defaultHeight;
+
+    const childWidth = childBounds && childBounds.width
+      ? childBounds.width
+      : containerBounds.width - 2 * spacing;
+
+    this.layoutManager.setLogicalBounds(child.id, {
+      x: containerBounds.x + spacing,
+      y: currentY,
+      width: childWidth,
+      height: childHeight
+    });
+
         currentY +=childHeight + spacing;
       }
       this.updateContentHeight();

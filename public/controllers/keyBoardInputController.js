@@ -24,7 +24,7 @@ export class KeyBoardInputController {
         switch (event.key) {
             case 'Backspace':
                 event.preventDefault();
-                this.editor.deleteTextBeforeCaret();
+                this.editor.backspace();
                 break;
             case 'Delete':
                 event.preventDefault();

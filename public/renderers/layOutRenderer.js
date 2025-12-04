@@ -55,13 +55,13 @@ if (this.ctx.textAlign === 'center') {
 
 let textY = bounds.y + bounds.height / 2;
 if (this.ctx.textBaseline === 'top') {
-  textY = bounds.y;
+  textY = bounds.y-5;
 } else if (this.ctx.textBaseline === 'bottom') {
   textY = bounds.y + bounds.height;
 } 
-if(style.valign === 'above') {
-  textY = bounds.y - 5; // 5 pixels above the top
-}
+// if(style.valign === 'above') {
+//   textY = bounds.y - 5; // 5 pixels above the top
+// }
 
   this.ctx.fillText(text, textX, textY);
   

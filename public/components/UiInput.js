@@ -15,7 +15,7 @@ export class UIInput extends UIEditableText {
          `${this.id}`,
          this.label,
          this.fontSize * 0.8,
-         { fill: '#000', align: 'left', valign: 'above' }
+         { fill: '#000', align: 'left', valign: 'top' }
        );
      }
    }

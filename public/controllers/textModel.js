@@ -12,8 +12,8 @@ export class TextModel{
         const box = this.editor.activeBox;
         const field = this.editor.activeField;
         box[field] = newText;
-        if(typeof box.updateText === 'function'){
-            box.updateText(newText);
+        if(typeof box.insertText === 'function'){
+            box.insertText(newText);
         }
         this.editor.pipeline.invalidate();
     }

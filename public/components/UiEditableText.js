@@ -54,15 +54,15 @@ export class UIEditableText extends UIElement {
    
 
     // 4. Value or placeholder
-    // const displayText = this.text || this.placeholder;
-    // const color = this.text ? this.color : '#888';
-    
-    // this.layoutRenderer.drawText(
-    //   `${this.id}-value`,
-    //   displayText,
-    //   this.fontSize,
-    //   { fill: color, align: this.align, valign: this.valign }
-    // );
+    const displayText = this.text || this.placeholder;
+    const color = this.text ? this.color : '#888';
+   
+    this.layoutRenderer.drawText(
+      `${this.id}`,
+      displayText,
+      this.fontSize,
+      { fill: color, align: this.align, valign: this.valign }
+    );
 
     // 5. Caret/selection
     this.renderCaretAndSelection();
