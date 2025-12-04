@@ -40,7 +40,7 @@ this.uiStage = uiStage;
 
     
     startEditing(box, field = 'text') {
-      console.log("Starting editing for box:", box, "field:", field);
+     
         this.activeBox = box;
         this.activeField = field;
 

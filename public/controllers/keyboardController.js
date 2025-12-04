@@ -21,13 +21,17 @@ this.activeBox = null;
       layoutRenderer: this.layoutRenderer,
      context: this.pipeline.rendererContext,
     });
-    this.uiStage.overlayRoot = this.keyboard;
+
+    if(this.uiStage.activeRoot) {
+      this.uiStage.activeRoot.addChild(this.keyboard);
+    }
+
     this.positionKeyboard();
     this.pipeline.invalidate();
   }
   hideKeyboard() {
-    if(this.keyboard) {
-      this.uiStage.overlayRoot = null;
+    if(this.keyboard&& this.uiStage.activeRoot) {
+      this.uiStage.activeRoot.removeChild(this.keyboard);
       this.keyboard = null;
       this.pipeline.invalidate();
     }

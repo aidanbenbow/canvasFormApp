@@ -1,7 +1,7 @@
 import { UIElement } from "./UiElement.js";
 
 export class UIEditableText extends UIElement {
-  constructor({ id, editor, text = '',label='',placeholder='', fontSize = 0.04, color = '#000',bgColor='#fff', align = 'left', valign = 'top', context, layoutManager, layoutRenderer }) {
+  constructor({ id, editor, text = '',label='',placeholder='', fontSize = 0.04, color = '#000',bgColor='#fff', align = 'left', valign = 'bottom', context, layoutManager, layoutRenderer }) {
     super({ id, context, layoutManager, layoutRenderer });
     this.editorController = editor;
     this.text = text;

@@ -14,7 +14,7 @@ export class UIOverlay extends UIElement {
       this.removeChild(this.messageText);
       this.messageText = null;
     }
-console.log('UIOverlay showMessage:', text, color, duration, fontSize);
+
     this.messageText = new UiText({
       id: `${this.id}_message`,
       text: text,
@@ -43,7 +43,6 @@ console.log('UIOverlay showMessage:', text, color, duration, fontSize);
     height: boxHeight
   });
 
-
     this.context.pipeline.invalidate();
 
     clearTimeout(this.timeoutId);
@@ -62,6 +61,7 @@ console.log('UIOverlay showMessage:', text, color, duration, fontSize);
   render() {
     // Overlay might have a semi-transparent background in future
     // For now, just render children
+    console.log('Rendering UIOverlay with children:', this.children);
     for (const child of this.children) {
       child.render();
     }

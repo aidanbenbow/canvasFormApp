@@ -129,7 +129,7 @@ if(nested) return nested;
         this.activeRoot.layout(canvasWidth, canvasHeight); // ✅ layout pass
         this.activeRoot.render();                          // ✅ render pass
       }
-
+console.log('Rendering overlayRoot:', this.overlayRoot);
       if(this.overlayRoot) {
         this.overlayRoot.layout(canvasWidth, canvasHeight);
         this.overlayRoot.render();

@@ -77,7 +77,7 @@ export function wireSystemEvents(system, context, store ={}) {
 
     dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData}) => {
             sendLog(`Form ${form.id} submitted with data: ${JSON.stringify(responseData)}`, responseData);
-        
+        context.overlayManager.showSuccess(`Form ${form.label} submitted successfully!`);
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.DELETE, async (form) => {
