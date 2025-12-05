@@ -42,4 +42,9 @@ export class BaseScreen {
             this.onExit();
         }
     }
+    layout(width, height) {
+        console.log(`Laying out screen ${this.id} with dimensions:`, width, height);
+       this.rootElement.layout(0, 0, width, height);
+       this.rootElement.measureAndLayout({ maxWidth: width, maxHeight: height });
+    }
 }

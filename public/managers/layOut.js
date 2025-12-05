@@ -5,6 +5,21 @@ export class LayoutManager {
       this.registry = new Map(); // Stores layout entries by ID
       this.zones = new Map();    // Optional named zones
     }
+
+    scaleX(x, actualWidth){
+      return (x / this.logicalWidth) * actualWidth;
+    }
+    scaleY(y, actualHeight){
+      return (y / this.logicalHeight) * actualHeight;
+    }
+    scaleRect(bounds, actualWidth, actualHeight){
+      return {
+        x: this.scaleX(bounds.x, actualWidth),
+        y: this.scaleY(bounds.y, actualHeight),
+        width: this.scaleX(bounds.width, actualWidth),
+        height: this.scaleY(bounds.height, actualHeight),
+      };
+    }
   
     // Define a layout zone
     defineZone(name, bounds) {

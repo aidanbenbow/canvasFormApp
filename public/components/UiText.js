@@ -7,24 +7,8 @@ export class UiText extends UIEditableText {
     this.fieldRef = fieldRef;
     this.type = 'text';
     this.draggable = true;
-    console.log('UiText created with text:', text);
    
   }
-
-  // render() {
-  //   super.render();
-  //    // 3. Label
-  //    if (this.label) {
-  //       console.log('Rendering label:', this.label);
-  //       this.layoutRenderer.drawText(
-  //         `${this.id}`,
-  //         this.label,
-  //         this.fontSize * 0.8,
-  //         { fill: '#000', align: 'left', valign: 'top' }
-  //       );
-  //     }
-  //   }
-
   updateText(newText) {
    super.updateText(newText);
     if (this.fieldRef) {

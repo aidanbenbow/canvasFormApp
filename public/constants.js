@@ -4,8 +4,6 @@ import { InputBoxRenderer } from "./renderers/boxes/inputBox.js";
 import { ImageBoxRenderer } from "./renderers/boxes/imageBox.js";
 
 
-import { AdminOverlayRenderer } from "./renderers/adminOverlay.js";
-
 import { emitFeedback, onMessageResponse, sendLog } from "./controllers/socketController.js";
 import { LoginRenderer } from "./renderers/loginRenderer.js";
 
@@ -66,85 +64,85 @@ export const myPluginManifest = {
   
   };
 
-  export function createPluginManifest({ eventBus, textEditorController, layoutManager, canvas }) {
-    return {
-      renderers: [
-        { id: 'textBox', class: TextBoxRenderer },
-        { id: 'inputBox', class: InputBoxRenderer },
-        { id: 'imageBox', class: ImageBoxRenderer },
-        { id: 'adminOverlay', class: AdminOverlayRenderer },
-        { id: 'loginPlugin', class: LoginRenderer },
-        {id: 'uiInputBox', class: UiInputBoxRenderer },
+  //  function createPluginManifest({ eventBus, textEditorController, layoutManager, canvas }) {
+  //   return {
+  //     renderers: [
+  //       { id: 'textBox', class: TextBoxRenderer },
+  //       { id: 'inputBox', class: InputBoxRenderer },
+  //       { id: 'imageBox', class: ImageBoxRenderer },
+  //       { id: 'adminOverlay', class: AdminOverlayRenderer },
+  //       { id: 'loginPlugin', class: LoginRenderer },
+  //       {id: 'uiInputBox', class: UiInputBoxRenderer },
         
-      ],
-      images: {
-        "button-unpushed": "/images/button_unpushed.png",
-        "checkbox-tick": "/images/checkbox_tick.png"
-      },
-      actions: {
-        openImageModal: (box) => {
-          console.log(`Opening modal for imageKey: ${box.imageKey}`);
-        },
-        highlightBox: (box) => {
-          box.highlighted = true;
-          console.log(`Box ${box.id} highlighted`);
-        },
-        sendButton: async (box) => {
-          const allBoxes = textEditorController.getAllBoxes();
+  //     ],
+  //     images: {
+  //       "button-unpushed": "/images/button_unpushed.png",
+  //       "checkbox-tick": "/images/checkbox_tick.png"
+  //     },
+  //     actions: {
+  //       openImageModal: (box) => {
+  //         console.log(`Opening modal for imageKey: ${box.imageKey}`);
+  //       },
+  //       highlightBox: (box) => {
+  //         box.highlighted = true;
+  //         console.log(`Box ${box.id} highlighted`);
+  //       },
+  //       sendButton: async (box) => {
+  //         const allBoxes = textEditorController.getAllBoxes();
 
-          const inputData = allBoxes.filter(b => b.type === 'inputBox').map(b => ({
-            label: b.label || 'Untitled',
-            text: b.text?.trim() || ''
-          }));
+  //         const inputData = allBoxes.filter(b => b.type === 'inputBox').map(b => ({
+  //           label: b.label || 'Untitled',
+  //           text: b.text?.trim() || ''
+  //         }));
 
-          const dataToSend = inputData.reduce((acc, entry) => {
-            acc[entry.label] = entry.text;
-            return acc;
-          }, {});
+  //         const dataToSend = inputData.reduce((acc, entry) => {
+  //           acc[entry.label] = entry.text;
+  //           return acc;
+  //         }, {});
           
 
 
-          if (inputData.length === 0) {
-            console.warn("No inputBox is currently being edited.");
-            socket.emit('feedback', {
-              success: false,
-              text: "No input to send ❌",
-              position: {
-                x: box.startPosition.x,
-                y: box.startPosition.y - 30
-              }
-        ,
-              duration: 3000
-            });
-            return;
-          }
+  //         if (inputData.length === 0) {
+  //           console.warn("No inputBox is currently being edited.");
+  //           socket.emit('feedback', {
+  //             success: false,
+  //             text: "No input to send ❌",
+  //             position: {
+  //               x: box.startPosition.x,
+  //               y: box.startPosition.y - 30
+  //             }
+  //       ,
+  //             duration: 3000
+  //           });
+  //           return;
+  //         }
 
-         sendLog(box.id, dataToSend);
+  //        sendLog(box.id, dataToSend);
         
-         onMessageResponse((response) => {
-          emitFeedback({
-            success: response.success,
-            error: response.error,
-            box
-          });
+  //        onMessageResponse((response) => {
+  //         emitFeedback({
+  //           success: response.success,
+  //           error: response.error,
+  //           box
+  //         });
         
-          if (response.success) {
-            allBoxes.forEach(b => {
-              if (b.type === 'inputBox') {
-                b.text = '';
-              }
-            });
-            textEditorController.stopEditing();
-          }
-        });
+  //         if (response.success) {
+  //           allBoxes.forEach(b => {
+  //             if (b.type === 'inputBox') {
+  //               b.text = '';
+  //             }
+  //           });
+  //           textEditorController.stopEditing();
+  //         }
+  //       });
         
         
         
-        },
-        writeText: (box) => {
-          textEditorController.startEditing(box);
+  //       },
+  //       writeText: (box) => {
+  //         textEditorController.startEditing(box);
        
-        }
-      }
-    };
-  }
+  //       }
+  //     }
+  //   };
+  // }

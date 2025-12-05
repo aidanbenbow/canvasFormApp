@@ -61,7 +61,7 @@ export class UIOverlay extends UIElement {
   render() {
     // Overlay might have a semi-transparent background in future
     // For now, just render children
-    console.log('Rendering UIOverlay with children:', this.children);
+    
     for (const child of this.children) {
       child.render();
     }

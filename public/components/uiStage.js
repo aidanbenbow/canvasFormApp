@@ -124,12 +124,12 @@ if(nested) return nested;
       const canvasHeight = canvas.height;
     
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    
+    console.log(this.activeRoot);
       if (this.activeRoot) {
         this.activeRoot.layout(canvasWidth, canvasHeight); // ✅ layout pass
         this.activeRoot.render();                          // ✅ render pass
       }
-console.log('Rendering overlayRoot:', this.overlayRoot);
+
       if(this.overlayRoot) {
         this.overlayRoot.layout(canvasWidth, canvasHeight);
         this.overlayRoot.render();

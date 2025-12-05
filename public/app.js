@@ -3,14 +3,14 @@ import { UIOverlay } from "./components/UiOverlay.js";
 import { CreateForm } from "./components/createForm.js";
 import { DashBoardScreen} from "./components/dashBoard.js";
 
-import { canvasConfig, createPluginManifest } from "./constants.js";
+import { canvasConfig, } from "./constants.js";
 
 import { fetchAllForms, fetchFormById, fetchFormResults,  onMessageResponse, saveFormStructure, sendLog } from "./controllers/socketController.js";
 import { ACTIONS } from "./events/actions.js";
 import { FormStore } from "./events/formStore.js";
 import { UIOverlayManager } from "./managers/UiOverlayManager.js";
 import { CanvasManager } from "./managers/canvas.js";
-import { interactionManager } from "./managers/interaction.js";
+
 import { LayoutManager } from "./managers/layOut.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";

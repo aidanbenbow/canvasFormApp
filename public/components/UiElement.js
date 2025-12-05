@@ -17,13 +17,16 @@ export class UIElement {
       this.isActive = false;
       this.isFocused = false;
       this.isDragging = false;
+
+      this.bounds = { x: 0, y: 0, width: 0, height: 0 };
+      this._measured = { width: 0, height: 0 };
     }
   
     addChild(child) {
-        child.layoutManager = this.layoutManager;
-        child.layoutRenderer = this.layoutRenderer;
+        // child.layoutManager = this.layoutManager;
+        // child.layoutRenderer = this.layoutRenderer;
       child.parent = this;
-      child.context = this.context;
+      //child.context = this.context;
       this.children.push(child);
     
     }
@@ -38,12 +41,11 @@ export class UIElement {
       }
       
   
-    getScaledBounds() {
-      if (!this.layoutRenderer || !this.layoutManager) return null;
-      return this.layoutManager.getScaledBounds(
-        this.id,
-        this.layoutRenderer.canvas.width,
-        this.layoutRenderer.canvas.height
+    getScaledBounds(canvasWidth, canvasHeight) {
+      return this.layoutManager.scaleRect(
+        this.bounds,
+        canvasWidth,
+        canvasHeight
       );
     }
   
@@ -155,10 +157,16 @@ while (ancestor) {
     
   
     render() {
-      if (!this.visible) return;
-      
-      for (const c of this.children) c.render();
-     
+     // if (!this.visible) return;  
+     this.renderChildren(); 
+    }
+
+    renderChildren() {
+      for (const c of this.children){
+        if(c.visible)
+        c.render();
+      } 
+        
     }
     renderDragHighlight(ctx) {
       if (this.isDragging||this.isSelected) {
@@ -186,11 +194,25 @@ while (ancestor) {
         this.children = this.children.filter(c => c !== child);
         child.parent = null;
       }
-      layout(canvasWidth, canvasHeight) {
-        for (const child of this.children) {
-          
-          child.layout(canvasWidth, canvasHeight);
-        }
+measure(constraints={maxWidth: Infinity, maxHeight: Infinity}) {
+  const width = Math.min(constraints.maxWidth, this.bounds.width || constraints.maxWidth);
+  const height = Math.min(constraints.maxHeight, this.bounds.height || 30);
+  this._measured = { width, height };
+        return this._measured;
+      }
+
+      layout(x,y,width,height) {
+        this.bounds = { x, y, width, height  };
+      }
+
+      measureAndLayout(constraints={maxWidth: Infinity, maxHeight: Infinity}) {
+        const measured = this.measure(constraints);
+        const width = measured.width;
+        const height = measured.height;
+        const x = this.bounds.x || 0;
+        const y = this.bounds.y || 0;
+        this.layout(x, y, width, height);
+        return this.bounds;
       }
       
   }

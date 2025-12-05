@@ -6,14 +6,13 @@ import { createUIComponent } from "./createUIComponent.js";
 
 export class ManifestUI extends UIElement{
     buildContainersFromManifest(manifest) {
-        manifest.forEach(({ idSuffix, type, layout, scroll, assignTo }) => {
+        manifest.forEach(({ idSuffix, type, layout, assignTo }) => {
           const component = createUIComponent({
             id: `${this.id}-${idSuffix}`,
             type,
             layout
           }, this.context);
-    
-          if (scroll) component.initializeScroll();
+    console.log("Adding container:", component);
           this.addChild(component);
           if (assignTo) this[assignTo] = component;
         });

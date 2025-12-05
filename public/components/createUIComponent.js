@@ -1,3 +1,4 @@
+import { UIFieldContainer } from "./UiFieldContainer.js";
 import { UIInput } from "./UiInput.js";
 import { UiText } from "./UiText.js";
 import { UIButton } from "./button.js";
@@ -59,7 +60,7 @@ export function createFieldComponent(type, context) {
     }
   }
 
-export function createUIComponent(field, context, {place = true} = {}) {
+export function createUIComponent(field, context) {
   const {
     id,
     type,
@@ -74,7 +75,7 @@ export function createUIComponent(field, context, {place = true} = {}) {
     onClick,
     
   } = field;
-  const { textEditorController, uiStage, pluginRegistry } = context;
+  const { textEditorController, uiStage } = context;
   
   let component;
 
@@ -118,14 +119,21 @@ export function createUIComponent(field, context, {place = true} = {}) {
                 context,
                 layoutManager: uiStage.layoutManager,
                 layoutRenderer: uiStage.layoutRenderer,
-                childSpaceing: childSpacing,
+                childSpacing: childSpacing,
                 defaultChildHeight: defaultChildHeight,
             });
             break;
+            case 'fieldContainer':
+                component = new UIFieldContainer({
+                    id,
+                    context,
+                    layoutManager: uiStage.layoutManager,
+                    layoutRenderer: uiStage.layoutRenderer,
+                    bgColor: 'rgba(0,0,0,0.1)'
+                });
+                break;
         }  
 
-    if (place) {
-        uiStage.layoutManager.place({ id, ...layout });
-    }
+  
     return component;
 }

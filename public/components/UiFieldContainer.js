@@ -7,16 +7,18 @@ export class UIFieldContainer extends UIElement {
     layoutManager,
     layoutRenderer,
     bgColor = "#f9f9f9",
-    padding = 8
+    padding = 8,
+    spacing = 8
   }) {
     super({ id, context, layoutManager, layoutRenderer });
     this.bgColor = bgColor;
     this.padding = padding;
+    this.spacing = spacing;
   }
 
   addChild(child) {
     super.addChild(child);
-    this.layoutChildrenVertically(this.padding, 30);
+    //this.layoutChildrenVertically(this.padding, 30);
   }
   layoutChildrenVertically(spacing, defaultHeight) {
     
@@ -33,22 +35,66 @@ export class UIFieldContainer extends UIElement {
       currentY += defaultHeight + spacing;
     }
   }
+measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+ const innerMaxWidth = Math.max(0, constraints.maxWidth - 2 * this.padding);
+  let totalHeight = this.padding; // top padding
+  let maxChildWidth = 0;
+
+  for (const child of this.children) {
+    const childSize = child.measure({
+      maxWidth: innerMaxWidth,
+      maxHeight: constraints.maxHeight
+    });
+    child._measured = childSize;
+    maxChildWidth = Math.max(maxChildWidth, childSize.width);
+    totalHeight += childSize.height + this.spacing; // child height + spacing
+  }
+  const width = Math.min(
+    constraints.maxWidth,
+    maxChildWidth + 2 * this.padding
+  );
+  const height = Math.min(
+    constraints.maxHeight,
+    totalHeight
+  );
+  this._measured = { width, height };
+  return this._measured;
+}
 
   render() {
     if (!this.visible) return;
+const canvas = this.layoutRenderer?.canvas;
+    const ctx = this.layoutRenderer.ctx;
+    const scaled = this.getScaledBounds(canvas?.width, canvas?.height);
+    // Draw background
+    this.layoutRenderer.drawRect(this.id, {
+      x: scaled.x,
+      y: scaled.y,
+      width: scaled.width,
+      height: scaled.height,
+      fill: this.bgColor
+    });
+    this.renderChildren();
+  }
 
-    const bounds = this.getScaledBounds();
-    if (bounds && this.layoutRenderer?.ctx) {
-      const ctx = this.layoutRenderer.ctx;
-      ctx.save();
-      ctx.fillStyle = this.bgColor;
-      ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-      ctx.restore();
-    }
-
-    // render children on top of background
+  layout(x, y, width, height) {
+    console.log("Layout UIFieldContainer:", this.id, x, y, width, height);
+    const w = width || this._measured.width;
+    const h = height || this._measured.height;
+    // Layout children vertically within the container
+    let currentY = y + this.padding;
+    const childMaxWidth = w - 2 * this.padding;
     for (const child of this.children) {
-      child.render();
+      const m = child._measured || child.measure({ maxWidth: childMaxWidth, maxHeight: height });
+      const childWidth = Math.min(m.width, childMaxWidth);
+      const childHeight = m.height
+      child.layout(
+        x + this.padding,
+        currentY,
+        childWidth,
+        childHeight
+      );
+      currentY += childHeight + this.spacing;
     }
   }
 }

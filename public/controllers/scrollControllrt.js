@@ -1,16 +1,31 @@
 export class ScrollController {
-    constructor({ contentHeight, viewportHeight }) {
+    constructor({ contentHeight=0, viewportHeight=0 }={}) {
       this.offsetY = 0;
       this.contentHeight = contentHeight;
       this.viewportHeight = viewportHeight;
     }
-  
-    scrollBy(delta) {
-      this.offsetY = Math.max(0, Math.min(this.offsetY + delta, this.contentHeight - this.viewportHeight));
+    setViewportHeight(height) {
+      this.viewportHeight = height;
+      this.clamp();
+    }
+    setContentHeight(height) {
+      this.contentHeight = height;
+      this.clamp();
+    }
+    clamp() {
+     const maxOffset = Math.max(0, this.contentHeight - this.viewportHeight);
+     if(this.offsetY < 0) this.offsetY = 0;
+      if(this.offsetY > maxOffset) this.offsetY = maxOffset;
     }
   
-    apply(ctx) {
-      ctx.translate(0, -this.offsetY);
+    scrollBy(delta) {
+      this.offsetY += delta;
+      this.clamp();
+    }
+  
+    apply(ctx,{scaleY=1}={}) {
+      const pixelOffsetY = this.offsetY * scaleY;
+      ctx.translate(0, -pixelOffsetY);
     }
   }
   

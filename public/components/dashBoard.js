@@ -9,14 +9,14 @@ export const dashboardUIManifest = {
       idSuffix: 'container',
       type: 'container',
       layout: { x: 10, y: 20, width: 200, height: 300 },
-      scroll: true,
+     
       assignTo: 'uiContainer'
     },
     {
       idSuffix: 'formsContainer',
-      type: 'container',
+      type: 'fieldContainer',
       layout: { x: 300, y: 20, width: 280, height: 500 },
-      scroll: true,
+     
       assignTo: 'formsContainer'
     }
   ],
