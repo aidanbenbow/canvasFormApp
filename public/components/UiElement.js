@@ -42,18 +42,19 @@ export class UIElement {
       
   
     getScaledBounds(canvasWidth, canvasHeight) {
+      const cw = canvasWidth || this.layoutRenderer?.canvas?.width;
+      const ch = canvasHeight || this.layoutRenderer?.canvas?.height;
       return this.layoutManager.scaleRect(
         this.bounds,
-        canvasWidth,
-        canvasHeight
+        cw,
+        ch
       );
     }
   
     contains(x, y) {
       const b = this.getScaledBounds();
-     // console.log(`Checking contains for ${this.id} at (${x}, ${y}) with bounds:`, b);
       if (!b) return false;
-      
+
 let scrollOffsetY = 0;
 let ancestor = this.parent;
 while (ancestor) {
@@ -74,7 +75,7 @@ while (ancestor) {
  
       for (const child of this.children) {
         const hit = child.contains(event.x, event.y);
-      
+     
         // If child is a container, recurse regardless
         if (child.children.length > 0 || hit) {
           if (child.dispatchEvent(event)) return true;

@@ -10,13 +10,34 @@ export class ManifestUI extends UIElement{
           const component = createUIComponent({
             id: `${this.id}-${idSuffix}`,
             type,
-            layout
           }, this.context);
-    console.log("Adding container:", component);
+          component.layoutSpec = layout;
+    
           this.addChild(component);
           if (assignTo) this[assignTo] = component;
         });
       }
+      layout(x, y, width, height) {
+        // Step 1: set own bounds
+        this.bounds = { x, y, width, height };
+    
+        for (const child of this.children) {
+          const spec = child.layoutSpec || {};
+          const measured = child.measure({
+            maxWidth: spec.width || width,
+            maxHeight: spec.height || height
+          });
+      
+          child.layout(
+            spec.x ?? this.bounds.x,
+            spec.y ?? this.bounds.y,
+            spec.width ?? measured.width,
+            spec.height ?? measured.height
+          );
+        }
+      
+      }
+    
     
       buildChildrenFromManifest(manifest, targetContainer) {
         manifest.forEach(def => {

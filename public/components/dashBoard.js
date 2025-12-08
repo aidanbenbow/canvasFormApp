@@ -79,11 +79,13 @@ this.rootElement.addChild(this.manifestUI);
   }
 
   onEnter() {
-  
     this.buildLayout();
+ this.manifestUI.layout(0, 0, this.context.uiStage.width, this.context.uiStage.height);
+
   }
 
   buildLayout() {
+  
     this.manifestUI.displayFormsLabels(this.store.getForms(), this.manifestUI.formsContainer, {
       onSelect: (form) => this._onSelect(form)
     });

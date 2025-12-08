@@ -65,7 +65,7 @@ if (formId) {
   system.actionDispatcher.dispatch(ACTIONS.FORM.VIEW, form, 'bootstrap');
 } else{
   const {forms} = await fetchAllForms('admin');
-  system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, forms, 'bootstrap');
+  // system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, forms, 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
 for(const f of forms){
   const results = await fetchFormResults(f.id, f.resultsTable || 'faithandbelief');
@@ -75,6 +75,7 @@ context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
 }
 
   const dash = new DashBoardScreen({ context, dispatcher: system.actionDispatcher, eventBusManager: system.eventBusManager, store });
+  dash.layout(window.innerWidth, window.innerHeight);
   dash.attachToStage(context.uiStage);
   context.pipeline.invalidate();
 }

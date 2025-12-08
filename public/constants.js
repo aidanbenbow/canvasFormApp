@@ -5,7 +5,7 @@ import { ImageBoxRenderer } from "./renderers/boxes/imageBox.js";
 
 
 import { emitFeedback, onMessageResponse, sendLog } from "./controllers/socketController.js";
-import { LoginRenderer } from "./renderers/loginRenderer.js";
+
 
 import { UiInputBoxRenderer } from "./renderers/uiInputBox.js";
 

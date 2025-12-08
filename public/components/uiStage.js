@@ -28,7 +28,7 @@ export class UIStage {
       const root = this.roots.get(rootId);
       if (!root) throw new Error(`UIStage: no root with id ${rootId}`);
       this.activeRoot = root;
-    
+  
     }
 
     removeRoot(rootId) {
@@ -124,14 +124,14 @@ if(nested) return nested;
       const canvasHeight = canvas.height;
     
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    console.log(this.activeRoot);
+   
       if (this.activeRoot) {
-        this.activeRoot.layout(canvasWidth, canvasHeight); // ✅ layout pass
+        this.activeRoot.layout(0,0,canvasWidth, canvasHeight); // ✅ layout pass
         this.activeRoot.render();                          // ✅ render pass
       }
 
       if(this.overlayRoot) {
-        this.overlayRoot.layout(canvasWidth, canvasHeight);
+        this.overlayRoot.layout(0,0,canvasWidth, canvasHeight);
         this.overlayRoot.render();
       }
     }

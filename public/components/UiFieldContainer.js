@@ -66,6 +66,7 @@ measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
 const canvas = this.layoutRenderer?.canvas;
     const ctx = this.layoutRenderer.ctx;
     const scaled = this.getScaledBounds(canvas?.width, canvas?.height);
+    
     // Draw background
     this.layoutRenderer.drawRect(this.id, {
       x: scaled.x,
@@ -78,9 +79,10 @@ const canvas = this.layoutRenderer?.canvas;
   }
 
   layout(x, y, width, height) {
-    console.log("Layout UIFieldContainer:", this.id, x, y, width, height);
+  
     const w = width || this._measured.width;
     const h = height || this._measured.height;
+    this.bounds = { x, y, width: w, height: h };
     // Layout children vertically within the container
     let currentY = y + this.padding;
     const childMaxWidth = w - 2 * this.padding;

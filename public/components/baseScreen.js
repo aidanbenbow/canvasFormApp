@@ -9,7 +9,7 @@ export class BaseScreen {
         this.namespace = namespace || `BaseScreen_${id || Math.random().toString(36).substr(2, 9)}`;
 
         this.rootElement = new UIElement({
-            id: `${this.id}-root`,
+            id: `${this.id}`,
             context: this.context,
             layoutManager: this.context?.uiStage.layoutManager,
             layoutRenderer: this.context?.uiStage.layoutRenderer,
@@ -43,7 +43,7 @@ export class BaseScreen {
         }
     }
     layout(width, height) {
-        console.log(`Laying out screen ${this.id} with dimensions:`, width, height);
+        
        this.rootElement.layout(0, 0, width, height);
        this.rootElement.measureAndLayout({ maxWidth: width, maxHeight: height });
     }
