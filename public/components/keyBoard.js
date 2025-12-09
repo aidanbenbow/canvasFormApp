@@ -20,26 +20,10 @@ export class PopupKeyboard extends UIElement {
   }
 
   createKeys() {
-    
-    const keyWidth = this.layoutManager.logicalWidth * 0.05;
-    const spacing = this.layoutManager.logicalHeight * 0.01;
-    const logicalHeight = this.layoutManager.logicalHeight;
-    const maxKeyboardHeight = logicalHeight * 0.4;
-    const rowCount = this.keyLayout.length;
-    const keyHeight = Math.min((maxKeyboardHeight - (rowCount - 1) * spacing) / rowCount, logicalHeight * 0.06);
-    this.totalKeyboardHeight = rowCount * keyHeight + (rowCount - 1) * spacing;
-
-    const startY = logicalHeight /2 // anchor near bottom
-   
     this.keyLayout.forEach((row, rowIndex) => {
-      const y = startY + rowIndex * (keyHeight + spacing);
-      const ids = row.map((key, i) => `key-${rowIndex}-${i}-${key}`);
-  
-      // Create UIButton instances
       row.forEach((key, i) => {
-        const id = ids[i];
-        const button = new UIButton({
-          id,
+        const button = new UIButton({ 
+          id: `key-${rowIndex}-${i}-${key}`,
           label: key,
           color: '#28a74599',
           onClick: () => this.handleKeyPress(key),
@@ -49,23 +33,8 @@ export class PopupKeyboard extends UIElement {
         });
         this.addChild(button);
       });
-
-   
-      // Place keys using flow
-      this.layoutManager.flow({
-        direction: 'horizontal',
-        items: ids,
-        spacing,
-        anchor: 'top-left',
-        start: { x: 50, y },
-        size: { width: keyWidth, height: keyHeight }
-      });
-     
-
     });
-
   }
-  
 
   handleKeyPress(key) {
    dispatcher.dispatch(ACTIONS.KEYBOARD.PRESS, { key });
@@ -83,27 +52,61 @@ export class PopupKeyboard extends UIElement {
     }
     return false;
   }
-  
 
-  layout(canvasWidth, canvasHeight) {
+  measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
     const logicalWidth = this.layoutManager.logicalWidth;
     const logicalHeight = this.layoutManager.logicalHeight;
   
-    const desiredWidth = logicalWidth * 0.9;
-    const desiredHeight = logicalHeight * 0.4;
-    const desiredX = logicalWidth * 0.05;
-    const desiredY = logicalHeight * 0.55; // anchor near bottom
+    const keyWidth = logicalWidth * 0.05;
+    const spacing = logicalHeight * 0.01;
+    const maxKeyboardHeight = logicalHeight * 0.4;
+    const rowCount = this.keyLayout.length;
+    const keyHeight = Math.min(
+      (maxKeyboardHeight - (rowCount - 1) * spacing) / rowCount,
+      logicalHeight * 0.06
+    );
   
-    this.layoutManager.place({
-      id: this.id,
-      x: 0,
-      y: logicalHeight/4,
-      width: logicalWidth,
-      height: this.totalKeyboardHeight
+    this.totalKeyboardHeight = rowCount * keyHeight + (rowCount - 1) * spacing;
+  
+    const width = Math.min(constraints.maxWidth, logicalWidth);
+    const height = Math.min(constraints.maxHeight, this.totalKeyboardHeight);
+  
+    this._measured = { width, height };
+    return this._measured;
+  }
+  
+
+  layout(x, y, width, height) {
+    const logicalWidth = this.layoutManager.logicalWidth;
+    const logicalHeight = this.layoutManager.logicalHeight;
+  
+    const w = width || this._measured.width;
+    const h = height || this._measured.height;
+  
+    this.bounds = { x, y, width: w, height: h };
+  
+    // Position keys row by row
+    const keyWidth = logicalWidth * 0.05;
+    const spacing = logicalHeight * 0.01;
+    const rowCount = this.keyLayout.length;
+    const keyHeight = Math.min(
+      (logicalHeight * 0.4 - (rowCount - 1) * spacing) / rowCount,
+      logicalHeight * 0.06
+    );
+  
+    const startY = y; // anchor at provided y
+    const startX = this.bounds.x + 50;
+
+    this.keyLayout.forEach((row, rowIndex) => {
+      const rowY = startY + rowIndex * (keyHeight + spacing);
+      row.forEach((key, i) => {
+        const child = this.children.find(c => c.label === key);
+        if (child) {
+          const childSize = child.measure({ maxWidth: keyWidth, maxHeight: keyHeight });
+child.layout(startX + i * (keyWidth + spacing), rowY, childSize.width, childSize.height);
+        }
+      });
     });
-  
-    super.layout(canvasWidth, canvasHeight); // ✅ layout children (buttons)
-   // this.layoutManager.dumpRegistry(); // For debugging
   }
   
 }

@@ -74,7 +74,10 @@ export class UIStage {
         let y = (e.clientY - rect.top) * scaleY;
 
     const event = { type, x, y}
-if(this.overlayRoot && this.overlayRoot.dispatchEvent(event)) return;
+    if (this.overlayRoot && this.overlayRoot.messageText?.contains(x, y)) {
+      if (this.overlayRoot.dispatchEvent(event)) return;
+    }
+  
 if(event.type === 'mousemove'){
  if(UIElement.focusedElement?.onMouseMove){
     UIElement.focusedElement.onMouseMove(x, y);

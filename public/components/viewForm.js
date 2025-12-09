@@ -32,6 +32,13 @@ export class ViewForm extends BaseScreen{
         this.manifestUI.buildFormFromManifest(activeForm, this.manifestUI.formContainer, {
             onSubmit: this.onSubmit
         });
+          // 🔹 Immediately measure and lay out
+  const canvas = this.context.uiStage.layoutRenderer.canvas;
+  const w = canvas.width;
+  const h = canvas.height;
+  this.manifestUI.measure({ maxWidth: w, maxHeight: h });
+  this.manifestUI.layout(0, 0, w, h);
+
     }
 
 }

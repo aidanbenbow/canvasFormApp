@@ -37,7 +37,28 @@ export class ManifestUI extends UIElement{
         }
       
       }
-    
+      measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+        let maxChildWidth = 0;
+        let totalChildHeight = 0;
+      
+        for (const child of this.children) {
+          const spec = child.layoutSpec || {};
+          const childSize = child.measure({
+            maxWidth: spec.width || constraints.maxWidth,
+            maxHeight: spec.height || constraints.maxHeight
+          });
+          child._measured = childSize;
+      
+          maxChildWidth = Math.max(maxChildWidth, spec.width || childSize.width);
+          totalChildHeight = Math.max(totalChildHeight, spec.height || childSize.height);
+        }
+      
+        const width = Math.min(constraints.maxWidth, maxChildWidth);
+        const height = Math.min(constraints.maxHeight, totalChildHeight);
+      
+        this._measured = { width, height };
+        return this._measured;
+      }
     
       buildChildrenFromManifest(manifest, targetContainer) {
         manifest.forEach(def => {

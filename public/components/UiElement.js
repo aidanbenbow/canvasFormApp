@@ -116,6 +116,7 @@ while (ancestor) {
   
     // 🔹 Event hooks (can be overridden)
     onMouseEnter() { this.isHovered = true;
+      
       this.context.pipeline.invalidate();
 }
     onMouseLeave() { this.isHovered = false; this.isActive = false;
@@ -142,6 +143,7 @@ while (ancestor) {
       this.context.dragController.updateDrag(x, y);
     }
     onClick() {
+     
       UIElement.setFocus(this);
       this.isActive = true;
       this.context.pipeline.invalidate();
