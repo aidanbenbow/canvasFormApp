@@ -15,4 +15,30 @@ export class UiText extends UIEditableText {
       this.fieldRef.label = newText;
     }
   }
+  // 🔹 New measure method
+  measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+    const canvas = this.layoutRenderer?.canvas;
+    const ctx = this.layoutRenderer?.ctx;
+    if (!ctx || !canvas) {
+      this._measured = { width: 0, height: 0 };
+      return this._measured;
+    }
+
+    // Scale font size into pixels relative to canvas height
+    const fontPx = this.fontSize * canvas.height;
+    ctx.save();
+    ctx.font = `${fontPx}px Arial`;
+    const metrics = ctx.measureText(this.text || this.placeholder || "");
+    ctx.restore();
+
+    const textWidth = metrics.width;
+    const textHeight = fontPx * 1.2; // approximate line height
+
+    const width = Math.min(constraints.maxWidth, textWidth);
+    const height = Math.min(constraints.maxHeight, textHeight);
+
+    this._measured = { width, height };
+    return this._measured;
+  }
+
 }

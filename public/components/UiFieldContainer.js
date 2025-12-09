@@ -49,16 +49,14 @@ measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
     maxChildWidth = Math.max(maxChildWidth, childSize.width);
     totalHeight += childSize.height + this.spacing; // child height + spacing
   }
-  const width = Math.min(
-    constraints.maxWidth,
-    maxChildWidth + 2 * this.padding
-  );
-  const height = Math.min(
-    constraints.maxHeight,
-    totalHeight
-  );
+  totalHeight += this.padding; // bottom padding
+
+  const width = Math.min(constraints.maxWidth, maxChildWidth + 2 * this.padding);
+  const height = Math.min(constraints.maxHeight, totalHeight);
+
   this._measured = { width, height };
   return this._measured;
+
 }
 
   render() {
@@ -98,5 +96,10 @@ const canvas = this.layoutRenderer?.canvas;
       );
       currentY += childHeight + this.spacing;
     }
+     // 🔹 Always recompute container height from children
+  const usedHeight = currentY + this.padding - y;
+  this.bounds.height = usedHeight;
+
+
   }
 }

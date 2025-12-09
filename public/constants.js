@@ -7,7 +7,6 @@ import { ImageBoxRenderer } from "./renderers/boxes/imageBox.js";
 import { emitFeedback, onMessageResponse, sendLog } from "./controllers/socketController.js";
 
 
-import { UiInputBoxRenderer } from "./renderers/uiInputBox.js";
 
 
 export const canvasConfig = {

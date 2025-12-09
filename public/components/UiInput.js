@@ -12,19 +12,37 @@ export class UIInput extends UIEditableText {
     // 3. Label
     if (this.label) {
       const bounds = this.getScaledBounds();
-      const labelY = bounds ? bounds.y - this.fontSize * 1.2 : 0;
+      const labelHeightPx = this.fontSize * this.layoutRenderer.canvas.height * 0.8;
+        const labelY = bounds.y - labelHeightPx;
+
+
        this.layoutRenderer.drawText(
          `${this.id}`,
          this.label,
-         this.fontSize * 0.8,
-         { fill: '#000', align: 'left', valign: 'top', x: bounds.x, y: labelY }
+         bounds.x,
+          labelY,
+         { fill: '#000', align: 'left', valign: 'top', 
+           fontSize: labelHeightPx
+          }
        );
      }
     
    }
-   getHeight(){
-    const bounds = this.getScaledBounds();
-    const labelHeight = this.label ? this.fontSize * 1.2 : 0;
-    return bounds ? bounds.height + labelHeight : 0
-   }
+   getHeight() {
+    return this._measured?.height || 0;
+  }
+
+   measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+    // Base input height in logical units
+    const baseHeight = 30;
+    const labelHeight = this.label ? 20 : 0;
+
+
+    const width = Math.min(constraints.maxWidth, 200);
+    const height = Math.min(constraints.maxHeight, baseHeight + labelHeight);
+
+    this._measured = { width, height };
+    return this._measured;
+  }
+
 }

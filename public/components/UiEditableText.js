@@ -54,14 +54,22 @@ export class UIEditableText extends UIElement {
    
 
     // 4. Value or placeholder
+    
     const displayText = this.text || this.placeholder;
     const color = this.text ? this.color : '#888';
-   
+    const fontPx = this.fontSize * this.layoutRenderer.canvas.height;
+    const y = this.valign === 'top'
+  ? bounds.y + fontPx
+  : this.valign === 'middle'
+    ? bounds.y + bounds.height / 2
+    : bounds.y + bounds.height - 4;
     this.layoutRenderer.drawText(
       `${this.id}`,
       displayText,
-      this.fontSize,
-      { fill: color, align: this.align, valign: this.valign }
+      bounds.x + 8,
+      y,
+      { fill: color, align: this.align, valign: this.valign
+      , fontSize: fontPx }
     );
 
     // 5. Caret/selection
