@@ -18,23 +18,19 @@ export class UIFieldContainer extends UIElement {
 
   addChild(child) {
     super.addChild(child);
-    //this.layoutChildrenVertically(this.padding, 30);
+    child.parent = this;
   }
-  layoutChildrenVertically(spacing, defaultHeight) {
-    
-    const containerBounds = this.layoutManager.getLogicalBounds(this.id);
-    if (!containerBounds) return;
-    let currentY = containerBounds.y + spacing;
-    for (const child of this.children) {
-      this.layoutManager.setLogicalBounds(child.id, {
-        x: containerBounds.x + spacing,
-        y: currentY,
-        width: containerBounds.width - 2 * spacing,
-        height: defaultHeight
-      });
-      currentY += defaultHeight + spacing;
-    }
+  invalidate() {
+    // Re‑measure with current constraints
+    const constraints = { 
+      maxWidth: this.layoutManager.logicalWidth, 
+      maxHeight: this.layoutManager.logicalHeight 
+    };
+    this.measure(constraints);
+    this.layout(this.bounds.x || 0, this.bounds.y || 0, this._measured.width, this._measured.height);
+    this.context.pipeline.invalidate();
   }
+
 measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
  const innerMaxWidth = Math.max(0, constraints.maxWidth - 2 * this.padding);
   let totalHeight = this.padding; // top padding

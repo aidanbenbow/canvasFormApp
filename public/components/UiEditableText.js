@@ -29,6 +29,14 @@ export class UIEditableText extends UIElement {
   updateText(newText) {
     this.text = newText;
     this.onChange?.(newText);
+
+    // Force re‑measure and re‑layout
+  if (this.layoutManager && this.context?.pipeline) {
+    this.measure({ maxWidth: this.layoutManager.logicalWidth, maxHeight: this.layoutManager.logicalHeight });
+    this.layout(this.bounds?.x || 0, this.bounds?.y || 0, this._measured.width, this._measured.height);
+    this.context.pipeline.invalidate();
+  }
+
   }
   render() {
     if (!this.visible) return;
