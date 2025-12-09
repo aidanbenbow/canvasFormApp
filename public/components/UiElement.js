@@ -32,13 +32,17 @@ export class UIElement {
     }
 
     static setFocus(target) {
-     
-        if (UIElement.focusedElement && UIElement.focusedElement !== target) {
-          UIElement.focusedElement.onBlur();
-        }
+      // Only blur if the current focused element is different and is focusable
+      if (UIElement.focusedElement && UIElement.focusedElement !== target && UIElement.focusedElement.focusable) {
+        UIElement.focusedElement.onBlur();
+      }
+    
+      // Only assign focus if the target itself is focusable
+      if (target.focusable) {
         UIElement.focusedElement = target;
         target.onFocus();
       }
+    }
       
   
     getScaledBounds(canvasWidth, canvasHeight) {
@@ -144,7 +148,10 @@ while (ancestor) {
     }
     onClick() {
      
-      UIElement.setFocus(this);
+      if (this.focusable) {
+        UIElement.setFocus(this);
+      }
+    
       this.isActive = true;
       this.context.pipeline.invalidate();
     }

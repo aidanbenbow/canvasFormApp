@@ -5,6 +5,7 @@ export class UIInput extends UIEditableText {
         super({ id, editor, text: '',label,placeholder, context, layoutManager, layoutRenderer });
         this.type = 'input';
         this.draggable = false;
+        this.focusable = true;
     }
    render() {
     super.render();

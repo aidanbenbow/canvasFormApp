@@ -10,11 +10,15 @@ export class UIButton extends UIElement {
     this.colour = color;
    
     this.draggable = false
+    this.focusable = false
   }
 
   onClick() {
     console.log(`Button ${this.id} clicked.`);
-    UIElement.setFocus(this);
+    if (this.focusable) {
+      UIElement.setFocus(this);
+    }
+  
     this.onClickHandler?.();
   }
 

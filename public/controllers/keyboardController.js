@@ -14,6 +14,7 @@ this.activeBox = null;
     if(this.keyboard) {
       this.hideKeyboard();
     }
+
     this.activeBox = box;
     this.keyboard = new PopupKeyboard({
       id: 'popup-keyboard',
@@ -25,8 +26,28 @@ this.activeBox = null;
     if(this.uiStage.activeRoot) {
       this.uiStage.activeRoot.addChild(this.keyboard);
     }
-
-    this.positionKeyboard();
+    const constraints = {
+      maxWidth: this.layoutManager.logicalWidth,
+      maxHeight: this.layoutManager.logicalHeight
+    };
+    const measured = this.keyboard.measure(constraints);
+    
+    // Position relative to active box
+    const bounds = this.activeBox.bounds; // safer than layoutManager.getLogicalBounds
+    if (!bounds) {
+      console.warn("Active box has no bounds yet");
+      return;
+    }
+    
+    let keyboardX = (this.layoutManager.logicalWidth - measured.width) / 2;
+    let keyboardY = bounds.y + bounds.height + 20;
+    
+    if (keyboardY + measured.height > this.layoutManager.logicalHeight) {
+      keyboardY = bounds.y - measured.height - 20;
+    }
+    
+    this.keyboard.layout(keyboardX, keyboardY, measured.width, measured.height);
+    
     this.pipeline.invalidate();
   }
   hideKeyboard() {
@@ -37,29 +58,32 @@ this.activeBox = null;
     }
   }
   positionKeyboard() {
-    if(!this.keyboard) return;
+    if (!this.keyboard) return;
     const bounds = this.layoutManager.getLogicalBounds(this.activeBox.id);
-    if(!bounds) return;
+    if (!bounds) return;
+  
     const spacing = 0.02; // logical units
-    const keyboardHeight = 0.3; // logical units
-    const keyboardWidth = 0.6; // logical units
-    let keyboardX = bounds.x;
+    const constraints = {
+      maxWidth: this.layoutManager.logicalWidth,
+      maxHeight: this.layoutManager.logicalHeight
+    };
+  
+    // 🔹 Let the keyboard measure itself
+    const measured = this.keyboard.measure(constraints);
+  
+    // Place below the active box
+    let keyboardX = (this.layoutManager.logicalWidth - measured.width) / 2;
     let keyboardY = bounds.y + bounds.height + spacing;
-    // Check if keyboard goes beyond right edge
-    if(keyboardX + keyboardWidth > 1) {
-      keyboardX = 1 - keyboardWidth - spacing;
+  
+    // Clamp to bottom edge
+    if (keyboardY + measured.height > this.layoutManager.logicalHeight) {
+      keyboardY = bounds.y - measured.height - spacing;
     }
-    // Check if keyboard goes beyond bottom edge
-    if(keyboardY + keyboardHeight > 1) {
-      keyboardY = bounds.y - keyboardHeight - spacing;
-    }
-    this.layoutManager.place({
-      id: this.keyboard.id,
-      x: keyboardX,
-      y: keyboardY,
-      width: keyboardWidth,
-      height: keyboardHeight
-    });
+  
+    // 🔹 Call the keyboard’s own layout
+    this.keyboard.layout(keyboardX, keyboardY, measured.width, measured.height);
+
+    console.log('Keyboard positioned at:', keyboardX, keyboardY);
   }
 
 }

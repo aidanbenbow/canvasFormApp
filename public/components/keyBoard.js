@@ -37,6 +37,8 @@ export class PopupKeyboard extends UIElement {
   }
 
   handleKeyPress(key) {
+    console.log("Key pressed:", key);
+
    dispatcher.dispatch(ACTIONS.KEYBOARD.PRESS, { key });
   }
 

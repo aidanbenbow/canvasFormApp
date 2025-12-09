@@ -1,18 +1,31 @@
 
+import { ACTIONS } from "../events/actions.js";
+
 
 export class KeyBoardInputController {
-    constructor(editor){
+    constructor(editor, dispatcher){
         this.editor = editor;
+       this.dispatcher = dispatcher;
         this.boundHandler = (event) => this.handleKeyDown(event);
     }
 
     enable() {
         window.addEventListener('keydown', this.boundHandler);
-    }
-
-    disable() {
+        dispatcher.on(ACTIONS.KEYBOARD.PRESS, ({ key }) => this.handleVirtualKey(key));
+      }
+      
+      disable() {
         window.removeEventListener('keydown', this.boundHandler);
-    }
+        dispatcher.off(ACTIONS.KEYBOARD.PRESS); // remove subscription if your dispatcher supports it
+      }
+      
+      handleVirtualKey(key) {
+        if (!this.editor.activeBox) return;
+        if (key === 'Backspace' || key === '←') this.editor.backspace();
+        else if (key === 'Space') this.editor.insertText(' ');
+        else if (key === '↵') this.editor.insertText('\n');
+        else this.editor.insertText(key);
+      }
     handleKeyDown(event) {
         if (!this.editor.activeBox) return;
 
