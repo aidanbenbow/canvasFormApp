@@ -10,7 +10,7 @@ export class UIElement {
       this.children = [];
       this.parent = null;
       this.visible = true;
-      this.interactive = true;
+      this.interactive = false;
 
       // 🔹 Interaction state flags
       this.isHovered = false;
@@ -57,6 +57,7 @@ export class UIElement {
   
     contains(x, y) {
       const b = this.getScaledBounds();
+    // const b = this.bounds;
       if (!b) return false;
 
 let scrollOffsetY = 0;
@@ -78,10 +79,11 @@ while (ancestor) {
       if (!this.visible) return false;
  
       for (const child of this.children) {
+     
         const hit = child.contains(event.x, event.y);
      
         // If child is a container, recurse regardless
-        if (child.children.length > 0 || hit) {
+        if (child.children.length > 0||child.interactive) {
           if (child.dispatchEvent(event)) return true;
         }
       
@@ -105,6 +107,7 @@ while (ancestor) {
         if (hit && event.type === 'mouseup') this.onMouseUp();
   
         if (hit && event.type === 'click') {
+          console.log(`UIElement ${this.id} received click event.`);
           this.onClick();
           return true;
         }
@@ -126,6 +129,7 @@ while (ancestor) {
     onMouseLeave() { this.isHovered = false; this.isActive = false;
       this.context.pipeline.invalidate();}
     onMouseDown() { this.isActive = true; 
+      
     if(this.draggable&&this.layoutRenderer&&this.layoutManager){
         const bounds = this.getScaledBounds();
         const canvas = this.layoutRenderer.canvas;
@@ -147,13 +151,13 @@ while (ancestor) {
       this.context.dragController.updateDrag(x, y);
     }
     onClick() {
-     
-      if (this.focusable) {
-        UIElement.setFocus(this);
-      }
+   return false
+      // if (this.focusable) {
+      //   UIElement.setFocus(this);
+      // }
     
-      this.isActive = true;
-      this.context.pipeline.invalidate();
+      // this.isActive = true;
+      // this.context.pipeline.invalidate();
     }
     onFocus() { this.isFocused = true; 
     this.context.pipeline.invalidate();}

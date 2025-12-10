@@ -48,6 +48,7 @@ export class UIEditableText extends UIElement {
       // 1. Background first
       ctx.save();
       ctx.fillStyle = this.bgColor;
+      if(this.isHovered) ctx.fillStyle = '#e0e0e0';
       ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
       ctx.restore();
 

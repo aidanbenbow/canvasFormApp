@@ -73,7 +73,29 @@ export class UIStage {
         let x = (e.clientX - rect.left) * scaleX;
         let y = (e.clientY - rect.top) * scaleY;
 
+        // Convert DOM pixels into logical coordinates
+  // const logicalX = (e.clientX - rect.left) / rect.width * this.layoutManager.logicalWidth;
+  // const logicalY = (e.clientY - rect.top) / rect.height * this.layoutManager.logicalHeight;
+  // const x = logicalX;
+  // const y = logicalY;
+
     const event = { type, x, y}
+
+ // 🔹 Draw a marker when clicking
+ if (type === 'click') {
+
+  const ctx = this.layoutRenderer.ctx;
+  ctx.save();
+  ctx.fillStyle = 'red';
+  ctx.beginPath();
+  ctx.arc(x, y, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  console.log("Click marker at:", x,y);
+  console.log(this.roots)
+}
+
+
     if (this.overlayRoot && this.overlayRoot.messageText?.contains(x, y)) {
       if (this.overlayRoot.dispatchEvent(event)) return;
     }

@@ -1,11 +1,12 @@
 
+import { dispatcher } from "../app.js";
 import { ACTIONS } from "../events/actions.js";
 
 
 export class KeyBoardInputController {
-    constructor(editor, dispatcher){
+    constructor(editor){
         this.editor = editor;
-       this.dispatcher = dispatcher;
+       
         this.boundHandler = (event) => this.handleKeyDown(event);
     }
 

@@ -26,6 +26,7 @@ this.activeBox = null;
     if(this.uiStage.activeRoot) {
       this.uiStage.activeRoot.addChild(this.keyboard);
     }
+    
     const constraints = {
       maxWidth: this.layoutManager.logicalWidth,
       maxHeight: this.layoutManager.logicalHeight
@@ -61,7 +62,7 @@ this.activeBox = null;
     if (!this.keyboard) return;
     const bounds = this.layoutManager.getLogicalBounds(this.activeBox.id);
     if (!bounds) return;
-  
+    console.log('Keyboard positioned at:', keyboardX, keyboardY);
     const spacing = 0.02; // logical units
     const constraints = {
       maxWidth: this.layoutManager.logicalWidth,
@@ -83,7 +84,7 @@ this.activeBox = null;
     // 🔹 Call the keyboard’s own layout
     this.keyboard.layout(keyboardX, keyboardY, measured.width, measured.height);
 
-    console.log('Keyboard positioned at:', keyboardX, keyboardY);
+  
   }
 
 }

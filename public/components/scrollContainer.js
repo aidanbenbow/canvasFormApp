@@ -7,6 +7,7 @@ export class UIScrollContainer extends UIElement {
       this.scrollController = new ScrollController({ contentHeight: 0, viewportHeight: 0 });
       this.childSpacing = childSpacing || 10;
       this.defaultChildHeight = defaultChildHeight || 50;
+      this.interactive = false
     }
   
     addChild(child) {

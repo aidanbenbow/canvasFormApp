@@ -34,6 +34,7 @@ export class PopupKeyboard extends UIElement {
         this.addChild(button);
       });
     });
+    
   }
 
   handleKeyPress(key) {
@@ -47,13 +48,13 @@ export class PopupKeyboard extends UIElement {
     super.render();
     
   }
-  dispatchEvent(event) {
-    // Always check children, even if parent isn't hit
-    for (const child of this.children) {
-      if (child.dispatchEvent(event)) return true;
-    }
-    return false;
-  }
+  // dispatchEvent(event) {
+  //   // Always check children, even if parent isn't hit
+  //   for (const child of this.children) {
+  //     if (child.dispatchEvent(event)) return true;
+  //   }
+  //   return false;
+  // }
 
   measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
     const logicalWidth = this.layoutManager.logicalWidth;
@@ -97,7 +98,7 @@ export class PopupKeyboard extends UIElement {
     );
   
     const startY = y; // anchor at provided y
-    const startX = this.bounds.x + 50;
+    const startX = this.bounds.x;
 
     this.keyLayout.forEach((row, rowIndex) => {
       const rowY = startY + rowIndex * (keyHeight + spacing);
@@ -106,9 +107,14 @@ export class PopupKeyboard extends UIElement {
         if (child) {
           const childSize = child.measure({ maxWidth: keyWidth, maxHeight: keyHeight });
 child.layout(startX + i * (keyWidth + spacing), rowY, childSize.width, childSize.height);
+// console.log(child.id, "laid out at", startX + i * (keyWidth + spacing), rowY,
+// "size:", childSize.width, childSize.height);
         }
+       
       });
+    
     });
+  
   }
   
 }
