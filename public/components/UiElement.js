@@ -23,10 +23,7 @@ export class UIElement {
     }
   
     addChild(child) {
-        // child.layoutManager = this.layoutManager;
-        // child.layoutRenderer = this.layoutRenderer;
       child.parent = this;
-      //child.context = this.context;
       this.children.push(child);
     
     }
@@ -54,10 +51,31 @@ export class UIElement {
         ch
       );
     }
+
+    getGlobalPosition() {
+      let x = this.bounds.x || 0;
+      let y = this.bounds.y || 0;
+      let ancestor = this.parent;
+      while (ancestor) {
+        x += ancestor.bounds.x || 0;
+        y += ancestor.bounds.y || 0;
+        if(ancestor.scrollController){
+            x -= ancestor.scrollController.offsetX;
+            y -= ancestor.scrollController.offsetY;
+        }
+        ancestor = ancestor.parent;
+      }
+      return { x, y, width: this.bounds.width, height: this.bounds.height };
+    }
+
+    hitTestPoint(x, y) {
+      const b = this.getGlobalPosition();
+      return x >= b.x && x <= b.x + b.width &&
+              y >= b.y && y <= b.y + b.height;
+    }
   
     contains(x, y) {
       const b = this.getScaledBounds();
-    // const b = this.bounds;
       if (!b) return false;
 
 let scrollOffsetY = 0;

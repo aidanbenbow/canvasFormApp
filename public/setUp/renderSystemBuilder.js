@@ -1,7 +1,7 @@
 import { UIStage } from "../components/uiStage.js";
 import { DragController } from "../controllers/dragController.js";
 import { TextEditorController } from "../controllers/textEditor.js";
-import { HitManager } from "../managers/hit.js";
+
 
 import { RenderManager } from "../managers/render.js";
 import { ActionRegistry } from "../registries/actionRegistry.js";
@@ -25,7 +25,7 @@ export class RenderSystemBuilder {
         this.actionRegistry = new ActionRegistry();
         this.assetRegistry = new AssetRegistry();
         this.hitRegistry = new HitRegistry();
-        this.hitManager = new HitManager(this.hitRegistry, hitCtx, this.eventBus, this.actionRegistry);
+       
         
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
@@ -39,7 +39,7 @@ export class RenderSystemBuilder {
         const context = new RendererContext({
             ctx: this.canvasManager.getContext(layer),
             hitCtx: this.canvasManager.getHitContext(layer),
-            hitRegistry: this.hitRegistry,
+            hitRegistry: null,
             hitManager: this.hitManager,
             pipeline: this.pipeline,
             textEditorController: this.textEditorController|| null,

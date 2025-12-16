@@ -1,41 +1,20 @@
-import { utilsRegister } from "../utils/register.js";
 
-export class HitManager {
-    constructor( hitRegistry, hitCtx, eventBus, actionRegistry) {
-      this.getHitHex = null
-      this.hitRegistry = hitRegistry;
-        this.hitCtx = hitCtx;
-        this.eventBus = eventBus;
-        this.actionRegistry = actionRegistry;
+export class HitTestManager {
+    constructor(root) {
+      this.root = root;
     }
-    setHitHexFunction(func){
-      this.getHitHex = func;
+   hitTest(x,y){
+return this._hitNode(this.root,x,y);
+   }
+   _hitNode(node,x,y){
+    if(!node.visible) return null;
+    for(const child of [...node.children].reverse()){
+      const hit = this._hitNode(child,x,y);
+      if(hit) return hit;
     }
-  
-    getHoverInfo(pos) {
-      const hex = this.getHitHex(this.hitCtx, pos);
-      return this.hitRegistry.get(hex);
+    if(node.interactive && node.hitTestPoint(x,y)){
+      return node;
     }
-    getHitTarget(pos) {
-      if (!this.getHitHex) return null;
-      const hex = this.getHitHex(this.hitCtx, pos);
-      return this.hitRegistry.get(hex);
-    }
-    
-    
-    handleClick(canvas,pos) {
-      
-      const hex = this.getHitHex(canvas,this.hitCtx, pos);
-      const hitObject = this.hitRegistry.get(hex);
-     
-    
-      if (hitObject) {
-        this.eventBus.emit('hitClick', {hex,hitObject});
-   
-    }}
-    handleMouseMove(canvas,pos) {
-      const hex = this.getHitHex(canvas,this.hitCtx,pos);
-      const hitObject = this.hitRegistry.get(hex);
-       
-    }
+       return null;
+   }
   }

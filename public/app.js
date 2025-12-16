@@ -10,6 +10,7 @@ import { ACTIONS } from "./events/actions.js";
 import { FormStore } from "./events/formStore.js";
 import { UIOverlayManager } from "./managers/UiOverlayManager.js";
 import { CanvasManager } from "./managers/canvas.js";
+import { HitTestManager } from "./managers/hit.js";
 
 import { LayoutManager } from "./managers/layOut.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";

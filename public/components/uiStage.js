@@ -1,3 +1,4 @@
+import { HitTestManager } from "../managers/hit.js";
 import { UIElement } from "./UiElement.js";
 
 export class UIStage {
@@ -14,6 +15,8 @@ export class UIStage {
   
       // Event listeners
       this._bindEvents();
+
+      this.hitTest = null
     }
   
     // -------------------------------
@@ -28,7 +31,7 @@ export class UIStage {
       const root = this.roots.get(rootId);
       if (!root) throw new Error(`UIStage: no root with id ${rootId}`);
       this.activeRoot = root;
-  
+  this.hitTest = new HitTestManager(this.activeRoot);
     }
 
     removeRoot(rootId) {
@@ -73,11 +76,10 @@ export class UIStage {
         let x = (e.clientX - rect.left) * scaleX;
         let y = (e.clientY - rect.top) * scaleY;
 
-        // Convert DOM pixels into logical coordinates
-  // const logicalX = (e.clientX - rect.left) / rect.width * this.layoutManager.logicalWidth;
-  // const logicalY = (e.clientY - rect.top) / rect.height * this.layoutManager.logicalHeight;
-  // const x = logicalX;
-  // const y = logicalY;
+        const hit = this.hitTest.hitTest(x, y);
+        if (hit) {
+          console.log(`Hit UIElement: ${hit.id}`);
+        }
 
     const event = { type, x, y}
 
@@ -96,17 +98,17 @@ export class UIStage {
 }
 
 
-    if (this.overlayRoot && this.overlayRoot.messageText?.contains(x, y)) {
-      if (this.overlayRoot.dispatchEvent(event)) return;
-    }
+//     if (this.overlayRoot && this.overlayRoot.messageText?.contains(x, y)) {
+//       if (this.overlayRoot.dispatchEvent(event)) return;
+//     }
   
-if(event.type === 'mousemove'){
- if(UIElement.focusedElement?.onMouseMove){
-    UIElement.focusedElement.onMouseMove(x, y);
-  }
-}
+// if(event.type === 'mousemove'){
+//  if(UIElement.focusedElement?.onMouseMove){
+//     UIElement.focusedElement.onMouseMove(x, y);
+//   }
+// }
 
-        this.activeRoot.dispatchEvent(event);
+//         this.activeRoot.dispatchEvent(event);
       }
       
       _handleWheelEvent(e) {
