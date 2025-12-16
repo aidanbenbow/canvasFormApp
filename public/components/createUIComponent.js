@@ -96,5 +96,5 @@ export function createUIComponent(def, context) {
   const { type, id } = def;
   const ComponentClass = componentRegistry[type];
   if (!ComponentClass) throw new Error(`Unknown component type: ${type}`);
-  return new ComponentClass({ id, ...def, context, layoutManager: context.uiStage.layoutManager, layoutRenderer: context.uiStage.layoutRenderer });
+  return new ComponentClass({ id, ...def, context });
 }

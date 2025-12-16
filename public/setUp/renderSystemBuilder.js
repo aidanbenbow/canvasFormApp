@@ -47,7 +47,7 @@ export class RenderSystemBuilder {
             focusManager: this.focusManager|| null,
             
             assetRegistry: this.assetRegistry || null,
-            canvas: this.canvasManager ,
+            canvas: this.canvasManager.layers[layer].canvas || null,
             uiStage: this.uiStage || null,
             dragController: this.dragController || null,
           });

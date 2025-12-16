@@ -4,6 +4,152 @@ import { UIButton } from "./button.js";
 import { createUIComponent } from "./createUIComponent.js";
 
 
+export class UIElementFactory {
+  constructor({ context,  }) {
+    this.context = context;
+    // this.layoutManager = layoutManager;
+    // this.layoutRenderer = layoutRenderer;
+  }
+
+  // -------------------------------
+  // Containers
+  // -------------------------------
+  createContainers(manifest) {
+    return manifest.map(({ idSuffix, type, assignTo }) => {
+      const component = createUIComponent(
+        { id: `ui-${idSuffix}`, type },
+        this.context
+      );
+      return { component, assignTo };
+    });
+  }
+
+  
+  // -------------------------------
+  // Buttons
+  // -------------------------------
+  createButtons(manifest, screenRef) {
+    return manifest.map(def => {
+      const id = `ui-${def.idSuffix}`;
+      const btn = createUIComponent({ ...def, id }, this.context);
+      if (def.action) btn.onClick = () => def.action(screenRef);
+      return btn;
+    });
+  }
+
+  // -------------------------------
+  // Forms
+  // -------------------------------
+  createForm(manifest, { onSubmit, onDelete } = {}) {
+    if (!manifest?.formStructure?.fields?.length) {
+      console.warn("Invalid manifest passed to createForm:", manifest);
+      return { inputBoxes: new Map(), containers: [] };
+    }
+
+    const inputBoxes = new Map();
+    const containers = [];
+
+    manifest.formStructure.fields.forEach(field => {
+      const component = createUIComponent(field, this.context, { place: false });
+
+      if (field.type === "input") inputBoxes.set(field.label, component);
+
+      if (field.type === "button") {
+        component.onClick = () => {
+          const responses = {};
+          inputBoxes.forEach((input, label) => (responses[label] = input.getValue()));
+          onSubmit?.({ formId: manifest.id, user: manifest.user || "anonymous", responses });
+        };
+      }
+
+      const fieldContainer = new UIFieldContainer({
+        id: `field-container-${field.id}`,
+        context: this.context,
+        layoutManager: this.layoutManager,
+        layoutRenderer: this.layoutRenderer,
+        bgColor: "rgba(0,0,0,0.2)"
+      });
+
+      fieldContainer.addChild(component);
+
+      // Optional: delete button
+      if (onDelete) {
+        const deleteBtn = createUIComponent({
+          id: `delete-btn-${field.id}`,
+          type: "button",
+          label: "Delete",
+          color: "#dc3545",
+          onClick: () => {
+            onDelete(field.id);
+            fieldContainer.removeChild(component);
+            fieldContainer.removeChild(deleteBtn);
+          }
+        }, this.context);
+        fieldContainer.addChild(deleteBtn);
+      }
+
+      containers.push(fieldContainer);
+    });
+
+    return { inputBoxes, containers };
+  }
+
+  // -------------------------------
+  // Forms labels (summary buttons)
+  // -------------------------------
+  createFormLabels(forms, { onSelect } = {}) {
+    return forms.map(form => {
+      const button = createUIComponent(
+        {
+          id: `form-${form.id}`,
+          type: "button",
+          label:form.label || `Form ${form.id}`,
+          color: "#28a745",
+          onClick: () => onSelect?.(form)
+        },
+        this.context,
+        { place: false }
+      );
+      return button;
+    });
+  }
+
+  // -------------------------------
+  // Results table
+  // -------------------------------
+  createResultsTable(results) {
+    const elements = [];
+
+    if (!results.length) {
+      elements.push(createUIComponent({
+        id: "no-results",
+        type: "text",
+        label: "No results available."
+      }, this.context, { place: false }));
+      return elements;
+    }
+
+    elements.push(createUIComponent({
+      id: "results-title",
+      type: "text",
+      label: "Form Results"
+    }, this.context, { place: false }));
+
+    results.forEach((result, index) => {
+      const inputs = Object.entries(result.inputs)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ");
+      elements.push(createUIComponent({
+        id: `result-${index}`,
+        type: "text",
+        label: `Result ${index + 1}: ${inputs}`
+      }, this.context, { place: false }));
+    });
+
+    return elements;
+  }
+}
+
 export class ManifestUI extends UIElement{
     buildContainersFromManifest(manifest) {
         manifest.forEach(({ idSuffix, type, layout, assignTo }) => {

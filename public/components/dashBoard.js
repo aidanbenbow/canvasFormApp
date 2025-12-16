@@ -1,25 +1,11 @@
 
-import { ManifestUI } from './manifestUI.js';
+import { ManifestUI, UIElementFactory } from './manifestUI.js';
 import { BaseScreen } from './baseScreen.js';
 import { ACTIONS } from '../events/actions.js';
+import { createUIComponent } from './createUIComponent.js';
 
 export const dashboardUIManifest = {
-  containers: [
-    {
-      idSuffix: 'container',
-      type: 'container',
-      layout: { x: 10, y: 20, width: 200, height: 300 },
-     
-      assignTo: 'uiContainer'
-    },
-    {
-      idSuffix: 'formsContainer',
-      type: 'fieldContainer',
-      layout: { x: 300, y: 20, width: 280, height: 500 },
-     
-      assignTo: 'formsContainer'
-    }
-  ],
+ 
   buttons: [
     {
       idSuffix: 'viewBtn',
@@ -61,16 +47,22 @@ export class DashBoardScreen extends BaseScreen {
     super({ id:'dashboard', context, dispatcher, eventBusManager });
     this.store = store;
     this.context = context;
-    this.manifestUI = new ManifestUI({ id: 'dashboardUI', context, layoutManager: this.context.uiStage.layoutManager, layoutRenderer: this.context.uiStage.layoutRenderer });
-    this.manifestUI.dashBoardScreen = this;
-    this.buildUI();
-this.rootElement.addChild(this.manifestUI);
-
-    this.listenEvent('forms:updated', (forms) => {
-      this.forms = forms;
-      this.buildLayout();
-      this.context.pipeline.invalidate();
-    } );
+    this.factory = new UIElementFactory({ context });
+    this.uiContainer = createUIComponent({
+      id: 'dashboardUIContainer',
+      type: 'container',
+    }, this.context,);
+    this.formContainer = createUIComponent({
+      id: 'dashboardFormContainer',
+      type: 'fieldContainer',
+      
+    },this.context,);
+    this.rootElement.addChild(this.uiContainer);
+    this.rootElement.addChild(this.formContainer);
+    const btns = this.factory.createButtons(dashboardUIManifest.buttons, this);
+    for(const btn of btns){
+      this.uiContainer.addChild(btn);
+    }
   }
 
   buildUI() {
@@ -80,15 +72,18 @@ this.rootElement.addChild(this.manifestUI);
 
   onEnter() {
     this.buildLayout();
- this.manifestUI.layout(0, 0, this.context.uiStage.width, this.context.uiStage.height);
+ const canvas = this.context.uiStage.layoutRenderer.canvas;
+ this.rootElement.measure(canvas.width, canvas.height);
+ this.rootElement.layout(0,0,canvas.width, canvas.height);
 
   }
 
   buildLayout() {
   
-    this.manifestUI.displayFormsLabels(this.store.getForms(), this.manifestUI.formsContainer, {
-      onSelect: (form) => this._onSelect(form)
-    });
+    const formsBtns = this.factory.createFormLabels(this.store.getForms(), (form) => this._onSelect(form));
+    for (const btn of formsBtns) {
+      this.formContainer.addChild(btn);
+    }
   }
 
   _onSelect(form) {

@@ -2,11 +2,12 @@
 
 export class UIElement {
     static focusedElement = null;
-    constructor({ id, context=null, layoutManager, layoutRenderer, }) {
+    constructor({ id, context=null,}) {
       this.id = id;
-      this.layoutManager = layoutManager;
-      this.layoutRenderer = layoutRenderer;
+      
   this.context = context;
+      this.layoutManager = context?.uiStage?.layoutManager||null;
+      this.layoutRenderer = context?.uiStage?.layoutRenderer||null;
       this.children = [];
       this.parent = null;
       this.visible = true;

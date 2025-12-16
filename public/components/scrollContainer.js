@@ -2,8 +2,8 @@ import { ScrollController } from "../controllers/scrollControllrt.js";
 import { UIElement } from "./UiElement.js";
 
 export class UIScrollContainer extends UIElement {
-    constructor({ id,context, layoutManager, layoutRenderer, childSpacing = 10, defaultChildHeight = 50 }) {
-      super({ id,context, layoutManager, layoutRenderer });
+    constructor({ id,context, childSpacing = 10, defaultChildHeight = 50 }) {
+      super({ id,context});
       this.scrollController = new ScrollController({ contentHeight: 0, viewportHeight: 0 });
       this.childSpacing = childSpacing || 10;
       this.defaultChildHeight = defaultChildHeight || 50;
@@ -81,10 +81,10 @@ this.scrollController.setContentHeight(contentHeight);
     
       if (!this.visible) return;
   
-      const ctx = this.layoutRenderer.ctx;
-      const canvas = this.layoutRenderer?.canvas;
+      const ctx = this.context.ctx
+      const canvas = this.context.canvas;
       const scaled = this.getScaledBounds(canvas?.width, canvas?.height);
-
+console.log('render scroll container', this.id, scaled);
       // Set clipping region for scroll container
       ctx.save();
 ctx.fillStyle = this.bgColor || '#ffffff';
