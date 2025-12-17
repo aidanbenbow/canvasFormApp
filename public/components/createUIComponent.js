@@ -92,7 +92,7 @@ const componentRegistry = {
 };
 
 export function createUIComponent(def, context) {
-  console.log('Creating UI component with definition:', def);
+
   const { type, id } = def;
   const ComponentClass = componentRegistry[type];
   if (!ComponentClass) throw new Error(`Unknown component type: ${type}`);

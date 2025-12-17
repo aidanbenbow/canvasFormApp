@@ -7,6 +7,7 @@ export class BaseScreen {
         this.dispatcher = dispatcher;
         this.eventBusManager = eventBusManager;
         this.namespace = namespace || `BaseScreen_${id || Math.random().toString(36).substr(2, 9)}`;
+        this.layoutStrategy = null; // To be defined by subclasses
 
         this.rootElement = new UIElement({
             id: `${this.id}`,
@@ -15,6 +16,10 @@ export class BaseScreen {
             layoutRenderer: this.context?.uiStage.layoutRenderer,
         });
     }
+setLayoutStrategy(strategy) {
+        this.layoutStrategy = strategy;
+    }
+
     listenAction(actionType, handler) {
         this.dispatcher.on(actionType, handler.bind(this), this.namespace);
     }
@@ -32,6 +37,7 @@ export class BaseScreen {
     attachToStage(stage) {
         stage.addRoot(this.rootElement);
         stage.setActiveRoot(this.rootElement.id);
+
         if(typeof this.onEnter === 'function'){
             this.onEnter();
         }
@@ -43,8 +49,13 @@ export class BaseScreen {
         }
     }
     layout(width, height) {
-        
+        this.rootElement.measure({ maxWidth: width, maxHeight: height });
        this.rootElement.layout(0, 0, width, height);
-       this.rootElement.measureAndLayout({ maxWidth: width, maxHeight: height });
+    
+        // 🔹 propagate strategy if defined
+    if (this.layoutStrategy) {
+        this.layoutStrategy.apply(this.rootElement);
+      }
+  
     }
 }

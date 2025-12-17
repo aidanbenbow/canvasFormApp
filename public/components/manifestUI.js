@@ -98,6 +98,7 @@ export class UIElementFactory {
   // Forms labels (summary buttons)
   // -------------------------------
   createFormLabels(forms, { onSelect } = {}) {
+   
     return forms.map(form => {
       const button = createUIComponent(
         {
@@ -107,8 +108,8 @@ export class UIElementFactory {
           color: "#28a745",
           onClick: () => onSelect?.(form)
         },
-        this.context,
-        { place: false }
+        this.context
+        
       );
       return button;
     });

@@ -76,7 +76,7 @@ context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
 }
 
   const dash = new DashBoardScreen({ context, dispatcher: system.actionDispatcher, eventBusManager: system.eventBusManager, store });
-  dash.layout(window.innerWidth, window.innerHeight);
+ 
   dash.attachToStage(context.uiStage);
   context.pipeline.invalidate();
 }

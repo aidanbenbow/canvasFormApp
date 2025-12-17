@@ -44,6 +44,7 @@ measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
     child._measured = childSize;
     maxChildWidth = Math.max(maxChildWidth, childSize.width);
     totalHeight += childSize.height + this.spacing; // child height + spacing
+    
   }
   totalHeight += this.padding; // bottom padding
 
@@ -51,6 +52,7 @@ measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
   const height = Math.min(constraints.maxHeight, totalHeight);
 
   this._measured = { width, height };
+  
   return this._measured;
 
 }

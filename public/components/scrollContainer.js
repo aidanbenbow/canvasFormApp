@@ -24,6 +24,7 @@ for(const child of this.children) {
     maxWidth: innerMaxWidth,
     maxHeight: constraints.maxHeight
   });
+  
   child._measured = childSize;
   maxChildWidth = Math.max(maxChildWidth, childSize.width||innerMaxWidth);
   totalHeight += (childSize.height||this.defaultChildHeight) + this.childSpacing; // child height + spacing
@@ -84,7 +85,7 @@ this.scrollController.setContentHeight(contentHeight);
       const ctx = this.context.ctx
       const canvas = this.context.canvas;
       const scaled = this.getScaledBounds(canvas?.width, canvas?.height);
-console.log('render scroll container', this.id, scaled);
+
       // Set clipping region for scroll container
       ctx.save();
 ctx.fillStyle = this.bgColor || '#ffffff';

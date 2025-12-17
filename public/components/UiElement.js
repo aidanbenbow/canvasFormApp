@@ -171,12 +171,7 @@ while (ancestor) {
     }
     onClick() {
    return false
-      // if (this.focusable) {
-      //   UIElement.setFocus(this);
-      // }
-    
-      // this.isActive = true;
-      // this.context.pipeline.invalidate();
+      
     }
     onFocus() { this.isFocused = true; 
     this.context.pipeline.invalidate();}
@@ -227,25 +222,41 @@ while (ancestor) {
         this.children = this.children.filter(c => c !== child);
         child.parent = null;
       }
-measure(constraints={maxWidth: Infinity, maxHeight: Infinity}) {
-  const width = Math.min(constraints.maxWidth, this.bounds.width || constraints.maxWidth);
-  const height = Math.min(constraints.maxHeight, this.bounds.height || 30);
-  this._measured = { width, height };
-        return this._measured;
-      }
+// In UIElement
+measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+  let totalWidth = 0;
+  let totalHeight = 0;
 
-      layout(x,y,width,height) {
-        this.bounds = { x, y, width, height  };
-      }
+  for (const child of this.children) {
+  
+    const childSize = child.measure(constraints);
+    totalWidth = Math.max(totalWidth, childSize.width);
+    totalHeight += childSize.height;
+    if (!Number.isFinite(childSize.width) || !Number.isFinite(childSize.height)) {
+      console.warn(`Child ${child.id} returned invalid size`, childSize);
+    }
+  }
 
-      measureAndLayout(constraints={maxWidth: Infinity, maxHeight: Infinity}) {
-        const measured = this.measure(constraints);
-        const width = measured.width;
-        const height = measured.height;
-        const x = this.bounds.x || 0;
-        const y = this.bounds.y || 0;
-        this.layout(x, y, width, height);
-        return this.bounds;
-      }
+  // fallback if no children
+  if (this.children.length === 0) {
+    totalWidth = Math.min(constraints.maxWidth, this.bounds.width || constraints.maxWidth);
+    totalHeight = Math.min(constraints.maxHeight, this.bounds.height || 30);
+  }
+
+  this._measured = { width: totalWidth, height: totalHeight };
+
+  return this._measured;
+}
+
+layout(x, y, width, height) {
+  this.bounds = { x, y, width, height };
+
+  let currentY = y;
+  for (const child of this.children) {
+    const childSize = child._measured || child.measure({ maxWidth: width, maxHeight: height });
+    child.layout(x, currentY, childSize.width, childSize.height);
+    currentY += childSize.height;
+  }
+}
       
   }

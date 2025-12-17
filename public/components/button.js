@@ -1,8 +1,8 @@
 import { UIElement } from "./UiElement.js";
 
 export class UIButton extends UIElement {
-  constructor({ id, label, color = '#007bff', onClick, context, layoutManager, layoutRenderer }) {   
-    super({ id, context, layoutManager, layoutRenderer });
+  constructor({ id, label, color = '#007bff', onClick, context}) {   
+    super({ id, context });
     this.label = label;
     this.onClickHandler = onClick;
     this.type = 'button';
@@ -54,7 +54,7 @@ const scaled = this.getScaledBounds(canvas?.width, canvas?.height);
   
   }
 measure(constraints={maxWidth: Infinity, maxHeight: Infinity}) {
-  const ctx = this.layoutRenderer.ctx
+  const ctx = this.context.ctx
   let textHeight = 16
   let textWidth = 0
   if(ctx){
@@ -64,13 +64,16 @@ measure(constraints={maxWidth: Infinity, maxHeight: Infinity}) {
   } else{
     textWidth = this.label.length * 10; // Approximate width
   }
+
   const padding = 10
   const measuredWidth = Math.min(textWidth + padding*2, constraints.maxWidth)
   const measuredHeight = Math.min(textHeight + padding*2, constraints.maxHeight)
+  
   this._measured = {
     width: measuredWidth,
     height: measuredHeight
   }
+  
   return this._measured;
 }
 
