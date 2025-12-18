@@ -97,8 +97,8 @@ export class UIElementFactory {
   // -------------------------------
   // Forms labels (summary buttons)
   // -------------------------------
-  createFormLabels(forms, { onSelect } = {}) {
-   
+  createFormLabels(forms, {onSelect} = {}) {
+   console.log(onSelect)
     return forms.map(form => {
       const button = createUIComponent(
         {
@@ -106,7 +106,7 @@ export class UIElementFactory {
           type: "button",
           label:form.label || `Form ${form.id}`,
           color: "#28a745",
-          onClick: () => onSelect?.(form)
+          onClick: onSelect?() => onSelect(form):undefined
         },
         this.context
         

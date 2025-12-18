@@ -98,17 +98,17 @@ export class UIStage {
 }
 
 
-//     if (this.overlayRoot && this.overlayRoot.messageText?.contains(x, y)) {
-//       if (this.overlayRoot.dispatchEvent(event)) return;
-//     }
+    if (this.overlayRoot && this.overlayRoot.messageText?.contains(x, y)) {
+      if (this.overlayRoot.dispatchEvent(event)) return;
+    }
   
-// if(event.type === 'mousemove'){
-//  if(UIElement.focusedElement?.onMouseMove){
-//     UIElement.focusedElement.onMouseMove(x, y);
-//   }
-// }
+if(event.type === 'mousemove'){
+ if(UIElement.focusedElement?.onMouseMove){
+    UIElement.focusedElement.onMouseMove(x, y);
+  }
+}
 
-//         this.activeRoot.dispatchEvent(event);
+        this.activeRoot.dispatchEvent(event);
       }
       
       _handleWheelEvent(e) {

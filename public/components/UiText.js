@@ -2,8 +2,8 @@ import { UIEditableText } from "./UiEditableText.js";
 
 
 export class UiText extends UIEditableText {
-  constructor({ id, text, fieldRef, editor, context, layoutManager, layoutRenderer, fontSize = 0.04, color = '#000',bgColor='rgba(1,1,1,0.1)', align = 'left', valign = 'middle', placeholder='' }) {
-    super({ id,editor, text,label:text,placeholder, fontSize, color,bgColor, align, valign,context, layoutManager, layoutRenderer,  });
+  constructor({ id, text, fieldRef, editor, context, fontSize = 0.04, color = '#000',bgColor='rgba(1,1,1,0.1)', align = 'left', valign = 'middle', placeholder='' }) {
+    super({ id,editor,context, text,label:text,placeholder, fontSize, color,bgColor, align, valign, });
     this.fieldRef = fieldRef;
     this.type = 'text';
     this.draggable = true;

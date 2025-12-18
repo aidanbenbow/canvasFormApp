@@ -69,11 +69,6 @@ export class DashBoardScreen extends BaseScreen {
     this.setLayoutStrategy(new VerticalLayoutStrategy());
   }
 
-  buildUI() {
-    this.manifestUI.buildContainersFromManifest(dashboardUIManifest.containers);
-    this.manifestUI.buildChildrenFromManifest(dashboardUIManifest.buttons, this.manifestUI.uiContainer);
-  }
-
   onEnter() {
     this.buildLayout();
     const canvas = this.context.canvas
@@ -82,8 +77,8 @@ export class DashBoardScreen extends BaseScreen {
 
   buildLayout() {
   
-    const formsBtns = this.factory.createFormLabels(this.store.getForms(), (form) => this._onSelect(form));
-  
+    const formsBtns = this.factory.createFormLabels(this.store.getForms(), {onSelect: (form) => this._onSelect(form) });
+  console.log(formsBtns);
     for (const btn of formsBtns) {
       this.formContainer.addChild(btn);
     }
@@ -96,7 +91,7 @@ export class DashBoardScreen extends BaseScreen {
   }
 
   _onSelect(form) {
-    
+console.log('Selected form:', form);  
     this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace);
 }
 _onView() {

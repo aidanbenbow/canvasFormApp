@@ -126,7 +126,7 @@ while (ancestor) {
         if (hit && event.type === 'mouseup') this.onMouseUp();
   
         if (hit && event.type === 'click') {
-          console.log(`UIElement ${this.id} received click event.`);
+          
           this.onClick();
           return true;
         }

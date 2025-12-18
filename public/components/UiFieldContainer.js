@@ -4,13 +4,11 @@ export class UIFieldContainer extends UIElement {
   constructor({
     id,
     context,
-    layoutManager,
-    layoutRenderer,
     bgColor = "#f9f9f9",
     padding = 8,
     spacing = 8
   }) {
-    super({ id, context, layoutManager, layoutRenderer });
+    super({ id, context, });
     this.bgColor = bgColor;
     this.padding = padding;
     this.spacing = spacing;

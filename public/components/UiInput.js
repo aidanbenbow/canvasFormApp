@@ -1,8 +1,8 @@
 import { UIEditableText } from "./UiEditableText.js";
 
 export class UIInput extends UIEditableText {
-    constructor({ id, editor, placeholder = '',label= '', context, layoutManager, layoutRenderer }) {
-        super({ id, editor, text: '',label,placeholder, context, layoutManager, layoutRenderer });
+    constructor({ id, editor,context,  placeholder = '',label= '', }) {
+        super({ id, editor,context, text: '',label,placeholder,  });
         this.type = 'input';
         this.draggable = false;
         this.focusable = true;
