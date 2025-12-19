@@ -16,6 +16,7 @@ import { LayoutManager } from "./managers/layOut.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
 import { HitRouter } from "./routes/hitRouter.js";
+import { ScreenRouter } from "./routes/screenRouter.js";
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
 import { wireSystemEvents } from "./setUp/wireSystemEvents.js";
@@ -52,7 +53,9 @@ context.pipeline.setRendererContext(context)
 
 context.pipeline.add(context.uiStage);
 
-wireSystemEvents(system, context, store);
+const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
+
+wireSystemEvents(system, context, store, screenRouter);
 
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
@@ -74,11 +77,12 @@ system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, resul
 
 context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
 }
+system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
 
-  const dash = new DashBoardScreen({ context, dispatcher: system.actionDispatcher, eventBusManager: system.eventBusManager, store });
+  // const dash = new DashBoardScreen({ context, dispatcher: system.actionDispatcher, eventBusManager: system.eventBusManager, store });
  
-  dash.attachToStage(context.uiStage);
-  context.pipeline.invalidate();
+  // dash.attachToStage(context.uiStage);
+  // context.pipeline.invalidate();
 }
 
 

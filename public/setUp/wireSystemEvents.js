@@ -1,16 +1,19 @@
 import { CreateForm } from "../components/createForm.js";
+import { DashBoardScreen } from "../components/dashBoard.js";
 import { EditForm } from "../components/editForm.js";
 import { UIFormResults } from "../components/formResults.js";
 import { ViewForm } from "../components/viewForm.js";
 import { onDelete, saveFormStructure, sendLog } from "../controllers/socketController.js";
 import { ACTIONS } from "../events/actions.js";
 
-export function wireSystemEvents(system, context, store ={}) {
+export function wireSystemEvents(system, context, store ={}, router) {
     const dispatcher = system.actionDispatcher;
     const bus = system.eventBusManager;
 
     dispatcher.on(ACTIONS.DASHBOARD.SHOW, (forms)=> {
         dispatcher.dispatch(ACTIONS.FORM.SET_LIST,forms)
+        const dash = new DashBoardScreen({ context, dispatcher, eventBusManager: bus, store  });
+        router.replace(dash);
     },'wiring');
 
     dispatcher.on(ACTIONS.FORM.VIEW, async (form) => {
@@ -23,8 +26,9 @@ export function wireSystemEvents(system, context, store ={}) {
     onSubmit: (responseData) => {
         dispatcher.dispatch(ACTIONS.FORM.SUBMIT, { form: store.getActiveForm(), responseData });}
     });
-        view.attachToStage(context.uiStage);
-        context.pipeline.invalidate();
+    router.push(view);
+        // view.attachToStage(context.uiStage);
+        // context.pipeline.invalidate();
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
