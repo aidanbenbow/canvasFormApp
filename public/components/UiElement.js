@@ -258,5 +258,16 @@ layout(x, y, width, height) {
     currentY += childSize.height;
   }
 }
+setChildren(children) {
+  this.children = [];
+  for (const child of children) this.addChild(child);
+
+  // ✅ Auto re-measure + re-layout
+  if (this.parent) {
+    const canvas = this.context.canvas;
+    this.measure({ maxWidth: canvas.width, maxHeight: canvas.height });
+    this.layout(this.bounds.x, this.bounds.y, this._measured.width, this._measured.height);
+  }
+}
       
   }

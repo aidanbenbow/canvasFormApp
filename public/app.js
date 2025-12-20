@@ -2,6 +2,7 @@ import { UIOverlay } from "./components/UiOverlay.js";
 
 import { CreateForm } from "./components/createForm.js";
 import { DashBoardScreen} from "./components/dashBoard.js";
+import { UIElementFactory } from "./components/manifestUI.js";
 
 import { canvasConfig, } from "./constants.js";
 
@@ -14,6 +15,7 @@ import { HitTestManager } from "./managers/hit.js";
 
 import { LayoutManager } from "./managers/layOut.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
+import { CommandRegistry } from "./registries/commandRegistry.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
 import { HitRouter } from "./routes/hitRouter.js";
 import { ScreenRouter } from "./routes/screenRouter.js";
@@ -54,8 +56,10 @@ context.pipeline.setRendererContext(context)
 context.pipeline.add(context.uiStage);
 
 const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
+const factory = new UIElementFactory({ context });
+const commandRegistry = new CommandRegistry();
 
-wireSystemEvents(system, context, store, screenRouter);
+wireSystemEvents(system, context, store, screenRouter, factory, commandRegistry);
 
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');

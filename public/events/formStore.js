@@ -133,4 +133,19 @@ _addResults(formId, newResults){
         }
         this._emitForms();
     }
+    subscribe(key, handler, namespace = 'ui') {
+        switch (key) {
+          case 'forms':
+            this.onFormsUpdated(handler, namespace);
+            break;
+          case 'activeForm':
+            this.onActiveFormChanged(handler, namespace);
+            break;
+          case 'results':
+            this.eventBusManager.on(ACTIONS.STORE.FORM_RESULTS, handler, namespace);
+            break;
+          default:
+            console.warn(`Unknown subscription key: ${key}`);
+        }
+      }
   }

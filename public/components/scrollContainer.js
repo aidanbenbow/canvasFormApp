@@ -14,6 +14,7 @@ export class UIScrollContainer extends UIElement {
       super.addChild(child);
     
     }
+   
 measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
 const innerMaxWidth = Math.max(0, constraints.maxWidth);
 let totalHeight = 0;
@@ -58,6 +59,7 @@ for(const child of this.children) {
 const contentHeight= this.children.length > 0 ? currentY - y - this.childSpacing : 0;
 this.scrollController.setViewportHeight(h);
 this.scrollController.setContentHeight(contentHeight);
+
 }
 
     updateContentHeight() {

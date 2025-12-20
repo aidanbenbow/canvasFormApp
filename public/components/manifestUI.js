@@ -1,3 +1,4 @@
+import { CommandRegistry } from "../registries/commandRegistry.js";
 import { UIElement } from "./UiElement.js";
 import { UIFieldContainer } from "./UiFieldContainer.js";
 import { UIButton } from "./button.js";
@@ -112,6 +113,25 @@ export class UIElementFactory {
         
       );
       return button;
+    });
+  }
+
+  createCommandButtons(children, commandMap) {
+    return children.map(def => {
+      const btn = createUIComponent(
+        {
+          id: `cmd-${def.id}`,
+          type: "button",
+          label: def.label
+        },
+        this.context
+      );
+  
+      
+        btn.onClick = () => commandMap.execute(def.command);
+     
+  
+      return btn;
     });
   }
 

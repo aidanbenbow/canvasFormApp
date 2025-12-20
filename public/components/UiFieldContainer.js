@@ -98,4 +98,9 @@ const canvas = this.layoutRenderer?.canvas;
 
 
   }
+  setActiveItem(activeForm) {
+    for (const child of this.children) {
+      child.isActive = child.form?.id === activeForm?.id;
+    }
+  }
 }
