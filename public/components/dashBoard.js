@@ -1,47 +1,10 @@
 
-import { ManifestUI, UIElementFactory } from './manifestUI.js';
 import { BaseScreen } from './baseScreen.js';
 import { ACTIONS } from '../events/actions.js';
 import { createUIComponent } from './createUIComponent.js';
 import { VerticalLayoutStrategy } from '../strategies/vertical.js';
+import { bindList } from '../state/reactiveStore.js';
 
-// export const dashboardUIManifest = {
- 
-//   buttons: [
-//     {
-//       idSuffix: 'viewBtn',
-//       label: 'View',
-//       type: 'button',
-//       action: (dashboard) => dashboard._onView(),
-//     },
-//     {
-//       idSuffix: 'resultsBtn',
-//       label: 'Results',
-//       type: 'button',
-//       action: (dashboard) => dashboard._onResults(),
-//     },
-//     {
-//       idSuffix: 'createBtn',
-//       label: 'Create',
-//       type: 'button',
-//       action: (dashboard) => dashboard._onCreate(),
-//     },
-//     {
-//       idSuffix: 'editBtn',
-//       label: 'Edit',
-//       type: 'button',
-//       action: (dashboard) => dashboard._onEdit(),
-//     },
-//     {
-//       idSuffix: 'deleteBtn',
-//       label: 'Delete',
-//       type: 'button',
-//       action: (dashboard) => {
-//         dashboard._onDelete();
-//       },
-//     }
-//   ]
-// };
 
 const dashboardUIManifest = {
   layout: 'vertical',
@@ -66,11 +29,11 @@ const dashboardUIManifest = {
 };
 
 export class DashBoardScreen extends BaseScreen {
-  constructor({ context, dispatcher, eventBusManager, store, factory, commandRegistry }) {
+  constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry }) {
     super({ id:'dashboard', context, dispatcher, eventBusManager });
     this.store = store;
     this.context = context;
-    this.factory = factory;
+ this.factories = factories;
     this.commandRegistry = commandRegistry;
     this.registerCommands();
     
@@ -81,7 +44,10 @@ export class DashBoardScreen extends BaseScreen {
     this.bindState();
     const canvas = this.context.canvas
  this.layout(canvas.width, canvas.height);
-// this.regions.forms.updateContentHeight()
+  }
+
+  onExit() {
+    this.unsubForms?.();
   }
   build(manifest) {
     this.setLayoutStrategy(new VerticalLayoutStrategy());
@@ -99,32 +65,24 @@ export class DashBoardScreen extends BaseScreen {
 
       if (def.children) {
         container.setChildren(
-          this.factory.createCommandButtons(def.children, this.commandRegistry)
+          this.factories.commandUI.createButtons(def.children, this.commandRegistry)
         );
       }
     });
   }
 
   bindState() {
-    this.store.subscribe('forms', ({ forms }) => {
-      const region = this.regions.forms;
-    
-      region.setChildren(
-        this.factory.createFormLabels(forms, {
-          onSelect: form =>
-            this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace)
-        })
-      );
-    
+    this.unsubForms = bindList({
+      store: this.store,
+      key: 'forms',
+      container: this.regions.forms,
+      factory: this.factory,
+      mapItem: (form) =>
+  this.factories.formsUI.createLabel(form, {
+    onSelect: f =>
+      this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, f, this.namespace)
+  })
     });
-      // ✅ Subscribe once to active form changes
-  this.store.subscribe('activeForm', ({ activeForm }) => {
-    const region = this.regions.forms;
-    if (region.setActiveItem) {
-      region.setActiveItem(activeForm);
-    }
-  });
-
   }
 
   _withActive(fn) {

@@ -2,36 +2,41 @@ import { CreateForm } from "../components/createForm.js";
 import { DashBoardScreen } from "../components/dashBoard.js";
 import { EditForm } from "../components/editForm.js";
 import { UIFormResults } from "../components/formResults.js";
-import { ViewForm } from "../components/viewForm.js";
+import { FormViewScreen } from "../components/viewForm.js";
+
 import { onDelete, saveFormStructure, sendLog } from "../controllers/socketController.js";
 import { ACTIONS } from "../events/actions.js";
 
-export function wireSystemEvents(system, context, store ={}, router, factory, commandRegistry) {
+export function wireSystemEvents(system, context, store ={}, router, factories, commandRegistry) {
     const dispatcher = system.actionDispatcher;
     const bus = system.eventBusManager;
 
     dispatcher.on(ACTIONS.DASHBOARD.SHOW, (forms)=> {
        
-        const dash = new DashBoardScreen({ context, dispatcher, eventBusManager: bus, store, factory, commandRegistry  });
+        const dash = new DashBoardScreen({ context, dispatcher, eventBusManager: bus, store, factories, commandRegistry  });
         router.replace(dash);
         dispatcher.dispatch(ACTIONS.FORM.SET_LIST,forms)
     },'wiring');
 
     dispatcher.on(ACTIONS.FORM.VIEW, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
-
-        const view = new ViewForm({ id: 'viewFormScreen', context, 
-    layoutManager: context.uiStage.layoutManager,
-    layoutRenderer: context.uiStage.layoutRenderer,
-    store,
-    factory,
-    onSubmit: (responseData) => {
-        dispatcher.dispatch(ACTIONS.FORM.SUBMIT, { form: store.getActiveForm(), responseData });}
-    });
-    router.push(view);
-        // view.attachToStage(context.uiStage);
-        // context.pipeline.invalidate();
-    }, 'wiring');
+      
+        const view = new FormViewScreen({
+          context,
+          dispatcher,
+          eventBusManager: bus,
+          store,
+          factories,
+          onSubmit: (responseData) => {
+            dispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
+              form: store.getActiveForm(),
+              responseData
+            });
+          }
+        });
+      
+        router.push(view);
+      }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);

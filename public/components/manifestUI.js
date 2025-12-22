@@ -116,6 +116,18 @@ export class UIElementFactory {
     });
   }
 
+  createFormLabel(form, { onSelect }) {
+    return createUIComponent(
+      {
+        id: `form-${form.id}`,
+        type: 'button',
+        label: form.label ?? `Form ${form.id}`,
+        onClick: () => onSelect?.(form)
+      },
+      this.context
+    );
+  }
+
   createCommandButtons(children, commandMap) {
     return children.map(def => {
       const btn = createUIComponent(

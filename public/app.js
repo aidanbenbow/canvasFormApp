@@ -2,6 +2,9 @@ import { UIOverlay } from "./components/UiOverlay.js";
 
 import { CreateForm } from "./components/createForm.js";
 import { DashBoardScreen} from "./components/dashBoard.js";
+import { CommandUIFactory } from "./components/factory/commandUiFactory.js";
+import { FormsUIFactory } from "./components/factory/formsUiFactory.js";
+import { ResultsUIFactory } from "./components/factory/resultsUiFactory.js";
 import { UIElementFactory } from "./components/manifestUI.js";
 
 import { canvasConfig, } from "./constants.js";
@@ -56,10 +59,14 @@ context.pipeline.setRendererContext(context)
 context.pipeline.add(context.uiStage);
 
 const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
-const factory = new UIElementFactory({ context });
+const factories = {
+  commandUI: new CommandUIFactory(context),
+  formsUI: new FormsUIFactory(context),
+  resultsUI: new ResultsUIFactory(context),
+};
 const commandRegistry = new CommandRegistry();
 
-wireSystemEvents(system, context, store, screenRouter, factory, commandRegistry);
+wireSystemEvents(system, context, store, screenRouter, factories, commandRegistry);
 
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
