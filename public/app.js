@@ -50,13 +50,13 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
   
   utilsRegister.registerPlugin(coreUtilsPlugin(context))
 
+  context.pipeline.setRendererContext(context.ctx)
 
+ // context.pipeline.add(context.uiStage);
 const rendererSystem = renderBuild.createRendererSystem()
 rendererSystem.start();
 
-context.pipeline.setRendererContext(context)
 
-context.pipeline.add(context.uiStage);
 
 const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
 const factories = {
@@ -90,10 +90,6 @@ context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
 }
 system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
 
-  // const dash = new DashBoardScreen({ context, dispatcher: system.actionDispatcher, eventBusManager: system.eventBusManager, store });
- 
-  // dash.attachToStage(context.uiStage);
-  // context.pipeline.invalidate();
 }
 
 

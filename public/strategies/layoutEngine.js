@@ -25,3 +25,9 @@ export class LayoutEngine {
       node.layoutChildren(bounds, state);
     }
   }
+
+  export const legacyWidgetRenderer = {
+    render(node, ctx) {
+      node.widget?.render(ctx);
+    }
+  };

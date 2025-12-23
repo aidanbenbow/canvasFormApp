@@ -5,6 +5,8 @@ import { createUIComponent } from './createUIComponent.js';
 
 import { bindList } from '../state/reactiveStore.js';
 import { layoutRegistry } from '../registries/layoutRegistry.js';
+import { SceneNode } from './nodes/sceneNode.js';
+import { legacyWidgetRenderer } from '../strategies/layoutEngine.js';
 
 
 const dashboardUIManifest = {
@@ -43,8 +45,11 @@ export class DashBoardScreen extends BaseScreen {
   onEnter() {
     this.build(dashboardUIManifest);
     this.bindState();
-    const canvas = this.context.canvas
- this.layout(canvas.width, canvas.height);
+  
+    const canvas = this.context.canvas;
+  this.context.pipeline.setRoot(this.rootElement);
+  this.context.pipeline.invalidate();
+    
   }
 
   onExit() {
@@ -57,18 +62,40 @@ export class DashBoardScreen extends BaseScreen {
     this.regions = {};
 
     Object.entries(manifest.regions).forEach(([key, def]) => {
-      const container = createUIComponent(
+      const widget = createUIComponent(
         { id: `dashboard-${key}`, type: def.type },
         this.context
       );
 
-      this.rootElement.addChild(container);
-      this.regions[key] = container;
+      // Wrap widget in a SceneNode
+    const node = new SceneNode({
+      id: `dashboard-${key}`,
+      layoutStrategy: layoutFactory,
+      renderStrategy: legacyWidgetRenderer,
+      children: []
+    });
+
+    // Keep reference to legacy widget for now
+    node.widget = widget;
+
+      this.rootElement.addChild(node);
+      this.regions[key] = node;
 
       if (def.children) {
-        container.setChildren(
-          this.factories.commandUI.createButtons(def.children, this.commandRegistry)
-        );
+       
+        const buttons =  this.factories.commandUI.createButtons(def.children, this.commandRegistry)
+        widget.setChildren(buttons);
+        // Wrap each button in a SceneNode
+      buttons.forEach(btnWidget => {
+        const btnNode = new SceneNode({
+          id: btnWidget.id,
+          renderStrategy: legacyWidgetRenderer,
+          layoutStrategy: layoutRegistry['vertical'],
+        });
+        btnNode.widget = btnWidget;
+        node.add(btnNode);
+      });
+
       }
     });
   }

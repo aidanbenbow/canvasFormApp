@@ -228,11 +228,12 @@ measure(constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
   let totalHeight = 0;
 
   for (const child of this.children) {
+    const childSize = child.measure ? child.measure(constraints) : null;
   
-    const childSize = child.measure(constraints);
-    totalWidth = Math.max(totalWidth, childSize.width);
-    totalHeight += childSize.height;
-    if (!Number.isFinite(childSize.width) || !Number.isFinite(childSize.height)) {
+    if (childSize && Number.isFinite(childSize.width) && Number.isFinite(childSize.height)) {
+      totalWidth = Math.max(totalWidth, childSize.width);
+      totalHeight += childSize.height;
+    } else {
       console.warn(`Child ${child.id} returned invalid size`, childSize);
     }
   }

@@ -21,4 +21,30 @@ export class VerticalLayoutStrategy extends LayoutStrategy {
       // Update container height to fit children
       container.bounds.height = currentY + this.padding - this.spacing;
     }
+    measure(container, constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+      let totalWidth = 0;
+      let totalHeight = this.padding;
+  
+      for (const child of container.children) {
+        // Ask child to measure itself
+        const childSize = child.measure
+          ? child.measure({ maxWidth: constraints.maxWidth - 2 * this.padding })
+          : { width: 100, height: 30 }; // fallback
+  
+        totalWidth = Math.max(totalWidth, childSize.width);
+        totalHeight += childSize.height + this.spacing;
+      }
+  
+      // Add padding
+      totalWidth += 2 * this.padding;
+      totalHeight += this.padding - this.spacing;
+  
+      // Save measured size
+      container._measured = {
+        width: Math.min(totalWidth, constraints.maxWidth),
+        height: Math.min(totalHeight, constraints.maxHeight),
+      };
+  
+      return container._measured;
+    }
   }

@@ -35,10 +35,22 @@ export class SceneNode {
   
     // --- Lifecycle Pipelines ---
   
-    measure(ctx) {
-      this.measured = this.layoutStrategy?.measure?.(this, ctx) ?? { width: 0, height: 0 };
-      for (const child of this.children) child.measure(ctx);
-    }
+    measure(ctx, constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+        // Measure children first
+        for (const child of this.children) {
+          child.measure(ctx, constraints);
+        }
+    
+        // Then measure self via strategy
+        this.measured = this.layoutStrategy?.measure?.(this, constraints, ctx) ?? {
+          width: this.style.width ?? 100,
+          height: this.style.height ?? 30
+        };
+    
+        console.log(`Measured node ${this.id}:`, this.measured);
+        return this.measured;
+      }
+    
   
     layout(bounds, ctx) {
       this.bounds = bounds;
@@ -61,4 +73,11 @@ export class SceneNode {
       if (!this.hitTestable) return null;
       return this.hitTestStrategy?.hitTest?.(this, point, ctx) ?? null;
     }
+    setChildren(children) {
+        this.children = [];
+        for (const child of children) {
+          this.add(child);
+        }
+      }
+    
   }
