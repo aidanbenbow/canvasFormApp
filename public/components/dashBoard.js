@@ -2,8 +2,9 @@
 import { BaseScreen } from './baseScreen.js';
 import { ACTIONS } from '../events/actions.js';
 import { createUIComponent } from './createUIComponent.js';
-import { VerticalLayoutStrategy } from '../strategies/vertical.js';
+
 import { bindList } from '../state/reactiveStore.js';
+import { layoutRegistry } from '../registries/layoutRegistry.js';
 
 
 const dashboardUIManifest = {
@@ -50,7 +51,8 @@ export class DashBoardScreen extends BaseScreen {
     this.unsubForms?.();
   }
   build(manifest) {
-    this.setLayoutStrategy(new VerticalLayoutStrategy());
+    const layoutFactory = layoutRegistry[manifest.layout];
+    this.setLayoutStrategy(layoutFactory);
 
     this.regions = {};
 
