@@ -73,21 +73,11 @@ export class SceneNode {
       if (!this.hitTestable) return null;
       return this.hitTestStrategy?.hitTest?.(this, point, ctx) ?? null;
     }
-    setChildren(children) {
-        this.children = [];
-        for (const child of children) {
-          this.add(child);
-        }
-      }
-      contains(x, y) {
-        if (!this.bounds) return false;
-        return (
-          x >= this.bounds.x &&
-          x <= this.bounds.x + this.bounds.width &&
-          y >= this.bounds.y &&
-          y <= this.bounds.y + this.bounds.height
-        );
-      }
-    
-    
+   
+      // Unified hit-test for event routing in Phase 2/3
+  contains(x, y) {
+    const b = this.bounds;
+    if (!b) return false;
+    return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
+  }
   }

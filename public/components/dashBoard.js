@@ -7,6 +7,7 @@ import { bindList } from '../state/reactiveStore.js';
 import { layoutRegistry } from '../registries/layoutRegistry.js';
 import { SceneNode } from './nodes/sceneNode.js';
 import { legacyWidgetRenderer } from '../strategies/layoutEngine.js';
+import { containerRenderer } from '../renderers/containerRenderer.js';
 
 
 const dashboardUIManifest = {
@@ -42,62 +43,67 @@ export class DashBoardScreen extends BaseScreen {
     
   }
 
-  onEnter() {
-    this.build(dashboardUIManifest);
-    this.bindState();
-  
-    const canvas = this.context.canvas;
-  this.context.pipeline.setRoot(this.rootElement);
-  this.context.pipeline.start({maxWidth: canvas.width, maxHeight: canvas.height});
-    
-  }
+  createRoot() {
+    const layoutFactory = layoutRegistry[dashboardUIManifest.layout];
 
-  onExit() {
-    this.unsubForms?.();
-  }
-  build(manifest) {
-    const layoutFactory = layoutRegistry[manifest.layout];
-    this.setLayoutStrategy(layoutFactory);
+    const root = new SceneNode({
+      id: 'dashboard-root',
+      layoutStrategy: layoutFactory,
+      renderStrategy: containerRenderer,
+      children: []
+    });
 
     this.regions = {};
 
-    Object.entries(manifest.regions).forEach(([key, def]) => {
+    Object.entries(dashboardUIManifest.regions).forEach(([key, def]) => {
+      // Legacy widget
       const widget = createUIComponent(
         { id: `dashboard-${key}`, type: def.type },
         this.context
       );
 
-      // Wrap widget in a SceneNode
-    const node = new SceneNode({
-      id: `dashboard-${key}`,
-      layoutStrategy: layoutFactory,
-      renderStrategy: legacyWidgetRenderer,
-      children: []
-    });
-
-    // Keep reference to legacy widget for now
-    node.widget = widget;
-
-      this.rootElement.addChild(node);
-      this.regions[key] = node;
-
-      if (def.children) {
-       
-        const buttons =  this.factories.commandUI.createButtons(def.children, this.commandRegistry)
-        widget.setChildren(buttons);
-        // Wrap each button in a SceneNode
-      buttons.forEach(btnWidget => {
-        const btnNode = new SceneNode({
-          id: btnWidget.id,
-          renderStrategy: legacyWidgetRenderer,
-          layoutStrategy: layoutRegistry['vertical'],
-        });
-        btnNode.widget = btnWidget;
-        node.add(btnNode);
+      const regionNode = new SceneNode({
+        id: `dashboard-${key}`,
+        layoutStrategy: layoutFactory,
+        renderStrategy: containerRenderer,
+        children: []
       });
 
+      regionNode.widget = widget;
+      root.add(regionNode);
+      this.regions[key] = regionNode;
+
+      // Static toolbar buttons
+      if (def.children) {
+        const buttons = this.factories.commandUI.createButtons(
+          def.children,
+          this.commandRegistry
+        );
+
+        widget.setChildren(buttons);
+
+        buttons.forEach(btnWidget => {
+          const btnNode = new SceneNode({
+            id: btnWidget.id,
+            layoutStrategy: layoutRegistry.vertical,
+            renderStrategy: legacyWidgetRenderer
+          });
+
+          btnNode.widget = btnWidget;
+          regionNode.add(btnNode);
+        });
       }
     });
+
+    return root;
+  }
+
+  onEnter() {
+    this.bindState();
+  }
+
+  onExit() {
+    this.unsubForms?.();
   }
 
   bindState() {

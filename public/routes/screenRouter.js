@@ -1,41 +1,49 @@
-export class ScreenRouter {
-    constructor({ context, stage }) {
+
+  export class ScreenRouter {
+    constructor({ context }) {
       this.context = context;
-      this.stage = stage;
+      this.pipeline = context.pipeline;
+  
       this.currentScreen = null;
       this.screenStack = [];
     }
   
-    // Replace current screen with a new one
     replace(screen) {
       if (this.currentScreen) {
-        this.currentScreen.detachFromStage(this.stage);
+        this.currentScreen.onExit?.();
       }
+  
       this.currentScreen = screen;
-      screen.attachToStage(this.stage);
-      this.context.pipeline.invalidate();
+      this.pipeline.setRoot(screen.rootNode);
+      screen.onEnter?.();
+  
+      this.pipeline.invalidate();
     }
   
-    // Push a new screen on top of stack
     push(screen) {
       if (this.currentScreen) {
+        this.currentScreen.onExit?.();
         this.screenStack.push(this.currentScreen);
-        this.currentScreen.detachFromStage(this.stage);
       }
+  
       this.currentScreen = screen;
-      screen.attachToStage(this.stage);
-      this.context.pipeline.invalidate();
+      this.pipeline.setRoot(screen.rootNode);
+      screen.onEnter?.();
+  
+      this.pipeline.invalidate();
     }
   
-    // Pop back to previous screen
     pop() {
       if (this.currentScreen) {
-        this.currentScreen.detachFromStage(this.stage);
+        this.currentScreen.onExit?.();
       }
+  
       this.currentScreen = this.screenStack.pop();
       if (this.currentScreen) {
-        this.currentScreen.attachToStage(this.stage);
-        this.context.pipeline.invalidate();
+        this.pipeline.setRoot(this.currentScreen.rootNode);
+        this.currentScreen.onEnter?.();
+        this.pipeline.invalidate();
       }
     }
   }
+  
