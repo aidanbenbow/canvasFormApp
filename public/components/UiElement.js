@@ -270,5 +270,10 @@ setChildren(children) {
     this.layout(this.bounds.x, this.bounds.y, this._measured.width, this._measured.height);
   }
 }
+update(dt) {
+  for (const child of this.children) {
+    child.update(dt);
+  }
+}
       
   }

@@ -48,7 +48,7 @@ export class DashBoardScreen extends BaseScreen {
   
     const canvas = this.context.canvas;
   this.context.pipeline.setRoot(this.rootElement);
-  this.context.pipeline.invalidate();
+  this.context.pipeline.start({maxWidth: canvas.width, maxHeight: canvas.height});
     
   }
 

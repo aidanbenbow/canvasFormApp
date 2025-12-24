@@ -47,7 +47,7 @@ export class SceneNode {
           height: this.style.height ?? 30
         };
     
-        console.log(`Measured node ${this.id}:`, this.measured);
+       // console.log(`Measured node ${this.id}:`, this.measured);
         return this.measured;
       }
     
@@ -79,5 +79,15 @@ export class SceneNode {
           this.add(child);
         }
       }
+      contains(x, y) {
+        if (!this.bounds) return false;
+        return (
+          x >= this.bounds.x &&
+          x <= this.bounds.x + this.bounds.width &&
+          y >= this.bounds.y &&
+          y <= this.bounds.y + this.bounds.height
+        );
+      }
+    
     
   }

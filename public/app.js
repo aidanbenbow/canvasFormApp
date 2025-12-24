@@ -52,9 +52,9 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 
   context.pipeline.setRendererContext(context.ctx)
 
- // context.pipeline.add(context.uiStage);
-const rendererSystem = renderBuild.createRendererSystem()
-rendererSystem.start();
+ 
+// const rendererSystem = renderBuild.createRendererSystem()
+// rendererSystem.start();
 
 
 
