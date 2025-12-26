@@ -70,7 +70,10 @@ wireSystemEvents(system, context, store, screenRouter, factories, commandRegistr
 
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
-
+context.pipeline.start({
+  maxWidth: mainCanvas.width,
+  maxHeight: mainCanvas.height
+})
 
 
 if (formId) {

@@ -1,8 +1,10 @@
-import { UIFieldContainer } from "../UiFieldContainer.js";
-import { UIInput } from "../UiInput.js";
-import { UiText } from "../UiText.js";
-import { UIButton } from "../button.js";
-import { UIScrollContainer } from "../scrollContainer.js";
+
+import { ButtonNode } from "../nodes/buttonNode.js";
+import { ContainerNode } from "../nodes/containerNode.js";
+import { InputNode } from "../nodes/inputNode.js";
+import { ScrollNode } from "../nodes/scrollNode.js";
+import { TextNode } from "../nodes/textNode.js";
+
 
 export class BaseUIFactory {
     constructor(context) {
@@ -14,18 +16,18 @@ export class BaseUIFactory {
     }
   }
 
-  const componentRegistry = {
-    button: UIButton,
-    text: UiText,
-    input: UIInput,
-    container: UIScrollContainer,
-    fieldContainer: UIFieldContainer
+  export const componentRegistry = {
+    button: (def) => new ButtonNode(def),
+    text: (def) => new TextNode(def),
+    input: (def) => new InputNode(def),
+    container: (def) => new ScrollNode(def),
+    fieldContainer: (def) => new ContainerNode(def),
   };
   
-  export function createUIComponent(def, context) {
-  
-    const { type, id } = def;
-    const ComponentClass = componentRegistry[type];
-    if (!ComponentClass) throw new Error(`Unknown component type: ${type}`);
-    return new ComponentClass({ id, ...def, context });
+  export function createUIComponent(def) {
+    const factory = componentRegistry[def.type];
+    if (!factory) {
+      throw new Error(`Unknown component type: ${def.type}`);
+    }
+    return factory(def);
   }

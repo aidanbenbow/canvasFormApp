@@ -1,6 +1,7 @@
 import { buttonRenderer } from "../../renderers/buttonRenderer.js";
 import { buttonLayoutStrategy } from "../../strategies/buttonLayoutStrategy.js";
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
+import { SceneNode } from "./sceneNode.js";
 
 export class ButtonNode extends SceneNode {
     constructor({ id, label, onClick, style = {} }) {

@@ -50,6 +50,7 @@ export class RenderPipeline {
     }
   
     start(constraints) {
+      console.log("RenderPipeline: Starting render loop with constraints", constraints);
       if (this.running) return;
       this.running = true;
       let lastTime = performance.now();

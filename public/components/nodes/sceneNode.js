@@ -38,7 +38,7 @@ export class SceneNode {
     measure(ctx, constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
         // Measure children first
         for (const child of this.children) {
-          child.measure(ctx, { maxWidth: constraints.maxWidth - padding*2 })
+          child.measure(ctx, { maxWidth: constraints.maxWidth - 10 })
         }
     
         // Then measure self via strategy
