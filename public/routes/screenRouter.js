@@ -12,7 +12,7 @@
       if (this.currentScreen) {
         this.currentScreen.onExit?.();
       }
-  
+  screen.createRoot();
       this.currentScreen = screen;
       this.pipeline.setRoot(screen.rootNode);
       screen.onEnter?.();

@@ -6,7 +6,7 @@ export class BaseScreen {
       this.dispatcher = dispatcher;
       this.eventBusManager = eventBusManager;
   
-      this.rootNode = this.createRoot();
+      this.rootNode = null
     }
   
     createRoot() {

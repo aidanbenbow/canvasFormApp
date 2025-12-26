@@ -80,4 +80,9 @@ export class SceneNode {
     if (!b) return false;
     return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
   }
+  setChildren(nodes) {
+    this.children = [];
+    nodes.forEach(n => this.add(n));
+  }
+
   }

@@ -46,7 +46,7 @@ export class DashBoardScreen extends BaseScreen {
   createRoot() {
     const layoutFactory = layoutRegistry[dashboardUIManifest.layout];
 
-    const root = new SceneNode({
+    this.rootNode = new SceneNode({
       id: 'dashboard-root',
       layoutStrategy: layoutFactory,
       renderStrategy: containerRenderer,
@@ -56,11 +56,6 @@ export class DashBoardScreen extends BaseScreen {
     this.regions = {};
 
     Object.entries(dashboardUIManifest.regions).forEach(([key, def]) => {
-      // Legacy widget
-      const widget = createUIComponent(
-        { id: `dashboard-${key}`, type: def.type },
-        this.context
-      );
 
       const regionNode = new SceneNode({
         id: `dashboard-${key}`,
@@ -68,37 +63,17 @@ export class DashBoardScreen extends BaseScreen {
         renderStrategy: containerRenderer,
         children: []
       });
-
-      regionNode.widget = widget;
-      root.add(regionNode);
+     
+      this.rootNode.add(regionNode);
       this.regions[key] = regionNode;
 
-      // Static toolbar buttons
-      if (def.children) {
-        const buttons = this.factories.commandUI.createButtons(
-          def.children,
-          this.commandRegistry
-        );
-
-        widget.setChildren(buttons);
-
-        buttons.forEach(btnWidget => {
-          const btnNode = new SceneNode({
-            id: btnWidget.id,
-            layoutStrategy: layoutRegistry.vertical,
-            renderStrategy: legacyWidgetRenderer
-          });
-
-          btnNode.widget = btnWidget;
-          regionNode.add(btnNode);
-        });
-      }
     });
-
-    return root;
+console.log(this.regions);
+    return this.rootNode;
   }
 
   onEnter() {
+    this.buildUI(dashboardUIManifest);
     this.bindState();
   }
 
@@ -106,12 +81,48 @@ export class DashBoardScreen extends BaseScreen {
     this.unsubForms?.();
   }
 
+  buildUI(manifest) {
+    Object.entries(manifest.regions).forEach(([key, def]) => {
+      const regionNode = this.regions[key];
+  
+      // --- legacy widget ---
+      const widget = createUIComponent(
+        { id: regionNode.id, type: def.type },
+        this.context
+      );
+  
+      regionNode.widget = widget;
+  
+      // --- static toolbar buttons ---
+      if (def.children) {
+        const buttons = this.factories.commandUI.createButtons(
+          def.children,
+          this.commandRegistry
+        );
+  
+        widget.setChildren(buttons);
+  
+        buttons.forEach(btnWidget => {
+          const btnNode = new SceneNode({
+            id: btnWidget.id,
+            layoutStrategy: layoutRegistry.vertical,
+            renderStrategy: legacyWidgetRenderer
+          });
+  
+          btnNode.widget = btnWidget;
+          regionNode.add(btnNode);
+        });
+      }
+    });
+  }
+  
+
   bindState() {
     this.unsubForms = bindList({
       store: this.store,
       key: 'forms',
       container: this.regions.forms,
-      factory: this.factory,
+      factory: this.factories.formsUI,
       mapItem: (form) =>
   this.factories.formsUI.createLabel(form, {
     onSelect: f =>

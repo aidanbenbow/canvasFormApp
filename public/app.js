@@ -81,7 +81,7 @@ if (formId) {
 } else{
   const {forms} = await fetchAllForms('admin');
   // system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, forms, 'bootstrap');
-  system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
+  // system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
 for(const f of forms){
   const results = await fetchFormResults(f.id, f.resultsTable || 'faithandbelief');
 system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
