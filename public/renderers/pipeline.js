@@ -12,6 +12,7 @@ export class RenderPipeline {
     }
   
     setRoot(rootNode) {
+      console.log("RenderPipeline: Setting root node", rootNode);
       this.root = rootNode;
       this.invalidate();
     }

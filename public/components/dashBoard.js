@@ -48,7 +48,7 @@ export class DashBoardScreen extends BaseScreen {
 
     this.rootNode = new SceneNode({
       id: 'dashboard-root',
-      layoutStrategy: layoutFactory,
+      layoutStrategy: layoutFactory(),
       renderStrategy: containerRenderer,
       children: []
     });
@@ -59,7 +59,7 @@ export class DashBoardScreen extends BaseScreen {
 
       const regionNode = new SceneNode({
         id: `dashboard-${key}`,
-        layoutStrategy: layoutFactory,
+        layoutStrategy: layoutFactory(),
         renderStrategy: containerRenderer,
         children: []
       });
