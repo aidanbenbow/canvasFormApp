@@ -81,7 +81,11 @@ export class UIStage {
           console.log(`Hit UIElement: ${hit.id}`);
         }
 
-    const event = { type, x, y}
+        const event = { type, x, y, originalEvent: e, target: hit };
+
+        // TEMP: debug
+        if (hit) console.log("Hit node:", hit.id, "type:", type);
+      
 
  // 🔹 Draw a marker when clicking
  if (type === 'click') {
@@ -144,6 +148,7 @@ if(nested) return nested;
     // -------------------------------
   
     render() {
+      console.log("UIStage activeRoot =", this.activeRoot);
       const canvas = this.layoutRenderer.canvas;
       const ctx = this.layoutRenderer.ctx;
     

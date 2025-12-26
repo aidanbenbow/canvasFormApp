@@ -85,34 +85,19 @@ console.log(this.regions);
     Object.entries(manifest.regions).forEach(([key, def]) => {
       const regionNode = this.regions[key];
   
-      // --- legacy widget ---
-      const widget = createUIComponent(
-        { id: regionNode.id, type: def.type },
-        this.context
-      );
-  
-      regionNode.widget = widget;
-  
-      // --- static toolbar buttons ---
-      if (def.children) {
-        const buttons = this.factories.commandUI.createButtons(
-          def.children,
-          this.commandRegistry
-        );
-  
-        widget.setChildren(buttons);
-  
-        buttons.forEach(btnWidget => {
-          const btnNode = new SceneNode({
-            id: btnWidget.id,
-            layoutStrategy: layoutRegistry.vertical,
-            renderStrategy: legacyWidgetRenderer
-          });
-  
-          btnNode.widget = btnWidget;
-          regionNode.add(btnNode);
-        });
-      }
+  // Declarative region node creation
+if (def.children) {
+  def.children.forEach(childDef => {
+    const node = this.factories.commandUI.create({
+      id: `cmd-${childDef.id}`,
+      type: "button",
+      label: childDef.label,
+      onClick: () => this.commandRegistry.execute(childDef.command)
+    });
+
+    regionNode.add(node);
+  });
+}
     });
   }
   

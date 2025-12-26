@@ -1,10 +1,11 @@
-export function buttonRenderer(ctx, node) {
-    const { x, y, width, height } = node.bounds;
-    const { label, state, style } = node;
+export const buttonRenderer = {
+    render(node, ctx) {
+      const { x, y, width, height } = node.bounds;
+      const { label, state, style } = node;
+     
   
-    ctx.save();
-  
-    // 🎨 Background
+      ctx.save();
+      // 🎨 Background
     let bg = '#f5f5f5';
     if (state.pressed) bg = '#dcdcdc';
     else if (state.hovered) bg = '#eaeaea';
@@ -29,10 +30,11 @@ export function buttonRenderer(ctx, node) {
       x + width / 2,
       y + height / 2
     );
-  
-    ctx.restore();
-  }
-  
+      ctx.restore();
+    }
+  };
+
+
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);

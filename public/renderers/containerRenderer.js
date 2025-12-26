@@ -22,6 +22,12 @@ export const containerRenderer = {
         ctx.lineWidth = width;
         ctx.strokeRect(b.x, b.y, b.width, b.height);
       }
+
+      // 🔥 critical bit: render children inside the container
+    for (const child of node.children) {
+      child.render(ctx);
+    }
+
   
       ctx.restore();
     }
