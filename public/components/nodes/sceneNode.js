@@ -97,5 +97,16 @@ export class SceneNode {
     this.children = [];
     nodes.forEach(n => this.add(n));
   }
+  onEventCapture(event) {
+    return false;
+  }
+
+  onEvent(event) {
+    return false;
+  }
+
+  onEventBubble(event) {
+    return false;
+  }
 
   }
