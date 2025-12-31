@@ -83,13 +83,16 @@ export class SceneNode {
     }
   
     hitTest(point, ctx) {
+      console.log(`Hit testing node ${this.id} at point (${point.x}, ${point.y})`);
       if (!this.hitTestable) return null;
       return this.hitTestStrategy?.hitTest?.(this, point, ctx) ?? null;
     }
    
       // Unified hit-test for event routing in Phase 2/3
   contains(x, y) {
+    console.log(`Checking if node ${this.id} contains point (${x}, ${y})`);
     const b = this.bounds;
+    
     if (!b) return false;
     return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
   }

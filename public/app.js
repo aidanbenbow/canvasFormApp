@@ -1,26 +1,18 @@
-import { UIOverlay } from "./components/UiOverlay.js";
 
-import { CreateForm } from "./components/createForm.js";
-import { DashBoardScreen} from "./components/dashBoard.js";
 import { CommandUIFactory } from "./components/factory/commandUiFactory.js";
 import { FormsUIFactory } from "./components/factory/formsUiFactory.js";
 import { ResultsUIFactory } from "./components/factory/resultsUiFactory.js";
-import { UIElementFactory } from "./components/manifestUI.js";
-
 import { canvasConfig, } from "./constants.js";
 
-import { fetchAllForms, fetchFormById, fetchFormResults,  onMessageResponse, saveFormStructure, sendLog } from "./controllers/socketController.js";
+import { fetchAllForms, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
 import { ACTIONS } from "./events/actions.js";
 import { FormStore } from "./events/formStore.js";
-import { UIOverlayManager } from "./managers/UiOverlayManager.js";
+import { SceneInputSystem } from "./events/sceneInputSystem.js";
 import { CanvasManager } from "./managers/canvas.js";
-import { HitTestManager } from "./managers/hit.js";
-
 import { LayoutManager } from "./managers/layOut.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { CommandRegistry } from "./registries/commandRegistry.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
-import { HitRouter } from "./routes/hitRouter.js";
 import { ScreenRouter } from "./routes/screenRouter.js";
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
@@ -52,12 +44,6 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 
   context.pipeline.setRendererContext(context.ctx)
 
- 
-// const rendererSystem = renderBuild.createRendererSystem()
-// rendererSystem.start();
-
-
-
 const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
 const factories = {
   commandUI: new CommandUIFactory(context),
@@ -65,6 +51,12 @@ const factories = {
   resultsUI: new ResultsUIFactory(context),
 };
 const commandRegistry = new CommandRegistry();
+
+const sceneInput = new SceneInputSystem({
+  canvas: mainCanvas,
+  pipeline: context.pipeline,
+  ctx: context.ctx
+});
 
 wireSystemEvents(system, context, store, screenRouter, factories, commandRegistry);
 
@@ -83,8 +75,7 @@ if (formId) {
   system.actionDispatcher.dispatch(ACTIONS.FORM.VIEW, form, 'bootstrap');
 } else{
   const {forms} = await fetchAllForms('admin');
-  // system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, forms, 'bootstrap');
-  // system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
+ 
 for(const f of forms){
   const results = await fetchFormResults(f.id, f.resultsTable || 'faithandbelief');
 system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');

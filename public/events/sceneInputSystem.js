@@ -1,14 +1,14 @@
 import { SceneEvent } from "./sceneEvent.js";
-import { SceneEventDispatcher } from "./sceneEventDispatcher";
+import { SceneEventDispatcher } from "./sceneEventDispatcher.js";
 import { SceneHitTestSystem } from "./sceneHitTestSystem.js";
 
 export class SceneInputSystem {
-    constructor({ canvas, root, ctx }) {
+    constructor({ canvas, pipeline, ctx }) {
       this.canvas = canvas;
-      this.root = root;
+      this.pipeline = pipeline;
       this.ctx = ctx;
   
-      this.hitTest = new SceneHitTestSystem(root);
+      this.hitTest = new SceneHitTestSystem();
       this.dispatcher = new SceneEventDispatcher();
   
       this._bind();
@@ -23,11 +23,18 @@ export class SceneInputSystem {
   
     _handle(e, type) {
       const rect = this.canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left);
-      const y = (e.clientY - rect.top);
+      const scaleX = this.canvas.width / rect.width;
+const scaleY = this.canvas.height / rect.height;
+
+const canvasX = (e.clientX - rect.left) * scaleX;
+  const canvasY = (e.clientY - rect.top) * scaleY;
+
+  // NEW: convert canvas → scene
+  const { x, y } = this.pipeline.toSceneCoords(canvasX, canvasY);
   
-      const target = this.hitTest.hitTest(x, y, this.ctx);
-  
+      const root = this.pipeline.root
+      const target = this.hitTest.hitTest(root,x, y, this.ctx);
+ //console.log(root);
       const event = new SceneEvent({
         type,
         x,
@@ -35,8 +42,8 @@ export class SceneInputSystem {
         target,
         originalEvent: e
       });
-  
-      this.dispatcher.dispatch(event, this.root);
+ console.log("Dispatching event:", event.type, "to target:", target ? target.id : "none");
+      this.dispatcher.dispatch(event);
     }
   }
   
