@@ -26,6 +26,7 @@ export class SceneInputSystem {
       const scaleX = this.canvas.width / rect.width;
 const scaleY = this.canvas.height / rect.height;
 
+  // Convert screen → canvas
 const canvasX = (e.clientX - rect.left) * scaleX;
   const canvasY = (e.clientY - rect.top) * scaleY;
 
@@ -34,7 +35,7 @@ const canvasX = (e.clientX - rect.left) * scaleX;
   
       const root = this.pipeline.root
       const target = this.hitTest.hitTest(root,x, y, this.ctx);
- //console.log(root);
+      
       const event = new SceneEvent({
         type,
         x,
@@ -42,7 +43,7 @@ const canvasX = (e.clientX - rect.left) * scaleX;
         target,
         originalEvent: e
       });
- console.log("Dispatching event:", event.type, "to target:", target ? target.id : "none");
+ //console.log("Dispatching event:", event.type, "to target:", target ? target.id : "none");
       this.dispatcher.dispatch(event);
     }
   }

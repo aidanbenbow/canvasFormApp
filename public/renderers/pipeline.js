@@ -24,7 +24,7 @@ export class RenderPipeline {
   
     tick(dt, constraints) {
       if (!this.root) return;
-  
+
       // 1. Measure
       this.root.measure(this.rendererContext, constraints);
   

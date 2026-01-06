@@ -37,9 +37,9 @@ export class SceneNode {
   
     measure(ctx, constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
         // Measure children first
-        for (const child of this.children) {
-          child.measure(ctx, { maxWidth: constraints.maxWidth - 10 })
-        }
+        // for (const child of this.children) {
+        //   child.measure(ctx, { maxWidth: constraints.maxWidth - 10 })
+        // }
     
         // Then measure self via strategy
         this.measured = this.layoutStrategy?.measure?.(this, constraints, ctx) ?? {
@@ -83,18 +83,23 @@ export class SceneNode {
     }
   
     hitTest(point, ctx) {
-      console.log(`Hit testing node ${this.id} at point (${point.x}, ${point.y})`);
+    //  console.log(`Hit testing node ${this.id} at point (${point.x}, ${point.y})`);
       if (!this.hitTestable) return null;
       return this.hitTestStrategy?.hitTest?.(this, point, ctx) ?? null;
     }
    
       // Unified hit-test for event routing in Phase 2/3
-  contains(x, y) {
-    console.log(`Checking if node ${this.id} contains point (${x}, ${y})`);
-    const b = this.bounds;
+  // contains(x, y) {
+  // //  console.log(`Checking if node ${this.id} contains point (${x}, ${y})`);
+  //   const b = this.bounds;
     
-    if (!b) return false;
-    return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
+  //   if (!b) return false;
+  //   return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
+  // }
+  contains(x, y) {
+    const b = this.bounds;
+    return x >= 0 && x <= b.width &&
+           y >= 0 && y <= b.height;
   }
   setChildren(nodes) {
     this.children = [];
@@ -110,6 +115,13 @@ export class SceneNode {
 
   onEventBubble(event) {
     return false;
+  }
+  globalToLocal(point) {
+    const b = this.bounds; // absolute bounds
+    return {
+      x: point.x - b.x,
+      y: point.y - b.y
+    };
   }
 
   }

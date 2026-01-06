@@ -1,17 +1,38 @@
 
 import { BaseScreen } from './baseScreen.js';
 import { ACTIONS } from '../events/actions.js';
-import { createUIComponent } from './createUIComponent.js';
 
 import { bindList } from '../state/reactiveStore.js';
-import { layoutRegistry } from '../registries/layoutRegistry.js';
-import { SceneNode } from './nodes/sceneNode.js';
-import { legacyWidgetRenderer } from '../strategies/layoutEngine.js';
-import { containerRenderer } from '../renderers/containerRenderer.js';
+
+import { compileUIManifest } from './uiManifestCompiler.js';
+import { bindCommands } from './commandBinder.js';
 
 
 const dashboardUIManifest = {
   layout: 'vertical',
+
+  commands: {
+    FORM_VIEW: {
+      action: ACTIONS.FORM.VIEW,
+      needsActive: true
+    },
+    FORM_RESULTS: {
+      action: ACTIONS.FORM.RESULTS,
+      needsActive: true
+    },
+    FORM_CREATE: {
+      action: ACTIONS.FORM.CREATE,
+      needsActive: false
+    },
+    FORM_EDIT: {
+      action: ACTIONS.FORM.EDIT,
+      needsActive: true
+    },
+    FORM_DELETE: {
+      action: ACTIONS.FORM.DELETE,
+      needsActive: true
+    }
+  },
 
   regions: {
     toolbar: {
@@ -39,68 +60,30 @@ export class DashBoardScreen extends BaseScreen {
     this.context = context;
  this.factories = factories;
     this.commandRegistry = commandRegistry;
-    this.registerCommands();
+    bindCommands({
+      manifest: dashboardUIManifest,
+      commandRegistry: this.commandRegistry,
+      dispatcher: this.dispatcher,
+      store: this.store,
+      namespace: this.namespace
+    });
     
   }
 
   createRoot() {
-    const layoutFactory = layoutRegistry[dashboardUIManifest.layout];
-
-    this.rootNode = new SceneNode({
-      id: 'dashboard-root',
-      layoutStrategy: layoutFactory(),
-      renderStrategy: containerRenderer,
-      children: []
-    });
-
-    this.regions = {};
-
-    Object.entries(dashboardUIManifest.regions).forEach(([key, def]) => {
-
-      const regionNode = new SceneNode({
-        id: `dashboard-${key}`,
-        layoutStrategy: layoutFactory(),
-        renderStrategy: containerRenderer,
-        children: []
-      });
-     
-      this.rootNode.add(regionNode);
-      this.regions[key] = regionNode;
-
-    });
-console.log(this.regions);
-    return this.rootNode;
+    const { rootNode, regions } = compileUIManifest(dashboardUIManifest, this.factories);
+    this.regions = regions;
+    this.rootNode = rootNode;
+    return rootNode;
   }
 
   onEnter() {
-    this.buildUI(dashboardUIManifest);
     this.bindState();
   }
 
   onExit() {
     this.unsubForms?.();
   }
-
-  buildUI(manifest) {
-    Object.entries(manifest.regions).forEach(([key, def]) => {
-      const regionNode = this.regions[key];
-  
-  // Declarative region node creation
-if (def.children) {
-  def.children.forEach(childDef => {
-    const node = this.factories.commandUI.create({
-      id: `cmd-${childDef.id}`,
-      type: "button",
-      label: childDef.label,
-      onClick: () => this.commandRegistry.execute(childDef.command)
-    });
-
-    regionNode.add(node);
-  });
-}
-    });
-  }
-  
 
   bindState() {
     this.unsubForms = bindList({
@@ -114,41 +97,6 @@ if (def.children) {
       this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, f, this.namespace)
   })
     });
-  }
-
-  _withActive(fn) {
-    const active = this.store.getActiveForm();
-    if (active) fn(active);
-  }
-
-  registerCommands() {
-    this.commandRegistry.register("FORM_VIEW", () =>
-      this._withActive(form =>
-        this.dispatcher.dispatch(ACTIONS.FORM.VIEW, form, this.namespace)
-      )
-    );
-  
-    this.commandRegistry.register("FORM_RESULTS", () =>
-      this._withActive(form =>
-        this.dispatcher.dispatch(ACTIONS.FORM.RESULTS, form, this.namespace)
-      )
-    );
-  
-    this.commandRegistry.register("FORM_CREATE", () =>
-      this.dispatcher.dispatch(ACTIONS.FORM.CREATE, null, this.namespace)
-    );
-  
-    this.commandRegistry.register("FORM_EDIT", () =>
-      this._withActive(form =>
-        this.dispatcher.dispatch(ACTIONS.FORM.EDIT, form, this.namespace)
-      )
-    );
-  
-    this.commandRegistry.register("FORM_DELETE", () =>
-      this._withActive(form =>
-        this.dispatcher.dispatch(ACTIONS.FORM.DELETE, form, this.namespace)
-      )
-    );
   }
 
 }
