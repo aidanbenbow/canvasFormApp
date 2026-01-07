@@ -29,13 +29,21 @@ const scaleY = this.canvas.height / rect.height;
   // Convert screen → canvas
 const canvasX = (e.clientX - rect.left) * scaleX;
   const canvasY = (e.clientY - rect.top) * scaleY;
-
+if(type==='click'){
+    console.log(`Click at canvas coords: (${canvasX}, ${canvasY})`);
+    console.log(`Canvas size: (${this.canvas.width}, ${this.canvas.height})`);
+    console.log(e.clientX, e.clientY);
+}
   // NEW: convert canvas → scene
   const { x, y } = this.pipeline.toSceneCoords(canvasX, canvasY);
   
       const root = this.pipeline.root
       const target = this.hitTest.hitTest(root,x, y, this.ctx);
-      
+
+      if(type==='click'){
+        console.log(`Transformed to scene coords: (${x}, ${y})`);
+      console.log(`Event type: ${type}, Target: ${target ? target.id : 'none'}`);
+      }
       const event = new SceneEvent({
         type,
         x,
@@ -43,7 +51,7 @@ const canvasX = (e.clientX - rect.left) * scaleX;
         target,
         originalEvent: e
       });
- //console.log("Dispatching event:", event.type, "to target:", target ? target.id : "none");
+ 
       this.dispatcher.dispatch(event);
     }
   }

@@ -74,6 +74,8 @@ export class DashBoardScreen extends BaseScreen {
     const { rootNode, regions } = compileUIManifest(dashboardUIManifest, this.factories);
     this.regions = regions;
     this.rootNode = rootNode;
+    console.log("Dashboard root node created:", rootNode);
+    console.log("Dashboard regions:", regions);
     return rootNode;
   }
 

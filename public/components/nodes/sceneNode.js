@@ -36,18 +36,12 @@ export class SceneNode {
     // --- Lifecycle Pipelines ---
   
     measure(ctx, constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
-        // Measure children first
-        // for (const child of this.children) {
-        //   child.measure(ctx, { maxWidth: constraints.maxWidth - 10 })
-        // }
     
         // Then measure self via strategy
         this.measured = this.layoutStrategy?.measure?.(this, constraints, ctx) ?? {
           width: this.style.width ?? 100,
           height: this.style.height ?? 30
         };
-    
-       // console.log(`Measured node ${this.id}:`, this.measured);
         return this.measured;
       }
     
@@ -82,20 +76,11 @@ export class SceneNode {
       for (const child of this.children) child.render(ctx);
     }
   
-    hitTest(point, ctx) {
-    //  console.log(`Hit testing node ${this.id} at point (${point.x}, ${point.y})`);
+    hitTest(point) {
       if (!this.hitTestable) return null;
-      return this.hitTestStrategy?.hitTest?.(this, point, ctx) ?? null;
+      return this.hitTestStrategy?.hitTest?.(this, point) ?? null;
     }
    
-      // Unified hit-test for event routing in Phase 2/3
-  // contains(x, y) {
-  // //  console.log(`Checking if node ${this.id} contains point (${x}, ${y})`);
-  //   const b = this.bounds;
-    
-  //   if (!b) return false;
-  //   return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
-  // }
   contains(x, y) {
     const b = this.bounds;
     return x >= 0 && x <= b.width &&
