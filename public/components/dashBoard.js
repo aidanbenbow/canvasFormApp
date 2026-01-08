@@ -83,6 +83,17 @@ export class DashBoardScreen extends BaseScreen {
   }
 
   onEnter() {
+    this.unsubActive = this.store.subscribe('activeForm', ({ activeForm }) => {
+      const active = activeForm;
+    
+      for (const child of this.regions.forms.children) {
+        const isSelected = child.id === active?.id;
+        if (child.state.selected !== isSelected) {
+          child.state.selected = isSelected;
+          child.invalidate();
+        }
+      }
+    });
     this.bindState();
   }
 
@@ -101,15 +112,6 @@ export class DashBoardScreen extends BaseScreen {
     selected: form.id === this.store.getActiveForm()?.id,
     onSelect: () => {
       this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace)
-
-      // 2. Update UI selection state
-      for (const child of this.regions.forms.children) {
-        const isSelected = child.id === form.id;
-        if (child.state.selected !== isSelected) {
-          child.state.selected = isSelected;
-          child.invalidate();
-        }
-      }
 
     }
       
