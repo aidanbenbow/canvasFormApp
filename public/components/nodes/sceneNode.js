@@ -1,3 +1,5 @@
+import { TinyEmitter } from "../../events/tinyEmitter.js";
+
 export class SceneNode {
     constructor({
       id,
@@ -12,6 +14,8 @@ export class SceneNode {
       this.id = id;
       this.style = style;
       this.visible = visible;
+
+      this.emitter = new TinyEmitter();
   
       this.layoutStrategy = layoutStrategy;
       this.renderStrategy = renderStrategy;
@@ -101,6 +105,27 @@ export class SceneNode {
   onEventBubble(event) {
     return false;
   }
+  on(event, handler) {
+    this.emitter.on(event, handler);
+  }
+
+  off(event, handler) {
+    this.emitter.off(event, handler);
+  }
+
+  emit(event, payload) {
+    this.emitter.emit(event, payload);
+  }
+
+  invalidate() {
+    this.emit("invalidate", this);
+     // Bubble invalidate up to the root
+  if (this.parent) {
+    this.parent.invalidate();
+  }
+
+  }
+
   globalToLocal(point) {
     const b = this.bounds; // absolute bounds
     return {

@@ -7,7 +7,10 @@ export class CommandUIFactory extends BaseUIFactory {
           id: `cmd-${def.id}`,
           type: 'button',
           label: def.label,
-          onClick: () => commandRegistry.execute(def.command)
+          onClick: () => {
+            console.log("Button clicked:", def.command);
+            commandRegistry.execute(def.command)
+          }
         })
       );
     }

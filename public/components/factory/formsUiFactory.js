@@ -1,3 +1,6 @@
+import { labelRenderer } from "../../renderers/nodeRenderers/labelRenderer.js";
+import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
+import { LabelNode } from "../nodes/labelNode.js";
 import { BaseUIFactory } from "./baseUiFactory.js";
 
 export class FormsUIFactory extends BaseUIFactory {
@@ -67,14 +70,20 @@ export class FormsUIFactory extends BaseUIFactory {
           ]
         });
       }
-    createLabel(form, { onSelect }) {
-      return this.create({
-        id: `form-${form.id}`,
-        type: 'button',
-        label: form.label ?? `Form ${form.id}`,
-        onClick: () => onSelect?.(form)
-      });
-    }
+      createLabel(form, { selected, onSelect }) {
+        const node = new LabelNode({
+          id: `form-${form.id}`,
+          text: form.label,
+          selected,
+          onSelect
+        });
+    
+        node.renderStrategy = labelRenderer;
+        node.hitTestStrategy = rectHitTestStrategy;
+    
+        return node;
+      }
+    
   
     createLabels(forms, opts) {
       return forms.map(form => this.createLabel(form, opts));

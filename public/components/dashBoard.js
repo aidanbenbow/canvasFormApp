@@ -38,11 +38,11 @@ const dashboardUIManifest = {
     toolbar: {
       type: 'container',
       children: [
-        { id: 'view', label: 'View', command: 'FORM_VIEW' },
-        { id: 'results', label: 'Results', command: 'FORM_RESULTS' },
-        { id: 'create', label: 'Create', command: 'FORM_CREATE' },
-        { id: 'edit', label: 'Edit', command: 'FORM_EDIT' },
-        { id: 'delete', label: 'Delete', command: 'FORM_DELETE' }
+        {type: 'button', id: 'view', label: 'View', command: 'FORM_VIEW' },
+        {type: 'button', id: 'results', label: 'Results', command: 'FORM_RESULTS' },
+        { type: 'button', id: 'create', label: 'Create', command: 'FORM_CREATE' },
+        { type: 'button', id: 'edit', label: 'Edit', command: 'FORM_EDIT' },
+        { type: 'button', id: 'delete', label: 'Delete', command: 'FORM_DELETE' }
       ]
     },
 
@@ -59,6 +59,9 @@ export class DashBoardScreen extends BaseScreen {
     this.store = store;
     this.context = context;
  this.factories = factories;
+ this.namespace = 'dashboard';
+ this.dispatcher = dispatcher;
+ console.log(this.factories);
     this.commandRegistry = commandRegistry;
     bindCommands({
       manifest: dashboardUIManifest,
@@ -71,7 +74,7 @@ export class DashBoardScreen extends BaseScreen {
   }
 
   createRoot() {
-    const { rootNode, regions } = compileUIManifest(dashboardUIManifest, this.factories);
+    const { rootNode, regions } = compileUIManifest(dashboardUIManifest, this.factories, this.commandRegistry);
     this.regions = regions;
     this.rootNode = rootNode;
     console.log("Dashboard root node created:", rootNode);
@@ -95,10 +98,24 @@ export class DashBoardScreen extends BaseScreen {
       factory: this.factories.formsUI,
       mapItem: (form) =>
   this.factories.formsUI.createLabel(form, {
-    onSelect: f =>
-      this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, f, this.namespace)
+    selected: form.id === this.store.getActiveForm()?.id,
+    onSelect: () => {
+      this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace)
+
+      // 2. Update UI selection state
+      for (const child of this.regions.forms.children) {
+        const isSelected = child.id === form.id;
+        if (child.state.selected !== isSelected) {
+          child.state.selected = isSelected;
+          child.invalidate();
+        }
+      }
+
+    }
+      
   })
     });
+  
   }
 
 }

@@ -29,21 +29,13 @@ const scaleY = this.canvas.height / rect.height;
   // Convert screen → canvas
 const canvasX = (e.clientX - rect.left) * scaleX;
   const canvasY = (e.clientY - rect.top) * scaleY;
-if(type==='click'){
-    console.log(`Click at canvas coords: (${canvasX}, ${canvasY})`);
-    console.log(`Canvas size: (${this.canvas.width}, ${this.canvas.height})`);
-    console.log(e.clientX, e.clientY);
-}
+
   // NEW: convert canvas → scene
   const { x, y } = this.pipeline.toSceneCoords(canvasX, canvasY);
-  
+  this.handlePointer(type, x, y);
       const root = this.pipeline.root
       const target = this.hitTest.hitTest(root,x, y, this.ctx);
 
-      if(type==='click'){
-        console.log(`Transformed to scene coords: (${x}, ${y})`);
-      console.log(`Event type: ${type}, Target: ${target ? target.id : 'none'}`);
-      }
       const event = new SceneEvent({
         type,
         x,
@@ -53,6 +45,37 @@ if(type==='click'){
       });
  
       this.dispatcher.dispatch(event);
+    }
+    handlePointer(type, x, y) {
+      const root = this.pipeline.root;
+      const target = this.hitTest.hitTest(root, x, y, this.ctx);
+    
+      // Track hover transitions
+      if (target !== this.lastPointerTarget) {
+        // Pointer left previous node
+        if (this.lastPointerTarget) {
+          this.lastPointerTarget.onPointerLeave?.();
+        }
+    
+        // Pointer entered new node
+        if (target) {
+          target.onPointerEnter?.();
+        }
+    
+        this.lastPointerTarget = target;
+      }
+    
+      // No target → nothing to do
+      if (!target) return;
+    
+      // Pointer down/up
+      if (type === "mousedown") {
+        target.onPointerDown?.();
+      }
+    
+      if (type === "mouseup") {
+        target.onPointerUp?.();
+      }
     }
   }
   

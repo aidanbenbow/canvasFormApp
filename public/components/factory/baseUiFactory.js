@@ -2,6 +2,7 @@
 import { ButtonNode } from "../nodes/buttonNode.js";
 import { ContainerNode } from "../nodes/containerNode.js";
 import { InputNode } from "../nodes/inputNode.js";
+import { LabelNode } from "../nodes/labelNode.js";
 import { ScrollNode } from "../nodes/scrollNode.js";
 import { TextNode } from "../nodes/textNode.js";
 
@@ -18,6 +19,7 @@ export class BaseUIFactory {
 
   export const componentRegistry = {
     button: (def) => new ButtonNode(def),
+    label: (def) => new LabelNode(def),
     text: (def) => new TextNode(def),
     input: (def) => new InputNode(def),
     container: (def) => new ScrollNode(def),

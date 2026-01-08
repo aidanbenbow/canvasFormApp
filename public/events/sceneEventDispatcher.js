@@ -3,7 +3,7 @@ import { buildScenePath } from "./sceneEvent.js";
 export class SceneEventDispatcher {
     dispatch(event) {
       if (!event.target) return false;
-  
+ 
       const path = buildScenePath(event.target);
   
       // --------------------

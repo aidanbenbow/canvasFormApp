@@ -14,6 +14,7 @@ export class RenderPipeline {
   
     setRoot(rootNode) {
       this.root = rootNode;
+      rootNode.on('invalidate', () => this.invalidate());
       this.invalidate();
     }
   

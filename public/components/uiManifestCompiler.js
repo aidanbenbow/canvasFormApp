@@ -4,7 +4,7 @@ import { layoutRegistry } from '../registries/layoutRegistry.js';
 import { containerRenderer } from '../renderers/containerRenderer.js';
 import { SceneNode } from './nodes/sceneNode.js';
 
-export function compileUIManifest(manifest, factories) {
+export function compileUIManifest(manifest, factories, commandRegistry) {
   const layoutFactory = layoutRegistry[manifest.layout];
 
   // Create root
@@ -36,7 +36,10 @@ export function compileUIManifest(manifest, factories) {
           id: `cmd-${childDef.id}`,
           type: 'button',
           label: childDef.label,
-          onClick: childDef.onClick
+          onClick: () => {
+            console.log("Button clicked:", childDef.command);
+            commandRegistry.execute(childDef.command);
+          }
         });
 
         regionNode.add(node);

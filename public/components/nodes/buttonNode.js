@@ -43,6 +43,7 @@ export class ButtonNode extends SceneNode {
     }
   
     onPointerDown() {
+   
       if (this.state.disabled) return;
       this.state.pressed = true;
       this.invalidate();
@@ -52,6 +53,7 @@ export class ButtonNode extends SceneNode {
       if (this.state.disabled) return;
   
       if (this.state.pressed) {
+        console.log("Button clicked:", this.id);
         this.onClick?.();
       }
   
