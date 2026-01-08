@@ -15,11 +15,7 @@ export class SceneHitTestSystem {
       if (hit) return hit;
     }
     // 2. Then test this node
-    if (!node.contains(point.x, point.y)) return null;
-
-  if(node.hitTest(point, ctx)) {
-    console.log('hit test success', node);
-  }
-    return node.hitTest(point, ctx) ? node : null;
+    if (!node.contains(local.x, local.y)) return null;
+    return node.hitTest(local, ctx) ? node : null;
   }
 }
