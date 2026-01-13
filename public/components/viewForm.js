@@ -1,84 +1,80 @@
-import { VerticalLayoutStrategy } from "../strategies/vertical.js";
-import { UIElement } from "./UiElement.js";
 import { BaseScreen } from "./baseScreen.js";
-import { createUIComponent } from "./createUIComponent.js";
-import { ManifestUI } from "./manifestUI.js";
+import { compileUIManifest } from "./uiManifestCompiler.js";
 
-export class FormViewScreen extends BaseScreen {
-    constructor({ context, dispatcher, eventBusManager, store, factories, onSubmit }) {
-      super({ id: 'form-view', context, dispatcher, eventBusManager });
-  
-      this.store = store;
-      this.factories = factories;
-      this.onSubmit = onSubmit;
-    }
-  
-    onEnter() {
-      this.build();
-      this.layoutToCanvas();
-    }
-  
-    build() {
-      this.setLayoutStrategy(new VerticalLayoutStrategy());
-  
-      const activeForm = this.store.getActiveForm();
-      const manifest = {
-        id: activeForm.id,
-        label: activeForm.label,
-        fields: activeForm.formStructure?.fields ?? []
-      };
-    
-      // 🔹 Ask the factory to build the form UI
-      const formUI = this.factories.formsUI.createFormView(manifest, {
-        onSubmit: this.onSubmit
-      });
-  
-      // 🔹 Add to screen
-      this.rootElement.setChildren([formUI]);
-    }
-  
-    layoutToCanvas() {
-      const canvas = this.context.canvas;
-      this.layout(canvas.width, canvas.height);
+const formViewUIManifest = {
+  layout: "vertical",
+id: "form-view-root",
+  regions: {
+    formContainer: {
+      type: "container",
+      layout: "vertical"
     }
   }
+};
 
-// const formViewManifest = {
-//     layout: 'vertical',
-//    forms: {
-//         idSuffix: 'formContainer',
-//         type: 'container',
-//         assignTo: 'formContainer'
-//     }
-// };
+export class FormViewScreen extends BaseScreen {
+  constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit }) {
+    super({ id: "form-view", context, dispatcher, eventBusManager });
 
-// export class ViewForm extends BaseScreen{
-//     constructor({id, context, dispatcher, eventBusManager, store,factory,  onSubmit }) {
-//         super({id, context, dispatcher, eventBusManager });
-//         this.store = store;
-//         this.onSubmit = onSubmit;
-//         this.inputBoxes = new Map();
-//         this.factory = factory;
-//         this.buildUI();
-//         this.rootElement.addChild(this.manifestUI);
-//         this.buildLayout();
-//     }
-//     buildUI() {
-//         this.manifestUI.buildContainersFromManifest(formViewManifest);
-//     }
-//     buildLayout() {
-//         const activeForm = this.store.getActiveForm();
-//         this.manifestUI.buildFormFromManifest(activeForm, this.manifestUI.formContainer, {
-//             onSubmit: this.onSubmit
-//         });
-//           // 🔹 Immediately measure and lay out
-//   const canvas = this.context.uiStage.layoutRenderer.canvas;
-//   const w = canvas.width;
-//   const h = canvas.height;
-//   this.manifestUI.measure({ maxWidth: w, maxHeight: h });
-//   this.manifestUI.layout(0, 0, w, h);
+    this.store = store;
+    this.factories = factories;
+    this.commandRegistry = commandRegistry;
+    this.onSubmit = onSubmit;
+  }
 
-//     }
+  createRoot() {
+    const { rootNode, regions } = compileUIManifest(
+      formViewUIManifest,
+      this.factories,
+      this.commandRegistry
+    );
 
-// }
+    this.rootNode = rootNode;
+    this.regions = regions;
 
+    return rootNode;
+  }
+  onEnter() {
+    const activeForm = this.store.getActiveForm();
+    if (!activeForm) return;
+  
+    const manifest = {
+      id: "form-view-root",
+      layout: "vertical",
+      regions: {
+        fields: {
+          children: [
+            { type: "input", id: "name", label: "Dorcas" },
+            { type: "input", id: "report", label: "Report", placeholder: "Enter text..." },
+            { type: "formButton", id: "submit", label: "Submit", command: "submitForm" }
+          ]
+        }
+      }
+    };
+  
+    const { regions } = compileUIManifest(
+      manifest,
+      this.factories,
+      this.commandRegistry,
+      {onChange: (fieldId, value) => {
+        console.log(`Field ${fieldId} changed to:`, value);
+      },
+      onSubmit: () => {
+        const responseData = {
+          name: regions.fields.children.find(c => c.id === 'name')?.state.value,
+          report: regions.fields.children.find(c => c.id === 'report')?.state.value
+        };
+        this.onSubmit?.(responseData);
+
+      }
+    }
+    );
+  
+    this.regions.formContainer.setChildren(regions.fields.children);
+    this.rootNode.invalidate?.();
+  }
+
+  onExit() {
+    // If you later bind store subscriptions here, clean them up.
+  }
+}

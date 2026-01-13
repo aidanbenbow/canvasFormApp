@@ -12,9 +12,14 @@ export class BaseUIFactory {
       this.context = context;
     }
   
-    create(def) {
-      return createUIComponent(def, this.context);
+    create(def, handlers = {}) {
+      return this.createComponent(def, handlers);
     }
+  
+    createComponent(def, handlers={}) {
+      return createUIComponent(def, this.context, handlers);
+    }
+  
   }
 
   export const componentRegistry = {
@@ -26,10 +31,12 @@ export class BaseUIFactory {
     fieldContainer: (def) => new ContainerNode(def),
   };
   
-  export function createUIComponent(def) {
+  export function createUIComponent(def, context, handlers = {}) {
     const factory = componentRegistry[def.type];
     if (!factory) {
       throw new Error(`Unknown component type: ${def.type}`);
     }
-    return factory(def);
+  
+    // Pass handlers into the node definition
+    return factory({ ...def, handlers, context });
   }

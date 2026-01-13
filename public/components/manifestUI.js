@@ -1,7 +1,7 @@
-import { CommandRegistry } from "../registries/commandRegistry.js";
+
 import { UIElement } from "./UiElement.js";
 import { UIFieldContainer } from "./UiFieldContainer.js";
-import { UIButton } from "./button.js";
+
 import { createUIComponent } from "./createUIComponent.js";
 
 

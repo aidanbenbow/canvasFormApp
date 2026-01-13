@@ -1,3 +1,5 @@
+import { scrollRenderer } from "../../renderers/nodeRenderers/scrollRenderer.js";
+import { scrollLayoutStrategy } from "../../strategies/nodeLayouts/scrollLayout.js";
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 

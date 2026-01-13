@@ -128,6 +128,11 @@ export class SceneNode {
 
   globalToLocal(point) {
     const b = this.bounds; // absolute bounds
+    // If we have no bounds yet, treat local == global
+  if (!b) {
+    return { x: point.x, y: point.y };
+  }
+
     return {
       x: point.x - b.x,
       y: point.y - b.y

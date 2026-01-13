@@ -10,13 +10,20 @@ export class FormsUIFactory extends BaseUIFactory {
         this.fieldRegistry = {
           text: this.createTextField.bind(this),
           input: this.createInputField.bind(this),
-          button: this.createButtonField.bind(this)
+          formButton: this.createButtonField.bind(this)
         };
       }
     
       registerFieldType(type, factoryFn) {
         this.fieldRegistry[type] = factoryFn;
       }
+      // createComponent(def, handlers = {}) {
+      //   if (def.type in this.fieldRegistry) {
+      //     return this.fieldRegistry[def.type](def, handlers);
+      //   }
+      //   return super.createComponent(def, handlers);
+      // }
+    
     createField(fieldDef, handlers) {
         const factoryFn = this.fieldRegistry[fieldDef.type];
         if (!factoryFn) {
@@ -25,51 +32,59 @@ export class FormsUIFactory extends BaseUIFactory {
         return factoryFn(fieldDef, handlers);
         }   
         
-    createTextField(fieldDef, { onChange }) {
-        return this.create({
-          id: `field-${fieldDef.id}`,
-          type: 'fieldContainer',
-          label: fieldDef.label,
-          children: [
-            this.create({
-              id: `input-${fieldDef.id}`,
-              type: 'text',
-              placeholder: fieldDef.placeholder || '',
-              onChange: (value) => onChange?.(fieldDef.id, value)
-            })
-          ]
-        });
-      }
+        createTextField(fieldDef, handlers = {}) {
+          const { onChange } = handlers;
+        
+          return super.create({
+            id: `field-${fieldDef.id}`,
+            type: "fieldContainer",
+            label: fieldDef.label,
+            children: [
+              super.create({
+                id: `input-${fieldDef.id}`,
+                type: "text",
+                placeholder: fieldDef.placeholder || "",
+                onChange: value => onChange?.(fieldDef.id, value)
+              }, handlers)
+            ]
+          }, handlers);
+        }
+        
 
-      createInputField(fieldDef, { onChange }) {
-        return this.create({
+      createInputField(fieldDef, handlers = {}) {
+        const { onChange } = handlers;
+      
+        return super.create({
           id: `field-${fieldDef.id}`,
           type: 'fieldContainer',
           label: fieldDef.label,
           children: [
-            this.create({
+            super.create({
               id: `input-${fieldDef.id}`,
               type: 'input',
               placeholder: fieldDef.placeholder || '',
-              onChange: (value) => onChange?.(fieldDef.id, value)
-            })
+              onChange: value => onChange?.(fieldDef.id, value)
+            }, handlers)
           ]
-        });
+        }, handlers);
       }
-      createButtonField(fieldDef, { onSubmit }) {
-        return this.create({
+      createButtonField(fieldDef, handlers = {}) {
+        const { onSubmit } = handlers;
+      
+        return super.create({
           id: `field-${fieldDef.id}`,
           type: "fieldContainer",
           children: [
-            this.create({
+            super.create({
               id: `btn-${fieldDef.id}`,
               type: "button",
               label: fieldDef.label ?? "Submit",
               onClick: () => onSubmit?.()
-            })
+            }, handlers)
           ]
-        });
+        }, handlers);
       }
+      
       createLabel(form, { selected, onSelect }) {
         const node = new LabelNode({
           id: `form-${form.id}`,
@@ -90,6 +105,7 @@ export class FormsUIFactory extends BaseUIFactory {
     }
   
     createFormView(formManifest, handlers) {
+      console.log("Creating form view for manifest:", formManifest);
         const container = this.create({
           id: `form-${formManifest.id}`,
           type: 'container',

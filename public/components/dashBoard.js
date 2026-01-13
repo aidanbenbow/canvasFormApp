@@ -57,11 +57,12 @@ export class DashBoardScreen extends BaseScreen {
   constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry }) {
     super({ id:'dashboard', context, dispatcher, eventBusManager });
     this.store = store;
+    console.log('activeform', store.getActiveForm());
+    console.log('forms', store.getForms());
     this.context = context;
  this.factories = factories;
  this.namespace = 'dashboard';
  this.dispatcher = dispatcher;
- console.log(this.factories);
     this.commandRegistry = commandRegistry;
     bindCommands({
       manifest: dashboardUIManifest,
@@ -78,23 +79,24 @@ export class DashBoardScreen extends BaseScreen {
     this.regions = regions;
     this.rootNode = rootNode;
     console.log("Dashboard root node created:", rootNode);
-    console.log("Dashboard regions:", regions);
     return rootNode;
   }
 
   onEnter() {
+    this.bindState();
     this.unsubActive = this.store.subscribe('activeForm', ({ activeForm }) => {
       const active = activeForm;
-    
+    console.log("Active form changed:", active);
       for (const child of this.regions.forms.children) {
         const isSelected = child.id === active?.id;
         if (child.state.selected !== isSelected) {
           child.state.selected = isSelected;
+          console.log(`Form ${child.id} selection state changed to:`, isSelected);
           child.invalidate();
         }
       }
     });
-    this.bindState();
+   
   }
 
   onExit() {

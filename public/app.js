@@ -45,12 +45,13 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
   context.pipeline.setRendererContext(context.ctx)
 
 const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
+const commandRegistry = new CommandRegistry();
 const factories = {
-  commandUI: new CommandUIFactory(context),
-  formsUI: new FormsUIFactory(context),
+  commandUI: new CommandUIFactory({ commandRegistry }),
+  formsUI: new FormsUIFactory({commandRegistry}),
   resultsUI: new ResultsUIFactory(context),
 };
-const commandRegistry = new CommandRegistry();
+
 
 const sceneInput = new SceneInputSystem({
   canvas: mainCanvas,

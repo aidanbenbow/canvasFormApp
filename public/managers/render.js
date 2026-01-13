@@ -21,12 +21,14 @@ export class RenderManager {
           drawable.render(context); // ✅ Self-rendering fallback
         }
       }
-      
+      clearAll(ctx) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
 
-    clearAll(rendererContext) {
-        for (const renderer of this.registry.getAll()) {
-            renderer?.clear?.(rendererContext); // Optional clear method per renderer
-        }
-        this.fallbackRenderer?.clear?.(rendererContext);
-    }
+    // clearAll(rendererContext) {
+    //     for (const renderer of this.registry.getAll()) {
+    //         renderer?.clear?.(rendererContext); // Optional clear method per renderer
+    //     }
+    //     this.fallbackRenderer?.clear?.(rendererContext);
+    // }
 }

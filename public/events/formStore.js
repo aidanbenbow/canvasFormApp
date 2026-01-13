@@ -134,6 +134,7 @@ _addResults(formId, newResults){
         this._emitForms();
     }
     subscribe(key, handler) {
+        console.log("Subscribing to key:", key);
         if (key === "forms") {
           return this.eventBusManager.on(
             ACTIONS.STORE.FORM_FORMS,
@@ -145,7 +146,7 @@ _addResults(formId, newResults){
         if (key === "activeForm") {
           return this.eventBusManager.on(
             ACTIONS.STORE.FORM_ACTIVE,
-            ({ activeForm }) => handler(activeForm),
+            ({ activeForm }) => handler({activeForm}),
             "ui"
           );
         }

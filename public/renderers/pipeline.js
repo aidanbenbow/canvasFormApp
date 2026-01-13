@@ -13,8 +13,19 @@ export class RenderPipeline {
     }
   
     setRoot(rootNode) {
+      // 1. Detach old root
+      if (this.root) {
+        this.root.off("invalidate", this._invalidateHandler);
+      }
+    
+      // 2. Attach new root
       this.root = rootNode;
-      rootNode.on('invalidate', () => this.invalidate());
+    
+      // Keep a reference to the handler so we can remove it later
+      this._invalidateHandler = () => this.invalidate();
+      rootNode.on("invalidate", this._invalidateHandler);
+    
+      // 3. Force redraw
       this.invalidate();
     }
   
@@ -42,9 +53,11 @@ export class RenderPipeline {
     }
   
     renderFrame() {
+      
       if (!this.dirty) return;
       this.renderManager.clearAll(this.rendererContext);
       if (this.root) {
+       
         this.root.render(this.rendererContext);
       }
       this.dirty = false;

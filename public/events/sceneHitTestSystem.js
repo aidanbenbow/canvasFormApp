@@ -1,13 +1,20 @@
 export class SceneHitTestSystem {
 
   hitTest(root, x, y, ctx) {
+    // Use the root passed in, not this.root
+    if (!root || !root.bounds) {
+      return null;
+    }
+
+  
     return this._hitNode(root, { x, y }, ctx);
   }
 
   _hitNode(node, point, ctx) {
-    if (!node.visible) return null;
-    // Convert global → local for THIS node
-    const local = node.globalToLocal(point);
+    if (!node || !node.visible || !node.bounds) return null;
+
+// Convert global → local
+const local = node.globalToLocal(point);
 
     // 1. Test children first — pass GLOBAL point down
     for (let i = node.children.length - 1; i >= 0; i--) {

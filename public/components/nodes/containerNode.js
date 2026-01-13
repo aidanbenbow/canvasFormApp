@@ -1,3 +1,4 @@
+import { layoutRegistry } from "../../registries/layoutRegistry.js";
 import { containerRenderer } from "../../renderers/containerRenderer.js";
 import { SceneNode } from "./sceneNode.js";
 
@@ -5,7 +6,7 @@ export class ContainerNode extends SceneNode {
     constructor({ id, layout = "vertical", style = {}, children = [] }) {
       super({
         id,
-        layoutStrategy: layoutRegistry[layout](),
+        layoutStrategy: layoutRegistry[layout],
         renderStrategy: containerRenderer
       });
   

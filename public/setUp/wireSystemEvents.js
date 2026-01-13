@@ -19,24 +19,27 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
     },'wiring');
 
     dispatcher.on(ACTIONS.FORM.VIEW, async (form) => {
-        dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
+      dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
       console.log(`Viewing form with id: ${form.id}`);
-        const view = new FormViewScreen({
-          context,
-          dispatcher,
-          eventBusManager: bus,
-          store,
-          factories,
-          onSubmit: (responseData) => {
-            dispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
-              form: store.getActiveForm(),
-              responseData
-            });
-          }
-        });
-      
-        router.push(view);
-      }, 'wiring');
+  
+      const view = new FormViewScreen({
+        context,
+        dispatcher,
+        eventBusManager: bus,
+        store,
+        factories,
+        commandRegistry,
+        onSubmit: (responseData) => {
+          dispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
+            form: store.getActiveForm(),
+            responseData
+          });
+        }
+      });
+  
+      router.push(view);
+    }, "wiring");
+  
 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
