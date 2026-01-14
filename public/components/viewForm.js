@@ -7,7 +7,19 @@ id: "form-view-root",
   regions: {
     formContainer: {
       type: "container",
-      layout: "vertical"
+      children: []
+    }
+  }
+};
+
+const manifest = {
+  regions: {
+    fields: {
+      children: [
+        { type: "input", id: "name", label: "Dorcas" },
+        { type: "input", id: "report", label: "Report", placeholder: "Enter text..." },
+        { type: "formButton", id: "submit", label: "Submit", command: "submitForm" }
+      ]
     }
   }
 };
@@ -17,14 +29,23 @@ export class FormViewScreen extends BaseScreen {
     super({ id: "form-view", context, dispatcher, eventBusManager });
 
     this.store = store;
+    this.children = this.store.getActiveForm()?.formStructure || {};
+    this.childArray = Object.values(this.children);
+    this.manifest = formViewUIManifest;
+    this.createManfest();
     this.factories = factories;
     this.commandRegistry = commandRegistry;
     this.onSubmit = onSubmit;
   }
-
+  createManfest() {
+        for(let child of this.childArray){
+            this.manifest.regions.formContainer.children.push(...child);
+        }
+        console.log('Form View Manifest:', this.manifest);
+  }
   createRoot() {
     const { rootNode, regions } = compileUIManifest(
-      formViewUIManifest,
+      this.manifest,
       this.factories,
       this.commandRegistry
     );
@@ -35,43 +56,7 @@ export class FormViewScreen extends BaseScreen {
     return rootNode;
   }
   onEnter() {
-    const activeForm = this.store.getActiveForm();
-    if (!activeForm) return;
-  
-    const manifest = {
-      id: "form-view-root",
-      layout: "vertical",
-      regions: {
-        fields: {
-          children: [
-            { type: "input", id: "name", label: "Dorcas" },
-            { type: "input", id: "report", label: "Report", placeholder: "Enter text..." },
-            { type: "formButton", id: "submit", label: "Submit", command: "submitForm" }
-          ]
-        }
-      }
-    };
-  
-    const { regions } = compileUIManifest(
-      manifest,
-      this.factories,
-      this.commandRegistry,
-      {onChange: (fieldId, value) => {
-        console.log(`Field ${fieldId} changed to:`, value);
-      },
-      onSubmit: () => {
-        const responseData = {
-          name: regions.fields.children.find(c => c.id === 'name')?.state.value,
-          report: regions.fields.children.find(c => c.id === 'report')?.state.value
-        };
-        this.onSubmit?.(responseData);
-
-      }
-    }
-    );
-  
-    this.regions.formContainer.setChildren(regions.fields.children);
-    this.rootNode.invalidate?.();
+    
   }
 
   onExit() {

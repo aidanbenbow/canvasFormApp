@@ -6,7 +6,7 @@ import { SceneNode } from './nodes/sceneNode.js';
 
 export function compileUIManifest(manifest, factories, commandRegistry, handlers = {}) {
   const layoutFactory = layoutRegistry[manifest.layout];
-
+console.log(manifest);
   // Create root
   const rootNode = new SceneNode({
     id: manifest.id || "root",
@@ -26,72 +26,24 @@ export function compileUIManifest(manifest, factories, commandRegistry, handlers
       children: []
     });
 
-    rootNode.add(regionNode);
+    // Add region to root
     regions[key] = regionNode;
 
-    // If region has children, compile them
-    if (def.children) {
-      def.children.forEach(childDef => {
-        let node;
-
-        // If this is a form field, use FormsUIFactory
-        if (childDef.type in factories.formsUI.fieldRegistry) {
-          node = factories.formsUI.createField(childDef, handlers);
-        } else {
-          // Otherwise use CommandUIFactory
-          node = factories.commandUI.create(childDef);
-        }
-
-        regionNode.add(node);
-      });
-    }
+    // Add children to region
+    def.children.forEach((childDef) => {
+      const factory = factories['basic']
+      if (!factory) {
+        throw new Error(`No factory found for type: ${childDef.type}`);
+      }
+      const childNode = factory.create(childDef, commandRegistry);
+      console.log('Created child node:', childNode);
+      regionNode.add(childNode);
+    });
+    rootNode.add(regionNode);
+  
   });
-
+console.log('Regions:', regions);
+console.log('Root Node:', rootNode);
   return { rootNode, regions };
 }
 
-// export function compileUIManifest(manifest, factories, commandRegistry) {
-//   const layoutFactory = layoutRegistry[manifest.layout];
-
-//   // Create root
-//   const rootNode = new SceneNode({
-//     id: manifest.id || 'root',
-//     layoutStrategy: layoutFactory(),
-//     renderStrategy: containerRenderer,
-//     children: []
-//   });
-
-//   const regions = {};
-
-//   // Build regions
-//   Object.entries(manifest.regions).forEach(([key, def]) => {
-//     const regionNode = new SceneNode({
-//       id: `${manifest.id || 'root'}-${key}`,
-//       layoutStrategy: layoutFactory(),
-//       renderStrategy: containerRenderer,
-//       children: []
-//     });
-
-//     rootNode.add(regionNode);
-//     regions[key] = regionNode;
-
-//     // Build children inside region
-//     if (def.children) {
-//       def.children.forEach(childDef => {
-//         const node = factories.commandUI.create({
-//           id: `cmd-${childDef.id}`,
-//           type: 'button',
-//           label: childDef.label,
-//           onClick: () => {
-//             console.log("Button clicked:", childDef.command);
-//             commandRegistry.execute(childDef.command);
-//           }
-//         });
-
-//         regionNode.add(node);
-//       });
-//     }
-//   });
-
-//   return { rootNode, regions };
-// }

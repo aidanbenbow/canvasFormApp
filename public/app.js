@@ -1,4 +1,5 @@
 
+import { BaseUIFactory } from "./components/factory/baseUiFactory.js";
 import { CommandUIFactory } from "./components/factory/commandUiFactory.js";
 import { FormsUIFactory } from "./components/factory/formsUiFactory.js";
 import { ResultsUIFactory } from "./components/factory/resultsUiFactory.js";
@@ -47,6 +48,7 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
 const commandRegistry = new CommandRegistry();
 const factories = {
+  basic: new BaseUIFactory({ context }),
   commandUI: new CommandUIFactory({ commandRegistry }),
   formsUI: new FormsUIFactory({commandRegistry}),
   resultsUI: new ResultsUIFactory(context),
