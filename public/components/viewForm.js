@@ -12,17 +12,6 @@ id: "form-view-root",
   }
 };
 
-const manifest = {
-  regions: {
-    fields: {
-      children: [
-        { type: "input", id: "name", label: "Dorcas" },
-        { type: "input", id: "report", label: "Report", placeholder: "Enter text..." },
-        { type: "formButton", id: "submit", label: "Submit", command: "submitForm" }
-      ]
-    }
-  }
-};
 
 export class FormViewScreen extends BaseScreen {
   constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit }) {
@@ -41,7 +30,7 @@ export class FormViewScreen extends BaseScreen {
         for(let child of this.childArray){
             this.manifest.regions.formContainer.children.push(...child);
         }
-        console.log('Form View Manifest:', this.manifest);
+       
   }
   createRoot() {
     const { rootNode, regions } = compileUIManifest(
@@ -63,3 +52,15 @@ export class FormViewScreen extends BaseScreen {
     // If you later bind store subscriptions here, clean them up.
   }
 }
+
+const manifest = {
+  regions: {
+    fields: {
+      children: [
+        { type: "input", id: "name", label: "Dorcas" },
+        { type: "input", id: "report", label: "Report", placeholder: "Enter text..." },
+        { type: "formButton", id: "submit", label: "Submit", command: "submitForm" }
+      ]
+    }
+  }
+};

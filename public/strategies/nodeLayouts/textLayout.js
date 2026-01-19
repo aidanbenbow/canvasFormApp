@@ -1,5 +1,6 @@
 export const textLayoutStrategy = {
     measure(node, constraints, ctx) {
+      console.log('Measuring text node:', node);
       ctx.save();
       ctx.font = node.style.font;
   
@@ -11,7 +12,7 @@ export const textLayoutStrategy = {
       );
   
       ctx.restore();
-  
+  console.log('Measured text node:', { text: node.text, width, height });
       return { width, height };
     },
   

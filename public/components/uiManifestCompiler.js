@@ -2,6 +2,7 @@
 
 import { layoutRegistry } from '../registries/layoutRegistry.js';
 import { containerRenderer } from '../renderers/containerRenderer.js';
+import { ContainerNode } from './nodes/containerNode.js';
 import { SceneNode } from './nodes/sceneNode.js';
 
 export function compileUIManifest(manifest, factories, commandRegistry, handlers = {}) {
@@ -19,10 +20,10 @@ console.log(manifest);
 
   // Build regions
   Object.entries(manifest.regions).forEach(([key, def]) => {
-    const regionNode = new SceneNode({
-      id: `${manifest.id || "root"}-${key}`,
-      layoutStrategy: layoutFactory(),
-      renderStrategy: containerRenderer,
+    const regionNode = new ContainerNode({
+      id: key,
+      layout: def.layout || 'vertical',
+      style: def.style || {},
       children: []
     });
 
@@ -36,13 +37,13 @@ console.log(manifest);
         throw new Error(`No factory found for type: ${childDef.type}`);
       }
       const childNode = factory.create(childDef, commandRegistry);
-      console.log('Created child node:', childNode);
+     
       regionNode.add(childNode);
     });
     rootNode.add(regionNode);
   
   });
-console.log('Regions:', regions);
+
 console.log('Root Node:', rootNode);
   return { rootNode, regions };
 }

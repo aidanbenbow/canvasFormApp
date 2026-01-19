@@ -9,7 +9,9 @@ export class VerticalLayoutStrategy {
     let totalHeight = this.padding;
 
     for (const child of container.children) {
-      const childSize = child.measure(ctx, { maxWidth: constraints.maxWidth - 2 * this.padding, maxHeight: constraints.maxHeight });
+      const childSize = child.measure(  ctx,
+        { maxWidth: constraints.maxWidth - 2 * this.padding, maxHeight: constraints.maxHeight }
+      );
       totalWidth = Math.max(totalWidth, childSize.width);
       totalHeight += childSize.height + this.spacing;
     }
@@ -24,6 +26,7 @@ export class VerticalLayoutStrategy {
   }
 
   layout(container, bounds, ctx) {
+    
     let currentY = bounds.y + this.padding;
     const innerWidth = bounds.width - 2 * this.padding;
 

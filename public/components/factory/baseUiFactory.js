@@ -36,6 +36,6 @@ export class BaseUIFactory {
     if (!factory) {
       throw new Error(`Unknown component type: ${def.type}`);
     }
-  
+ 
     return factory({ ...def, context });
   }

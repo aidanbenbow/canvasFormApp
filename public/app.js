@@ -45,7 +45,7 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 
   context.pipeline.setRendererContext(context.ctx)
 
-const screenRouter = new ScreenRouter({ context, stage: context.uiStage });
+const screenRouter = new ScreenRouter({ context });
 const commandRegistry = new CommandRegistry();
 const factories = {
   basic: new BaseUIFactory({ context }),
