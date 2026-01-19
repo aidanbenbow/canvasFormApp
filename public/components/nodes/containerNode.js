@@ -6,7 +6,7 @@ export class ContainerNode extends SceneNode {
     constructor({ id, layout = "vertical", style = {}, children = [] }) {
       super({
         id,
-        layoutStrategy: layoutRegistry[layout],
+        layoutStrategy: layoutRegistry[layout](),
         renderStrategy: containerRenderer
       });
   

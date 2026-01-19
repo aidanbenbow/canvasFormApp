@@ -1,5 +1,5 @@
 export class VerticalLayoutStrategy {
-  constructor({ padding = 8, spacing = 6 } = {}) {
+  constructor({ padding = 18, spacing = 6 } = {}) {
     this.padding = padding;
     this.spacing = spacing;
   }
@@ -9,6 +9,7 @@ export class VerticalLayoutStrategy {
     let totalHeight = this.padding;
 
     for (const child of container.children) {
+
       const childSize = child.measure(  ctx,
         { maxWidth: constraints.maxWidth - 2 * this.padding, maxHeight: constraints.maxHeight }
       );

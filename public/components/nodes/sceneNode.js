@@ -64,7 +64,7 @@ export class SceneNode {
           };
         }
     
-        child.layout(child.bounds, ctx);
+       // child.layout(child.bounds, ctx);
       }
     
     }

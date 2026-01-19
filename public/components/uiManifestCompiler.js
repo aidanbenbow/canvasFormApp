@@ -22,7 +22,6 @@ console.log(manifest);
   Object.entries(manifest.regions).forEach(([key, def]) => {
     const regionNode = new ContainerNode({
       id: key,
-      layout: def.layout || 'vertical',
       style: def.style || {},
       children: []
     });
