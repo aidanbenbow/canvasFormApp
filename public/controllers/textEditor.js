@@ -1,22 +1,18 @@
-import { dispatcher } from "../app.js";
-import { PopupKeyboard } from "../components/keyBoard.js";
-import { ACTIONS } from "../events/actions.js";
+
 import { CaretController } from "./caretController.js";
 import { KeyBoardInputController } from "./keyBoardInputController.js";
 import { keyboardController } from "./keyboardController.js";
 import { TextModel } from "./textModel.js";
 
 export class TextEditorController {
-    constructor(pipeline,  layoutManager, layoutRenderer, uiStage) {
+    constructor(pipeline,popup) {
         this.activeBox = null;
         this.activeField = null; // Not used in this controller, but kept for consistency
         this.caretIndex = 0;
         this.blinkState = true;
         this.pipeline = pipeline;
-        this.layoutManager = layoutManager;
-        this.layoutRenderer = layoutRenderer;
-this.uiStage = uiStage;
-        this.keyboardController = new keyboardController(pipeline, layoutManager, layoutRenderer,uiStage);
+  this.popup = popup
+        this.keyboardController = new keyboardController(pipeline, this.popup);
         this.textModel = null
         this.keyboardInput = new KeyBoardInputController(this);
         this.caretController = new CaretController(this);
@@ -27,7 +23,6 @@ this.uiStage = uiStage;
 
     
     startEditing(box, field = 'text') {
-     
         this.activeBox = box;
         this.activeField = field;
 
@@ -38,7 +33,7 @@ this.uiStage = uiStage;
   
       this.caretController.setCaretToEnd(initialValue);
       this.keyboardInput.enable();
-       this.keyboardController.showKeyboard(box, field);
+       this.keyboardController.showKeyboard();
 
         this.pipeline.invalidate();
       }

@@ -33,6 +33,13 @@ export class InputNode extends SceneNode {
   
     onPointerDown() {
       this.state.focused = true;
+      this.emit("focus", this);
+      this.invalidate();
+    }
+
+    updateText(newValue) {
+      this.value = newValue;
+      this.cursorPos = newValue.length;
       this.invalidate();
     }
   

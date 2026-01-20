@@ -1,4 +1,5 @@
 import { BaseScreen } from "./baseScreen.js";
+import { InputNode } from "./nodes/inputNode.js";
 import { compileUIManifest } from "./uiManifestCompiler.js";
 
 const formViewUIManifest = {
@@ -45,7 +46,17 @@ export class FormViewScreen extends BaseScreen {
     return rootNode;
   }
   onEnter() {
-    
+    const editor = this.context.textEditorController;
+  
+    // Walk the tree and attach focus listeners
+    function wireInputs(node) {
+      if (node instanceof InputNode) {
+        node.on("focus", () => editor.startEditing(node));
+      }
+      node.children.forEach(wireInputs);
+    }
+  
+    wireInputs(this.rootNode);
   }
 
   onExit() {

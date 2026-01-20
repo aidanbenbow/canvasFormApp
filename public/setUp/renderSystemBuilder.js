@@ -30,7 +30,7 @@ export class RenderSystemBuilder {
         this.renderManager =  new RenderManager(this.rendererRegistry);
         this.pipeline = new RenderPipeline(this.renderManager);
         this.pipeline.setRendererContext(this.canvasManager.getContext());
-        this.textEditorController = new TextEditorController(this.pipeline,this.layoutManager, this.layoutRenderer, this.uiStage);
+        this.textEditorController = new TextEditorController(this.pipeline);
         this.components = {};
         this.dragController = new DragController(this.pipeline);
        
