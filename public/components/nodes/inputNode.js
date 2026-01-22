@@ -43,20 +43,5 @@ export class InputNode extends SceneNode {
       this.invalidate();
     }
   
-    onKeyPress(char) {
-      if (!this.state.focused) return;
-      this.value += char;
-      this.cursorPos = this.value.length;
-      this.onChange?.(this.value);
-      this.invalidate();
-    }
-  
-    onKeyBackspace() {
-      if (!this.state.focused) return;
-      this.value = this.value.slice(0, -1);
-      this.cursorPos = this.value.length;
-      this.onChange?.(this.value);
-      this.invalidate();
-    }
   }
   

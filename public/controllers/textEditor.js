@@ -33,7 +33,7 @@ export class TextEditorController {
   
       this.caretController.setCaretToEnd(initialValue);
       this.keyboardInput.enable();
-       this.keyboardController.showKeyboard();
+      // this.keyboardController.showKeyboard();
 
         this.pipeline.invalidate();
       }

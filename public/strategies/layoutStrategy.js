@@ -1,11 +1,9 @@
 export class LayoutStrategy {
-    constructor({ spacing = 8, padding = 8 } = {}) {
-      this.spacing = spacing;
-      this.padding = padding;
-    }
-  
-    // Should be implemented by subclasses
-    apply(container) {
-      throw new Error("LayoutStrategy.apply() must be implemented");
-    }
+  measure(node, constraints, ctx) {
+    throw new Error(`${this.constructor.name}.measure() not implemented`);
   }
+
+  layout(node, bounds, ctx) {
+    throw new Error(`${this.constructor.name}.layout() not implemented`);
+  }
+}
