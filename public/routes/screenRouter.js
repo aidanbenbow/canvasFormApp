@@ -1,8 +1,8 @@
 
   export class ScreenRouter {
-    constructor({ context }) {
+    constructor({ context, uiEngine }) {
       this.context = context;
-      this.pipeline = context.pipeline;
+      this.uiEngine = uiEngine;
   
       this.currentScreen = null;
       this.screenStack = [];
@@ -15,10 +15,9 @@
       }
   screen.createRoot();
       this.currentScreen = screen;
-      this.pipeline.setRoot(screen.rootNode);
+      this.uiEngine.mountScene(screen.rootNode);
       screen.onEnter?.();
-  
-      this.pipeline.invalidate();
+      this.context.pipeline.invalidate();
     }
   
     push(screen) {
@@ -29,10 +28,9 @@
       }
       screen.createRoot();
       this.currentScreen = screen;
-      this.pipeline.setRoot(screen.rootNode);
+      this.uiEngine.mountScene(screen.rootNode);
       screen.onEnter?.();
-  
-      this.pipeline.invalidate();
+  this.context.pipeline.invalidate();
     }
   
     pop() {
@@ -43,9 +41,9 @@
       this.currentScreen = this.screenStack.pop();
       if (this.currentScreen) {
         this.currentScreen.createRoot?.();
-        this.pipeline.setRoot(this.currentScreen.rootNode);
+        this.uiEngine.mountScene(this.currentScreen.rootNode);
         this.currentScreen.onEnter?.();
-        this.pipeline.invalidate();
+        
       }
     }
   }

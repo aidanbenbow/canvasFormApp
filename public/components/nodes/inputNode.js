@@ -1,5 +1,5 @@
 import { inputRenderer } from "../../renderers/nodeRenderers/inputRenderer.js";
-import { inputLayoutStrategy } from "../../strategies/nodeLayouts/inputLayout.js";
+import { InputLayoutStrategy } from "../../strategies/nodeLayouts/inputLayout.js";
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
@@ -7,7 +7,7 @@ export class InputNode extends SceneNode {
     constructor({ id, value = "", placeholder = "", onChange, style = {} }) {
       super({
         id,
-        layoutStrategy: inputLayoutStrategy,
+        layoutStrategy: InputLayoutStrategy,
         renderStrategy: inputRenderer,
         hitTestStrategy: rectHitTestStrategy
       });
@@ -42,6 +42,10 @@ export class InputNode extends SceneNode {
       this.cursorPos = newValue.length;
       this.invalidate();
     }
+    getValue() {
+      return this.value;
+    }
+    
   
   }
   

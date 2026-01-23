@@ -1,7 +1,7 @@
 import { ACTIONS } from '../events/actions.js';
 import { normalizeForm } from '../plugins/formManifests.js';
 import { BaseScreen } from './baseScreen.js';
-import { ManifestUI } from './manifestUI.js';
+import { ManifestUI } from '../legacy/manifestUI.js';
 
 export const createFormManifest = {
   containers: [

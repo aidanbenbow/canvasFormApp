@@ -1,12 +1,31 @@
 export function engineRootLayoutStrategy() {
     return {
-      measure(node, available) {
+      measure(node, available, ctx) {
+        // Root fills the screen
+        for (const child of node.children) {
+          child.measure(available, ctx);
+        }
         return available;
       },
-      layout(node, bounds) {
-        node.children.forEach(child => {
-          child.setLayoutBounds(bounds);
-        });
+  
+      layout(node, bounds, ctx) {
+        // 🔴 THIS WAS MISSING
+        node.bounds = bounds;
+  
+        for (const child of node.children) {
+          const measured = child.measured ?? child.measure(bounds, ctx);
+  
+          child.layout(
+            {
+              x: bounds.x,
+              y: bounds.y,
+              width: measured.width,
+              height: measured.height
+            },
+            ctx
+          );
+        }
       }
     };
   }
+  

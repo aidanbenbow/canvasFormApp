@@ -138,5 +138,7 @@ export class SceneNode {
       y: point.y - b.y
     };
   }
+  
+  
 
   }

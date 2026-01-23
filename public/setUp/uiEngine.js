@@ -14,12 +14,13 @@ export class UIEngine {
       });
   
       this.systemUIRoot = SystemUILayerFactory.create(dispatcher);
-      this.root.add(this.systemUIRoot);
+      this.root.add(this.systemUIRoot.root);
   
       this.screenManager = new ScreenManager(this.root);
     }
   
     mountScene(sceneRoot) {
       this.screenManager.loadScreen(sceneRoot);
+      this.root.invalidate();
     }
   }

@@ -1,4 +1,4 @@
-import { UIOverlayManager } from "../managers/UiOverlayManager.js";
+
 
 export class RendererContext {
     constructor({ ctx, hitCtx, hitRegistry, hitManager, pipeline, textEditorController, selectionController, focusManager,assetRegistry, canvas, uiStage, dragController }) {
@@ -15,6 +15,6 @@ export class RendererContext {
         this.canvas = canvas;
         this.uiStage = uiStage;
         this.dragController = dragController;
-        this.overlayManager = new UIOverlayManager({ context: this });
+        
     }
 }

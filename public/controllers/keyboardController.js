@@ -6,6 +6,7 @@ export class keyboardController {
   }
 
   showKeyboard() {
+    console.log("Showing keyboard popup", this.popupNode);
     this.popupNode.show();
     this.pipeline.invalidate();
   }

@@ -1,15 +1,15 @@
 export class ScreenManager {
     constructor(engineRoot) {
       this.engineRoot = engineRoot;
-      this.currentScreen = null;
+      this.currentScreenRoot = null;
     }
   
     loadScreen(screenRoot) {
-      if (this.currentScreen) {
-        this.engineRoot.remove(this.currentScreen);
+      if (this.currentScreenRoot) {
+        this.engineRoot.remove(this.currentScreenRoot);
       }
   
-      this.currentScreen = screenRoot;
+      this.currentScreenRoot = screenRoot;
       this.engineRoot.add(screenRoot);
     }
   }

@@ -1,4 +1,4 @@
-import { UIElement } from './UiElement.js';
+import { UIElement } from '../components/UiElement.js';
 import { UiText } from './UiText.js';
 
 

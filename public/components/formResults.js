@@ -1,6 +1,6 @@
 
 import { BaseScreen } from "./baseScreen.js";
-import { ManifestUI } from "./manifestUI.js";
+import { ManifestUI } from "../legacy/manifestUI.js";
 
 const resultFormManifest = {
     containers: [

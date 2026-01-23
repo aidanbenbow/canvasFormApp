@@ -1,12 +1,12 @@
 import { textRenderer } from "../../renderers/nodeRenderers/textRenderer.js";
-import { textLayoutStrategy } from "../../strategies/nodeLayouts/textLayout.js";
+import { TextLayoutStrategy } from "../../strategies/nodeLayouts/textLayout.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class TextNode extends SceneNode {
     constructor({ id, text, style = {} }) {
       super({
         id,
-        layoutStrategy: textLayoutStrategy,
+        layoutStrategy: TextLayoutStrategy,
         renderStrategy: textRenderer
       });
   

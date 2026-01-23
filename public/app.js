@@ -6,6 +6,7 @@ import { ResultsUIFactory } from "./components/factory/resultsUiFactory.js";
 import { canvasConfig, } from "./constants.js";
 
 import { fetchAllForms, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
+import { TextEditorController } from "./controllers/textEditor.js";
 import { ACTIONS } from "./events/actions.js";
 import { FormStore } from "./events/formStore.js";
 import { SceneInputSystem } from "./events/sceneInputSystem.js";
@@ -13,11 +14,14 @@ import { CanvasManager } from "./managers/canvas.js";
 import { LayoutManager } from "./managers/layOut.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { CommandRegistry } from "./registries/commandRegistry.js";
+import { containerRenderer } from "./renderers/containerRenderer.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
 import { ScreenRouter } from "./routes/screenRouter.js";
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
+import { UIEngine } from "./setUp/uiEngine.js";
 import { wireSystemEvents } from "./setUp/wireSystemEvents.js";
+import { engineRootLayoutStrategy } from "./strategies/engineRootLayout.js";
 import {  utilsRegister } from "./utils/register.js";
 
 
@@ -45,7 +49,19 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 
   context.pipeline.setRendererContext(context.ctx)
 
-const screenRouter = new ScreenRouter({ context });
+const uiengine = new UIEngine({
+  layoutStrategy: engineRootLayoutStrategy(),
+  renderStrategy: containerRenderer,
+  dispatcher: system.actionDispatcher
+});
+
+context.pipeline.setRoot(uiengine.root);
+context.pipeline.invalidate();
+
+const textEditor = new TextEditorController(context.pipeline, uiengine.systemUIRoot.popupLayer);
+context.textEditorController = textEditor;
+
+const screenRouter = new ScreenRouter({ context,uiEngine: uiengine });
 const commandRegistry = new CommandRegistry();
 const factories = {
   basic: new BaseUIFactory({ context }),
