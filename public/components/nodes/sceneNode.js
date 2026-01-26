@@ -39,7 +39,7 @@ export class SceneNode {
   
     // --- Lifecycle Pipelines ---
   
-    measure(ctx, constraints = { maxWidth: Infinity, maxHeight: Infinity }) {
+    measure( constraints = { maxWidth: Infinity, maxHeight: Infinity }, ctx) {
     
         // Then measure self via strategy
         this.measured = this.layoutStrategy?.measure?.(this, constraints, ctx) ?? {
@@ -55,13 +55,9 @@ export class SceneNode {
       this.layoutStrategy?.layout?.(this, bounds, ctx);
       for (const child of this.children) {
         if (!child.bounds) {
-          // Fallback: give child a zero-sized box at parent's origin
-          child.bounds = {
-            x: bounds.x,
-            y: bounds.y,
-            width: 0,
-            height: 0
-          };
+          throw new Error(
+            `Child ${child.id} was not laid out by ${this.id}`
+          );
         }
     
        // child.layout(child.bounds, ctx);

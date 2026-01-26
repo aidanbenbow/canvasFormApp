@@ -19,11 +19,12 @@ export function engineRootLayoutStrategy() {
             {
               x: bounds.x,
               y: bounds.y,
-              width: measured.width,
-              height: measured.height
+              width: measured.maxWidth,
+              height: measured.maxHeight
             },
             ctx
           );
+          
         }
       }
     };

@@ -15,7 +15,7 @@ export class UIEngine {
   
       this.systemUIRoot = SystemUILayerFactory.create(dispatcher);
       this.root.add(this.systemUIRoot.root);
-  
+ 
       this.screenManager = new ScreenManager(this.root);
     }
   

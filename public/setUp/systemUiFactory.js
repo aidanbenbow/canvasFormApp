@@ -14,15 +14,15 @@ export const SystemUILayerFactory = {
   
       const popupLayer = PopupModule.create(dispatcher);
       const keyboardLayer = KeyboardModule.create(dispatcher);
-  
+  console.log("Keyboard Layer:", keyboardLayer);
+  console.log("Popup Layer:", popupLayer);
+  console.log("System UI Root:", systemRoot);
       popupLayer.add(keyboardLayer);
       systemRoot.add(popupLayer);
       
   
       return {
-        root: systemRoot,
-        popupLayer,
-        keyboardLayer
+        root: systemRoot
       }
     }
   };

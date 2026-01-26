@@ -12,7 +12,7 @@ export const PopupModule = {
   
       dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => popup.show());
       dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => popup.hide());
-  
+  console.log(popup);
       return popup;
     }
   };

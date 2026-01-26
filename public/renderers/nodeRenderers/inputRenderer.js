@@ -1,3 +1,5 @@
+import { wrapText } from "../../controllers/textModel.js";
+
 export const inputRenderer = {
     render(node, ctx) {
       const { x, y, width, height } = node.bounds;
@@ -15,10 +17,19 @@ export const inputRenderer = {
       ctx.fillStyle = "#000";
   
       const textX = x + paddingX;
-      const textY = y + paddingY;
+      let textY = y + paddingY;
+
+      const maxTextWidth = width - 2 * paddingX;
+      const lines = node.value
+        ? wrapText(ctx, node.value, maxTextWidth)
+        : wrapText(ctx,node.placeholder,  maxTextWidth);
   
       if (node.value) {
-        ctx.fillText(node.value, textX, textY);
+        for(const line of lines) {
+          ctx.fillStyle = "#000";
+          ctx.fillText(line, textX, textY);
+          textY += parseInt(font) + 2; // Move to next line
+        }
       } else {
         ctx.fillStyle = "#888";
         ctx.fillText(node.placeholder, textX, textY);

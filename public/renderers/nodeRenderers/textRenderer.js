@@ -1,3 +1,5 @@
+import { wrapText } from "../../controllers/textModel.js";
+
 export const textRenderer = {
     render(node, ctx) {
       const { x, y, width, height } = node.bounds;
@@ -6,10 +8,13 @@ export const textRenderer = {
       ctx.save();
       ctx.font = font;
       ctx.fillStyle = color;
-  
+
+     
       // Baseline at top-left
       ctx.textBaseline = "top";
-      ctx.fillText(node.text, x, y);
+
+       ctx.fillText(node.text, x, y );
+       
   
       ctx.restore();
     }

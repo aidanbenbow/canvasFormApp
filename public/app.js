@@ -56,9 +56,12 @@ const uiengine = new UIEngine({
 });
 
 context.pipeline.setRoot(uiengine.root);
+
+
+const pop = uiengine.root.children[0].children[0]
 context.pipeline.invalidate();
 
-const textEditor = new TextEditorController(context.pipeline, uiengine.systemUIRoot.popupLayer);
+const textEditor = new TextEditorController(context.pipeline, pop);
 context.textEditorController = textEditor;
 
 const screenRouter = new ScreenRouter({ context,uiEngine: uiengine });
