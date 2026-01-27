@@ -4,7 +4,7 @@ export const labelRenderer = {
   
       // Selected highlight
       if (node.state.selected) {
-        ctx.fillStyle = "e8e8e8"; // light blue
+        ctx.fillStyle = "#e8e8e8"; // light blue
         ctx.fillRect(x, y, width, height);
       }
   

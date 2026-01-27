@@ -66,8 +66,13 @@ context.textEditorController = textEditor;
 
 const screenRouter = new ScreenRouter({ context,uiEngine: uiengine });
 const commandRegistry = new CommandRegistry();
+
+commandRegistry.register("form.submit", (payload) => {
+  console.log("Form submitted with payload:", payload);
+});
+
 const factories = {
-  basic: new BaseUIFactory({ context }),
+  basic: new BaseUIFactory(context, commandRegistry ),
   commandUI: new CommandUIFactory({ commandRegistry }),
   formsUI: new FormsUIFactory({commandRegistry}),
   resultsUI: new ResultsUIFactory(context),

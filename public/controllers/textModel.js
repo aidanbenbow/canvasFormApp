@@ -52,16 +52,16 @@ export class TextModel{
 }
 
 export function wrapText(ctx, text, maxWidth) {
-    const words = text.split(" ");
     const lines = [];
     let currentLine = "";
   
-    for (const word of words) {
-      const testLine = currentLine ? currentLine + " " + word : word;
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth && currentLine) {
+    for (const char of text) {
+      const testLine = currentLine + char;
+      const width = ctx.measureText(testLine).width;
+  
+      if (width > maxWidth && currentLine !== "") {
         lines.push(currentLine);
-        currentLine = word;
+        currentLine = char;
       } else {
         currentLine = testLine;
       }

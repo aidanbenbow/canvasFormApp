@@ -19,21 +19,14 @@ export const inputRenderer = {
       const textX = x + paddingX;
       let textY = y + paddingY;
 
-      const maxTextWidth = width - 2 * paddingX;
-      const lines = node.value
-        ? wrapText(ctx, node.value, maxTextWidth)
-        : wrapText(ctx,node.placeholder,  maxTextWidth);
-  
-      if (node.value) {
-        for(const line of lines) {
-          ctx.fillStyle = "#000";
-          ctx.fillText(line, textX, textY);
-          textY += parseInt(font) + 2; // Move to next line
-        }
-      } else {
-        ctx.fillStyle = "#888";
-        ctx.fillText(node.placeholder, textX, textY);
-      }
+     const { lines, lineHeight} = node._layout 
+
+     for (const line of lines) {
+      ctx.fillStyle = node.value ? "#000" : "#888";
+      ctx.fillText(line, textX, textY);
+      textY += lineHeight;
+    }
+
   
       // Cursor
       if (node.state.focused) {

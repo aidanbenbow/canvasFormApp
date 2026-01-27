@@ -1,13 +1,26 @@
+import { wrapText } from "../../controllers/textModel.js";
+
 export class InputLayoutStrategy {
   measure(node, constraints, ctx) {
-    const width =
-      node.style.width ??
-      Math.min(200, constraints.maxWidth);
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    const width = node.style.width ?? Math.min(200, constraints.maxWidth);
+  
+    context.font = node.style.font;
+    const maxTextWidth = width - node.style.paddingX * 2;
+  
+    const lines = wrapText(context, node.value || node.placeholder, maxTextWidth);
+    const lineHeight = parseInt(node.style.font) + 2;
+  
+    const contentHeight = lines.length * lineHeight + node.style.paddingY * 2;
 
-    const height =
-      node.style.height ??
-      Math.min(32, constraints.maxHeight);
-
+    node._layout = { lines, lineHeight };
+  
+    const height = Math.min(
+      node.style.height ?? contentHeight,
+      constraints.maxHeight
+    )
+ 
     return { width, height };
   }
 

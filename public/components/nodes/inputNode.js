@@ -1,3 +1,4 @@
+import { layoutRegistry } from "../../registries/layoutRegistry.js";
 import { inputRenderer } from "../../renderers/nodeRenderers/inputRenderer.js";
 import { InputLayoutStrategy } from "../../strategies/nodeLayouts/inputLayout.js";
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
@@ -7,7 +8,7 @@ export class InputNode extends SceneNode {
     constructor({ id, value = "", placeholder = "", onChange, style = {} }) {
       super({
         id,
-        layoutStrategy: InputLayoutStrategy,
+        layoutStrategy: layoutRegistry["input"]() || new InputLayoutStrategy(),
         renderStrategy: inputRenderer,
         hitTestStrategy: rectHitTestStrategy
       });

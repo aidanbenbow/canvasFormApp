@@ -1,3 +1,4 @@
+import { labelRenderer } from "../../renderers/nodeRenderers/labelRenderer.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class LabelNode extends SceneNode {
@@ -5,7 +6,7 @@ export class LabelNode extends SceneNode {
     super({
       id,
       layoutStrategy: null,        // parent container handles layout
-      renderStrategy: null,        // we’ll attach a renderer
+      renderStrategy: labelRenderer,        // we’ll attach a renderer
       hitTestStrategy: null        // simple rect hit test
     });
 

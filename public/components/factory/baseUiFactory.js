@@ -8,8 +8,10 @@ import { TextNode } from "../nodes/textNode.js";
 
 
 export class BaseUIFactory {
-    constructor(context) {
+    constructor(context, commandRegistry) {
       this.context = context;
+      this.commandRegistry = commandRegistry;
+      console.log(commandRegistry)
     }
   
     create(def) {
@@ -17,13 +19,38 @@ export class BaseUIFactory {
     }
   
     createComponent(def) {
-      return createUIComponent(def, this.context);
+      return createUIComponent(def, {
+        ...this.context,
+        commandRegistry: this.commandRegistry
+      });
     }
   
   }
 
   export const componentRegistry = {
-    button: (def) => new ButtonNode(def),
+    button: (def) => {
+      const { context } = def;
+      const { commandRegistry, pipeline } = context;
+    console.log("Creating button with definition:", def);
+    console.log("Command Registry:", commandRegistry);
+    return new ButtonNode({
+      ...def,
+      onClick: () => {
+        const rootNode = pipeline.root
+        const fields = collectInputValues(rootNode);
+  
+        const finalPayload = {
+          ...(def.payload || {}),
+          fields
+        };
+  
+        commandRegistry.execute(def.action, finalPayload);
+      }
+  
+      });
+    }
+    
+    ,
     label: (def) => new LabelNode(def),
     text: (def) => new TextNode(def),
     input: (def) => new InputNode(def),
@@ -38,4 +65,18 @@ export class BaseUIFactory {
     }
  
     return factory({ ...def, context });
+  }
+
+  function collectInputValues(node, result = {}) {
+    if (node instanceof InputNode) {
+      result[node.id] = node.value;
+    }
+  
+    if (node.children) {
+      for (const child of node.children) {
+        collectInputValues(child, result);
+      }
+    }
+  
+    return result;
   }

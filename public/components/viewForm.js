@@ -21,6 +21,7 @@ export class FormViewScreen extends BaseScreen {
     this.store = store;
     this.children = this.store.getActiveForm()?.formStructure || {};
     this.childArray = Object.values(this.children);
+    console.log("Child Array:", this.childArray);
     this.manifest = formViewUIManifest;
     this.createManfest();
     this.factories = factories;

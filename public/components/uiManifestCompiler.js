@@ -39,7 +39,7 @@ export function compileUIManifest(manifest, factories, commandRegistry, handlers
       if (!factory) {
         throw new Error(`No factory found for type: ${childDef.type}`);
       }
-      const childNode = factory.create(childDef, commandRegistry);
+      const childNode = factory.create(childDef);
      
       regionNode.add(childNode);
     });
