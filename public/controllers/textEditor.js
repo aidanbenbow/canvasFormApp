@@ -6,8 +6,8 @@ import { TextModel } from "./textModel.js";
 
 export class TextEditorController {
     constructor(pipeline,popup) {
-        this.activeBox = null;
-        this.activeField = null; // Not used in this controller, but kept for consistency
+        this.activeNode = null;
+       
         this.caretIndex = 0;
         this.blinkState = true;
         this.pipeline = pipeline;
@@ -24,9 +24,8 @@ export class TextEditorController {
 
     
     startEditing(box, field = 'text') {
-        this.activeBox = box;
-        this.activeField = field;
-
+        this.activeNode = box;
+       
        //Initialize the text model with the box’s current value
   const initialValue = box.getValue?.() || '';
   this.textModel = new TextModel(this);     // re‑create or reset model
@@ -41,8 +40,8 @@ export class TextEditorController {
 
       
     stopEditing() {
-        this.activeBox = null;
-        this.activeField = null; // Not used in this controller, 
+        this.activeNode = null;
+        
         this.keyboardController.hideKeyboard();
         this.keyboardInput.disable();
         this.textModel = null;
@@ -56,7 +55,7 @@ export class TextEditorController {
           return;
         }
         this.textModel.insert(text);
-        this.activeBox.updateText(this.textModel.getText());
+       // this.activeNode.updateText(this.textModel.getText());
         this.pipeline.invalidate();
       
       }
@@ -67,28 +66,34 @@ export class TextEditorController {
           return;
         }
         this.textModel.backSpace();
-        this.activeBox.updateText(this.textModel.getText());
+        this.activeNode.updateText(this.textModel.getText());
         this.pipeline.invalidate();
       
       }
       moveCaretLinearly(offset, shiftKey) {
-        this.caretController.moveCaretLinearly(offset, shiftKey);
+        this.caretController.moveCaret(offset, shiftKey);
       }
    
     initCaretBlink() {
         setInterval(() => {
             this.blinkState = !this.blinkState;
-            if (this.activeBox) this.pipeline.invalidate();
+            if (this.activeNode) this.pipeline.invalidate();
         }, 500);
     }
       
     drawCaret(ctx) {
-      this.caretController.draw(ctx);
- 
+      this.caretController.drawCaret(ctx);
       }
       
     drawSelection(ctx) {
       this.caretController.drawSelection(ctx);
+    }
+
+    renderOverlay(ctx) {
      
+      if (this.activeNode) {
+        this.drawSelection(ctx);
+        this.drawCaret(ctx);
+      }
     }
 }

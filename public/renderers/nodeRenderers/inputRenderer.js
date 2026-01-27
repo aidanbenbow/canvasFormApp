@@ -26,16 +26,6 @@ export const inputRenderer = {
       ctx.fillText(line, textX, textY);
       textY += lineHeight;
     }
-
-  
-      // Cursor
-      if (node.state.focused) {
-        const textWidth = ctx.measureText(node.value).width;
-        ctx.beginPath();
-        ctx.moveTo(textX + textWidth + 1, textY);
-        ctx.lineTo(textX + textWidth + 1, textY + parseInt(font));
-        ctx.stroke();
-      }
   
       ctx.restore();
     }

@@ -2,26 +2,26 @@ export class TextModel{
     constructor(editor){
         this.editor = editor;
     }
-    getText(){
-        const box = this.editor.activeBox;
-        if(!box) return '';
-        const field = this.editor.activeField;
-        return typeof box[field] === 'string' ? box[field] : '';
-    }
+    getText() {
+        const node = this.editor.activeNode;
+        if (!node) return '';
+        return node.getValue ? node.getValue() : node.value || '';
+      }
     setText(newText){
-        const box = this.editor.activeBox;
-        const field = this.editor.activeField;
-        box[field] = newText;
-        if(typeof box.insertText === 'function'){
-            box.insertText(newText);
+        const box = this.editor.activeNode;
+     
+        if(!box) return;
+
+        if(typeof box.updateText === 'function'){
+            box.updateText(newText);
         }
         this.editor.pipeline.invalidate();
     }
     replaceSelection(newText){
-        const box = this.editor.activeBox;
-        const field = this.editor.activeField;
+        const box = this.editor.activeNode;
+        
         const caret = this.editor.caretController
-        const original = box[field] || '';
+        const original = this.getText();
         const before = original.slice(0, caret.selectionStart);
         const after = original.slice(caret.selectionEnd);
         const updated = before + newText + after;
@@ -31,9 +31,6 @@ export class TextModel{
         caret.selectionStart = newCaretPos;
         caret.selectionEnd = newCaretPos;
 
-        if(typeof box.updateText === 'function'){
-            box.updateText(updated);
-        }
         this.editor.pipeline.invalidate();
     }
     insert(text){

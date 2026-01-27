@@ -63,7 +63,7 @@ context.pipeline.invalidate();
 
 const textEditor = new TextEditorController(context.pipeline, pop);
 context.textEditorController = textEditor;
-
+context.pipeline.setEditor(textEditor);
 const screenRouter = new ScreenRouter({ context,uiEngine: uiengine });
 const commandRegistry = new CommandRegistry();
 

@@ -6,10 +6,15 @@ export class RenderPipeline {
       this.dirty = true;
       this.running = false;
       this.constraints = { maxWidth: Infinity, maxHeight: Infinity };
+      this.editor = null;
     }
   
     setRendererContext(rendererContext) {
       this.rendererContext = rendererContext;
+    }
+
+    setEditor(editor) {
+      this.editor = editor;
     }
   
     setRoot(rootNode) {
@@ -57,9 +62,13 @@ export class RenderPipeline {
       if (!this.dirty) return;
       this.renderManager.clearAll(this.rendererContext);
       if (this.root) {
-       
         this.root.render(this.rendererContext);
       }
+
+      if( this.editor ) {
+        this.editor.renderOverlay(this.rendererContext);
+      }
+
       this.dirty = false;
     }
   

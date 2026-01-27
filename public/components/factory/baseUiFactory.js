@@ -11,7 +11,7 @@ export class BaseUIFactory {
     constructor(context, commandRegistry) {
       this.context = context;
       this.commandRegistry = commandRegistry;
-      console.log(commandRegistry)
+
     }
   
     create(def) {
@@ -31,8 +31,7 @@ export class BaseUIFactory {
     button: (def) => {
       const { context } = def;
       const { commandRegistry, pipeline } = context;
-    console.log("Creating button with definition:", def);
-    console.log("Command Registry:", commandRegistry);
+    
     return new ButtonNode({
       ...def,
       onClick: () => {

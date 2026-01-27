@@ -41,12 +41,12 @@ export class InputNode extends SceneNode {
     updateText(newValue) {
       this.value = newValue;
       this.cursorPos = newValue.length;
+
       this.invalidate();
     }
     getValue() {
       return this.value;
     }
     
-  
   }
   
