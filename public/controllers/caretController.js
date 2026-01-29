@@ -41,41 +41,6 @@ export class CaretController {
         this.editor.pipeline.invalidate();
       }
     
-
-    //   drawCaret(ctx) {
-    
-    //     const node = this.editor.activeNode;
-       
-    //     if (!node || !this.editor.blinkState) return;
-    
-    //     const { x, y } = node.bounds;
-    //     const { lines, lineHeight } = node._layout;
-    //     const text = node.value || "";
-    
-    //     // Split text into lines based on layout
-    //     let remaining = text.slice(0, this.caretIndex);
-    //     let lineIndex = 0;
-    
-    //     while (lineIndex < lines.length) {
-    //       const line = lines[lineIndex];
-    //       if (remaining.length <= line.length) break;
-    //       remaining = remaining.slice(line.length);
-    //       lineIndex++;
-    //     }
-    
-    //     const caretX =
-    //       x + node.style.paddingX + ctx.measureText(remaining).width;
-    
-    //     const caretY =
-    //       y + node.style.paddingY + lineIndex * lineHeight;
-    
-    //     ctx.strokeStyle = "#000";
-    //     ctx.lineWidth = 1.5;
-    //     ctx.beginPath();
-    //     ctx.moveTo(caretX, caretY);
-    //     ctx.lineTo(caretX, caretY + lineHeight);
-    //     ctx.stroke();
-    //   }
     drawCaret(ctx) {
         const node = this.editor.activeNode;
         if (!node || !this.editor.blinkState) return;

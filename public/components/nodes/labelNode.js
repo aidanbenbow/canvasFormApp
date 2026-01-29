@@ -19,7 +19,7 @@ export class LabelNode extends SceneNode {
     };
 
     this.style = {
-      font: "12px sans-serif",
+      font: "16px sans-serif",
       paddingX: 8,
       paddingY: 4,
       ...style

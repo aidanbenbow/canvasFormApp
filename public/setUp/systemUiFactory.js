@@ -8,6 +8,9 @@ export const SystemUILayerFactory = {
     create(dispatcher) {
       const systemRoot = new SceneNode({
         id: 'system-ui-root',
+        style: {
+          background: '#93B5E1'  // transparent background
+        },
         layoutStrategy: overlayLayoutStrategy(),
         renderStrategy: containerRenderer
       });

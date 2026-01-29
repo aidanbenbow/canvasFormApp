@@ -13,8 +13,8 @@ export class TextNode extends SceneNode {
       this.text = text;
   
       this.style = {
-        font: "18px sans-serif",
-        color: "#000",
+        font: "28px sans-serif",
+        color: "#ccc",
         ...style
       };
     }

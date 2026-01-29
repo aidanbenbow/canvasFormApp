@@ -5,9 +5,9 @@ import { keyboardController } from "./keyboardController.js";
 import { TextModel } from "./textModel.js";
 
 export class TextEditorController {
-    constructor(pipeline,popup) {
+    constructor(pipeline,popup, canvas) {
         this.activeNode = null;
-       
+       this.canvas = canvas;
         this.caretIndex = 0;
         this.blinkState = true;
         this.pipeline = pipeline;
@@ -19,6 +19,7 @@ export class TextEditorController {
         this.caretController = new CaretController(this);
        
         this.initCaretBlink();
+        this.initClipboard();
       
     }
 
@@ -34,7 +35,7 @@ export class TextEditorController {
       this.caretController.setCaretToEnd(initialValue);
       this.keyboardInput.enable();
        this.keyboardController.showKeyboard();
-
+this.clipboardProxy.focus();
         this.pipeline.invalidate();
       }
 
@@ -45,6 +46,7 @@ export class TextEditorController {
         this.keyboardController.hideKeyboard();
         this.keyboardInput.disable();
         this.textModel = null;
+        this.clipboardProxy.blur();
         this.pipeline.invalidate();
         
     }
@@ -96,4 +98,72 @@ export class TextEditorController {
         this.drawCaret(ctx);
       }
     }
+
+    initClipboard() {
+      this.clipboardProxy = document.createElement("textarea");
+
+Object.assign(this.clipboardProxy.style, {
+  position: "fixed",
+  opacity: "0",
+  background: "transparent",
+  color: "transparent",
+  border: "none",
+  resize: "none",
+  outline: "none",
+  fontSize: "16px", // prevents iOS zoom
+});
+document.body.appendChild(this.clipboardProxy);
+this.canvas.addEventListener("contextmenu", (e) => {
+  if (!this.activeNode) return;
+
+  e.preventDefault(); // suppress canvas menu
+
+  this.clipboardProxy.style.left = e.clientX + "px";
+  this.clipboardProxy.style.top = e.clientY + "px";
+
+  this.clipboardProxy.focus();
+
+  // Let browser show native menu
+  setTimeout(() => {
+    this.clipboardProxy.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        clientX: e.clientX,
+        clientY: e.clientY
+      })
+    );
+  });
+});
+
+this.clipboardProxy.addEventListener("copy", (e) => {
+  if (!this.activeNode || !this.textModel) return;
+
+  const { selectionStart, selectionEnd } = this.caretController;
+  if (selectionStart === selectionEnd) return;
+
+  const start = Math.min(selectionStart, selectionEnd);
+  const end = Math.max(selectionStart, selectionEnd);
+
+  const text = this.textModel.getText().slice(start, end);
+
+  e.clipboardData.setData("text/plain", text);
+  e.preventDefault();
+});
+
+    
+      this.clipboardProxy.addEventListener("paste", (e) => {
+        if (!this.activeNode || !this.textModel) return;
+    
+        e.preventDefault();
+    
+        const text = e.clipboardData.getData("text/plain");
+        if (!text) return;
+    
+        this.textModel.insert(text);
+        this.activeNode.updateText(this.textModel.getText());
+        this.pipeline.invalidate();
+      });
+    }
+    
+    
 }

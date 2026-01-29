@@ -5,9 +5,15 @@ import { compileUIManifest } from "./uiManifestCompiler.js";
 const formViewUIManifest = {
   layout: "vertical",
 id: "form-view-root",
+style: {
+  background: "#ffffff",
+},
   regions: {
     formContainer: {
       type: "container",
+      style: {
+        background: "#f9f9f9",
+      },
       children: []
     }
   }
