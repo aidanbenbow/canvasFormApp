@@ -1,6 +1,7 @@
 
 import { ButtonNode } from "../nodes/buttonNode.js";
 import { ContainerNode } from "../nodes/containerNode.js";
+import { DropdownInputNode } from "../nodes/dropDownNode.js";
 import { InputNode } from "../nodes/inputNode.js";
 import { LabelNode } from "../nodes/labelNode.js";
 import { ScrollNode } from "../nodes/scrollNode.js";
@@ -55,6 +56,14 @@ export class BaseUIFactory {
     input: (def) => new InputNode(def),
     container: (def) => new ScrollNode(def),
     fieldContainer: (def) => new ContainerNode(def),
+    dropDown: (def) => {
+      def.options = [
+        "Option 1",
+        "Option 2",
+        "Option 3",
+      ]
+      console.log("Dropdown Def:", def);
+    return  new DropdownInputNode(def)},
   };
   
   export function createUIComponent(def, context) {

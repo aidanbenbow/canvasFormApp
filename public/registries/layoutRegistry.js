@@ -1,6 +1,7 @@
 import { ButtonLayoutStrategy } from "../strategies/buttonLayoutStrategy.js";
 import { CenterLayoutStrategy } from "../strategies/centre.js";
 import { engineRootLayoutStrategy } from "../strategies/engineRootLayout.js";
+import { DropdownLayoutStrategy } from "../strategies/nodeLayouts/dropDownLayout.js";
 import { InputLayoutStrategy } from "../strategies/nodeLayouts/inputLayout.js";
 import { KeyboardLayoutStrategy } from "../strategies/nodeLayouts/keyBoardLayout.js";
 import { PopupLayoutStrategy} from "../strategies/nodeLayouts/popUpLayout.js";
@@ -20,4 +21,5 @@ export const layoutRegistry = {
     engine: ()=> new engineRootLayoutStrategy(),
     overlay: ()=> new overlayLayoutStrategy(),
     centre: ()=> new CenterLayoutStrategy(),
+    dropDown: ()=> new DropdownLayoutStrategy()
 }
