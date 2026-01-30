@@ -1,4 +1,5 @@
 import { ButtonLayoutStrategy } from "../strategies/buttonLayoutStrategy.js";
+import { CenterLayoutStrategy } from "../strategies/centre.js";
 import { engineRootLayoutStrategy } from "../strategies/engineRootLayout.js";
 import { InputLayoutStrategy } from "../strategies/nodeLayouts/inputLayout.js";
 import { KeyboardLayoutStrategy } from "../strategies/nodeLayouts/keyBoardLayout.js";
@@ -17,5 +18,6 @@ export const layoutRegistry = {
     text: ()=> new TextLayoutStrategy(),
     button: ()=> new ButtonLayoutStrategy(),
     engine: ()=> new engineRootLayoutStrategy(),
-    overlay: ()=> new overlayLayoutStrategy()
+    overlay: ()=> new overlayLayoutStrategy(),
+    centre: ()=> new CenterLayoutStrategy(),
 }

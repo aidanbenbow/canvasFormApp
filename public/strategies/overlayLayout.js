@@ -8,7 +8,7 @@
           child.measure(available, ctx);
         }
         
-        return available;
+        return {width: available.maxWidth, height: available.maxHeight};
       },
   
       layout(node, bounds, ctx) {

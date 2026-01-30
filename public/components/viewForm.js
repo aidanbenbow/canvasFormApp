@@ -3,7 +3,7 @@ import { InputNode } from "./nodes/inputNode.js";
 import { compileUIManifest } from "./uiManifestCompiler.js";
 
 const formViewUIManifest = {
-  layout: "vertical",
+  layout: "centre",
 id: "form-view-root",
 style: {
   background: "#ffffff",

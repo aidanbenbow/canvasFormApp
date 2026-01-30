@@ -5,7 +5,7 @@ export function engineRootLayoutStrategy() {
         for (const child of node.children) {
           child.measure(available, ctx);
         }
-        return available;
+        return {width: available.maxWidth, height: available.maxHeight};
       },
   
       layout(node, bounds, ctx) {
@@ -19,8 +19,8 @@ export function engineRootLayoutStrategy() {
             {
               x: bounds.x,
               y: bounds.y,
-              width: measured.maxWidth,
-              height: measured.maxHeight
+              width: measured.width,
+              height: measured.height
             },
             ctx
           );

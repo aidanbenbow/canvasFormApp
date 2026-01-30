@@ -14,7 +14,7 @@ export class TextNode extends SceneNode {
   
       this.style = {
         font: "28px sans-serif",
-        color: "#ccc",
+        color: "#CF3113",
         ...style
       };
     }

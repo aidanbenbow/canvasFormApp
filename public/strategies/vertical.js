@@ -5,40 +5,43 @@ export class VerticalLayoutStrategy {
   }
 
   measure(container, constraints = { maxWidth: Infinity, maxHeight: Infinity }, ctx) {
-    let totalWidth = 0;
-    let totalHeight = this.padding;
+    let height = this.padding;
+    let maxChildWidth = 0;
 
     for (const child of container.children) {
 
-      const childSize = child.measure(  ctx,
-        { maxWidth: constraints.maxWidth - 2 * this.padding, maxHeight: constraints.maxHeight }
+      const childSize = child.measure(  
+        { maxWidth: constraints.maxWidth - 2 * this.padding, maxHeight: constraints.maxHeight },ctx
       );
-      totalWidth = Math.max(totalWidth, childSize.width);
-      totalHeight += childSize.height + this.spacing;
+      height+= childSize.height + this.spacing;
+      maxChildWidth = Math.max(maxChildWidth, childSize.width);
     }
 
-    totalWidth += 2 * this.padding;
-    totalHeight += this.padding - this.spacing;
+    height +=this.padding - this.spacing; // remove last spacing, add bottom padding
 
     return {
-      width: Math.min(totalWidth, constraints.maxWidth),
-      height: Math.min(totalHeight, constraints.maxHeight)
+      width: Math.min(maxChildWidth + 2 * this.padding, constraints.maxWidth),
+      height: Math.min(height, constraints.maxHeight)
     };
   }
 
   layout(container, bounds, ctx) {
-    
-    let currentY = bounds.y + this.padding;
-    const innerWidth = bounds.width - 2 * this.padding;
-
+    container.bounds = bounds;
+  
+    let y = bounds.y + this.padding 
+  
     for (const child of container.children) {
-      const w = child.measured.width || innerWidth;
-      const h = child.measured.height || 30;
-      child.layout({ x: bounds.x + this.padding, y: currentY, width: w, height: h }, ctx);
-      currentY += h + this.spacing;
+      const { width, height } = child.measured;
+  
+      child.layout({
+        x: bounds.x + this.padding,
+        y,
+        width,
+        height
+      }, ctx);
+  
+      y += height + this.spacing;
     }
-
-    container.bounds.height = currentY - bounds.y + this.padding - this.spacing;
-    container.bounds.width = bounds.width;
   }
+  
 }
