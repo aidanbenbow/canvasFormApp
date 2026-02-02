@@ -14,31 +14,32 @@ export class AnchoredOverlayLayoutStrategy {
     }
   
     layout(node, bounds, ctx) {
-        this.anchor = node.anchor;
-      if (!this.anchor) {
-        node.bounds = bounds;
-      } else {
-        const anchorBounds = this.anchor.bounds;
-        const width = anchorBounds.width;
-        const height = Math.min(node.options?.length * this.optionHeight || 0, this.maxHeight);
-  
-        node.bounds = {
-          x: anchorBounds.x,
-          y: anchorBounds.y + anchorBounds.height,
-          width,
-          height
-        };
+        const anchor = node.anchor;
+        const optionHeight = this.optionHeight;
+        const menuHeight = Math.min((node.options?.length || 0) * optionHeight, this.maxHeight);
+      
+        if (!anchor) {
+          node.bounds = { ...bounds, height: menuHeight };
+        } else {
+          const ab = anchor.bounds;
+          node.bounds = {
+            x: ab.x,
+            y: ab.y + ab.height,
+            width: ab.width,
+            height: menuHeight
+          };
+        }
+      
+        // layout children as vertical stack
+        node.children.forEach((child, i) => {
+          child.layout({
+            x: node.bounds.x,
+            y: node.bounds.y + i * optionHeight,
+            width: node.bounds.width,
+            height: optionHeight
+          }, ctx);
+        });
       }
-  
-      // Layout children to fill node
-      for (const child of node.children) {
-        child.layout({
-          x: node.bounds.x,
-          y: node.bounds.y,
-          width: node.bounds.width,
-          height: node.bounds.height
-        }, ctx);
-      }
-    }
+      
   }
   

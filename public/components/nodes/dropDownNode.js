@@ -19,7 +19,7 @@ this.context = context;
 
     this.selectedIndex = -1;
     this.onSelect = onSelect; // callback when selecting an option
-
+this.dropdownVisible = false;
     // default styling
     this.style = {
       font: "14px sans-serif",
@@ -40,48 +40,15 @@ this.context = context;
   // Click toggles dropdown
   onPointerDown(pointerX, pointerY) {
     this.state.focused = true;
-    this.openDropdown();
+    if (this.dropdownVisible) {
+      this.closeDropdown();
+    } else {
+      this.openDropdown();
+    }
     this.selectedIndex = -1; // reset selection
     this.emit("focus", this);
     this.invalidate();
   }
-
-  // Pointer move highlights option
-  onPointerMove(pointerX, pointerY) {
-    if (!this.dropdownVisible) return;
-
-    const relativeY = pointerY - (this.bounds.y + this.bounds.height);
-    const index = Math.floor(relativeY / this.style.optionHeight);
-
-    if (index >= 0 && index < this.options.length) {
-      this.selectedIndex = index;
-      this.invalidate();
-    } else {
-      this.selectedIndex = -1;
-      this.invalidate();
-    }
-  }
-
-  // Click an option to select
-  onPointerUp(pointerX, pointerY) {
-    if (!this.dropdownVisible) return;
-    if (this.selectedIndex >= 0) {
-      this.selectOption(this.selectedIndex);
-    }
-  }
-
-  selectOption(index) {
-    const chosen = this.options[index];
-    if (!chosen) return;
-
-    this.value = chosen;
-    this.dropdownVisible = false;
-    this.selectedIndex = index;
-    this.invalidate();
-
-    if (this.onSelect) this.onSelect(chosen);
-  }
-
   // Keyboard navigation
   onKeyDown(key) {
     if (!this.dropdownVisible) return false;
@@ -116,14 +83,23 @@ this.context = context;
       onSelect: (value, index) => {
         this.value = value;
         this.selectedIndex = index;
-        popupLayer.clear();
-        popupLayer.hide();
+        this.onSelect?.(value, index);
+        this.closeDropdown();
       }
     });
-  console.log(menu);
+  this.dropdownVisible = true;
+ 
   
     popupLayer.children = [menu];
     popupLayer.show();
+    popupLayer.invalidate?.();
+  }
+  closeDropdown() {
+    const { popupLayer } = this.context.uiServices;
+    this.dropdownVisible = false;
+    popupLayer.clear();
+    popupLayer.hide();
+    popupLayer.invalidate?.();
   }
   
 }

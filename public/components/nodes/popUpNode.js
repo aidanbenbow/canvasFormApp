@@ -34,4 +34,8 @@ export class PopUpNode extends ContainerNode {
       this.visible = !this.visible;
       this.invalidate();
     }
+    clear() {
+      this.children = [];
+      this.invalidate();
+    }
   }

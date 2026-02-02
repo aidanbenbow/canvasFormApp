@@ -1,4 +1,5 @@
 import { labelRenderer } from "../../renderers/nodeRenderers/labelRenderer.js";
+import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class LabelNode extends SceneNode {
@@ -7,7 +8,7 @@ export class LabelNode extends SceneNode {
       id,
       layoutStrategy: null,        // parent container handles layout
       renderStrategy: labelRenderer,        // we’ll attach a renderer
-      hitTestStrategy: null        // simple rect hit test
+      hitTestStrategy: rectHitTestStrategy        // simple rect hit test
     });
 
     this.text = text;

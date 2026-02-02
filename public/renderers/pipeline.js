@@ -25,7 +25,7 @@ export class RenderPipeline {
     
       // 2. Attach new root
       this.root = rootNode;
-    
+    console.log("RenderPipeline: New root set:", rootNode);
       // Keep a reference to the handler so we can remove it later
       this._invalidateHandler = () => this.invalidate();
       rootNode.on("invalidate", this._invalidateHandler);

@@ -61,7 +61,7 @@ const uiengine = new UIEngine({
 context.pipeline.setRoot(uiengine.root);
 
 
-const pop = context.uiServices.popups;
+const pop = context.uiServices
 context.pipeline.invalidate();
 
 const textEditor = new TextEditorController(context.pipeline, pop, mainCanvas);
