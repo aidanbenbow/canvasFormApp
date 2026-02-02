@@ -23,7 +23,8 @@ export class KeyboardLayoutStrategy {
     const keyWidth = (bounds.width - (10 * spacing)) / 10;
     const keyHeight = 48;
 
-    let y = bounds.y;
+   
+  let y = bounds.y + bounds.height + spacing;
     let childIndex = 0;
 
     node.keyLayout.forEach(row => {
@@ -38,4 +39,5 @@ export class KeyboardLayoutStrategy {
       y += keyHeight + spacing;
     });
   }
+  
 }
