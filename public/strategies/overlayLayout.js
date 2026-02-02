@@ -26,10 +26,16 @@
               height: h
             }, ctx);
   
-          // 🪟 Everything else overlays fullscreen for now
+          
           } else {
-            child.layout(bounds, ctx);
+            // Respect child bounds if already set
+            if (child.bounds) {
+              child.layout(child.bounds, ctx);
+            } else {
+              child.layout(bounds, ctx);
+            }
           }
+          
         }
       }
     };

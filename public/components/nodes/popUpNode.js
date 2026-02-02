@@ -5,7 +5,7 @@ export class PopUpNode extends ContainerNode {
     constructor({
       id = "popup",
       layout = "popup",            // popup-specific layout strategy
-      backgroundColor = "rgba(0,0,0,0.5)",
+      backgroundColor,
       spacing = 10
     }) {
       super({

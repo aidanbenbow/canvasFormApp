@@ -44,6 +44,8 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
   const context = renderBuild.createRendererContext()
   context.canvasManager = canvas; // ✅ Attach canvasManager to context
   context.firstScreen = false;
+
+  context.uiServices = {};
   
   utilsRegister.registerPlugin(coreUtilsPlugin(context))
 
@@ -52,13 +54,14 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 const uiengine = new UIEngine({
   layoutStrategy: engineRootLayoutStrategy(),
   renderStrategy: containerRenderer,
-  dispatcher: system.actionDispatcher
+  dispatcher: system.actionDispatcher,
+  context
 });
 
 context.pipeline.setRoot(uiengine.root);
 
 
-const pop = uiengine.root.children[0].children[0]
+const pop = context.uiServices.popups;
 context.pipeline.invalidate();
 
 const textEditor = new TextEditorController(context.pipeline, pop, mainCanvas);

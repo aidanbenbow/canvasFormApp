@@ -2,20 +2,21 @@ import { SceneNode } from "./sceneNode.js";
 import { layoutRegistry } from "../../registries/layoutRegistry.js";
 import { dropdownInputRenderer } from "../../renderers/nodeRenderers/dropDownRenderer.js";
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
+import { DropdownMenuNode } from "./dopDownMenuNode.js";
 
 export class DropdownInputNode extends SceneNode {
-  constructor({ id, value = "", placeholder = "", options = [], onSelect, style = {} }) {
+  constructor({ id, context, value = "", placeholder = "", options = [], onSelect, style = {} }) {
     super({
       id,
       layoutStrategy: layoutRegistry["dropDown"](),   // custom dropdown layout
       renderStrategy: dropdownInputRenderer,         // custom dropdown renderer
       hitTestStrategy: rectHitTestStrategy
     });
-
+this.context = context;
     this.value = value;
     this.placeholder = placeholder;
     this.options = options;
-    this.dropdownVisible = false;
+
     this.selectedIndex = -1;
     this.onSelect = onSelect; // callback when selecting an option
 
@@ -39,7 +40,7 @@ export class DropdownInputNode extends SceneNode {
   // Click toggles dropdown
   onPointerDown(pointerX, pointerY) {
     this.state.focused = true;
-    this.dropdownVisible = !this.dropdownVisible;
+    this.openDropdown();
     this.selectedIndex = -1; // reset selection
     this.emit("focus", this);
     this.invalidate();
@@ -105,4 +106,24 @@ export class DropdownInputNode extends SceneNode {
 
     return false;
   }
+  openDropdown() {
+    const { popupLayer } = this.context.uiServices;
+    console.log(popupLayer);
+  
+    const menu = new DropdownMenuNode({
+      anchor: this,
+      options: this.options,
+      onSelect: (value, index) => {
+        this.value = value;
+        this.selectedIndex = index;
+        popupLayer.clear();
+        popupLayer.hide();
+      }
+    });
+  console.log(menu);
+  
+    popupLayer.children = [menu];
+    popupLayer.show();
+  }
+  
 }

@@ -1,3 +1,4 @@
+import { AnchoredOverlayLayoutStrategy } from "../strategies/anchoredOverlay.js";
 import { ButtonLayoutStrategy } from "../strategies/buttonLayoutStrategy.js";
 import { CenterLayoutStrategy } from "../strategies/centre.js";
 import { engineRootLayoutStrategy } from "../strategies/engineRootLayout.js";
@@ -21,5 +22,6 @@ export const layoutRegistry = {
     engine: ()=> new engineRootLayoutStrategy(),
     overlay: ()=> new overlayLayoutStrategy(),
     centre: ()=> new CenterLayoutStrategy(),
-    dropDown: ()=> new DropdownLayoutStrategy()
+    dropDown: ()=> new DropdownLayoutStrategy(),
+    anchored: ()=> new AnchoredOverlayLayoutStrategy()
 }

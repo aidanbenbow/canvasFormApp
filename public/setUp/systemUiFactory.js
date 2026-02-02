@@ -9,7 +9,7 @@ export const SystemUILayerFactory = {
       const systemRoot = new SceneNode({
         id: 'system-ui-root',
         style: {
-          background: '#93B5E1'  // transparent background
+          background: 'transparent'  // transparent background
         },
         layoutStrategy: overlayLayoutStrategy(),
         renderStrategy: containerRenderer
@@ -20,10 +20,13 @@ export const SystemUILayerFactory = {
   
       popupLayer.add(keyboardLayer);
       systemRoot.add(popupLayer);
-      
   
       return {
-        root: systemRoot
+        root: systemRoot,
+        services:{
+          popupLayer,
+          keyboardLayer
+        }
       }
     }
   };

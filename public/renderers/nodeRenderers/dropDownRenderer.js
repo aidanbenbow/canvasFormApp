@@ -38,7 +38,7 @@ export const dropdownInputRenderer = {
         node.options.forEach((opt, i) => {
           // Highlight selected
           if (i === node.selectedIndex) {
-            ctx.fillStyle = "rgba(0, 120, 215, 0.3)";
+            ctx.fillStyle = "rgba(0, 120, 215, 0.8)";
             ctx.fillRect(x, y + height + i * optionHeight, width, optionHeight);
           }
   

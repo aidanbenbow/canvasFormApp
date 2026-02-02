@@ -6,7 +6,7 @@ export const PopupModule = {
       const popup = new PopUpNode({
         id: 'popup-layer',
         layout: 'popup',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        
         spacing: 10
       });
   
