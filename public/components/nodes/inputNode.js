@@ -16,11 +16,7 @@ export class InputNode extends SceneNode {
       this.value = value;
       this.placeholder = placeholder;
       this.onChange = onChange;
-  
-      this.state = {
-        focused: false,
-        cursorPos: value.length
-      };
+      this.cursorPos = value.length
   
       this.style = {
         font: "14px sans-serif",
@@ -33,9 +29,8 @@ export class InputNode extends SceneNode {
     }
   
     onPointerDown() {
-      this.state.focused = true;
-      this.emit("focus", this);
-      this.invalidate();
+      
+      this.context.focusManager.focus(this.id);
     }
 
     updateText(newValue) {

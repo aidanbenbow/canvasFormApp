@@ -3,6 +3,7 @@ import { TinyEmitter } from "../../events/tinyEmitter.js";
 export class SceneNode {
     constructor({
       id,
+      context,
       style = {},
       visible = true,
       layoutStrategy = null,
@@ -12,9 +13,10 @@ export class SceneNode {
       children = []
     }) {
       this.id = id;
+      this.context = context;
       this.style = style;
       this.visible = visible;
-
+console.log(this.context);
       this.emitter = new TinyEmitter();
   
       this.layoutStrategy = layoutStrategy;
@@ -34,6 +36,9 @@ export class SceneNode {
   
     add(child) {
       child.parent = this;
+      if(!child.context) {
+        child.context = this.context;
+      }
       this.children.push(child);
     }
   
@@ -133,6 +138,12 @@ export class SceneNode {
       x: point.x - b.x,
       y: point.y - b.y
     };
+  }
+  get uiState() {
+    return this.context.uiState.get(this.id);
+  }
+  setUIState(partial) {
+    this.context.uiState.update(this.id, partial);
   }
   
   

@@ -1,8 +1,8 @@
 import { SceneNode } from "./sceneNode.js";
 
 export class RootSceneNode extends SceneNode {
-  constructor({ id, style, layoutStrategy, renderStrategy }) {
-    super({ id, style, layoutStrategy, renderStrategy });
+  constructor({ id,context, style, layoutStrategy, renderStrategy }) {
+    super({ id,context, style, layoutStrategy, renderStrategy });
     
     this.overlayLayer = null; // dedicated overlay / system UI
   }

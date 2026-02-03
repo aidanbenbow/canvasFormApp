@@ -8,6 +8,7 @@ export class DropdownInputNode extends SceneNode {
   constructor({ id, context, value = "", placeholder = "", options = [], onSelect, style = {} }) {
     super({
       id,
+      context,
       layoutStrategy: layoutRegistry["dropDown"](),   // custom dropdown layout
       renderStrategy: dropdownInputRenderer,         // custom dropdown renderer
       hitTestStrategy: rectHitTestStrategy
@@ -79,11 +80,12 @@ this.dropdownVisible = false;
   
     const menu = new DropdownMenuNode({
       anchor: this,
+      context: this.context,
       options: this.options,
-      onSelect: (value, index) => {
-        this.value = value;
+      onSelect: (option, index) => {
+        this.value = option.value;
         this.selectedIndex = index;
-        this.onSelect?.(value, index);
+        this.emit("select", {value:option.value,option, index, source: this});
         this.closeDropdown();
       }
     });
@@ -103,3 +105,4 @@ this.dropdownVisible = false;
   }
   
 }
+

@@ -53,17 +53,62 @@ export class BaseUIFactory {
     ,
     label: (def) => new LabelNode(def),
     text: (def) => new TextNode(def),
-    input: (def) => new InputNode(def),
+    input: (def) => {
+      const { context } = def;
+    const node =  new InputNode(def)
+    context.fieldRegistry.set(def.id, node);
+    return node;
+
+    },
     container: (def) => new ScrollNode(def),
     fieldContainer: (def) => new ContainerNode(def),
     dropDown: (def) => {
       def.options = [
-        "Option 1",
-        "Option 2",
-        "Option 3",
-      ]
-      console.log("Dropdown Def:", def);
-    return  new DropdownInputNode(def)},
+        {
+          label: "Option 1",
+          value: "opt1",
+          fills: {
+            messageInput: "Hello from option 1",
+            reportInput: "Report for option 1"
+          }
+        },
+        {
+          label: "Option 2",
+          value: "opt2",
+          fills: {
+            messageInput: "Hello from option 2",
+            reportInput: "Report for option 2"
+          }
+        },
+        {
+          label: "Option 3",
+          value: "opt3",
+          fills: {
+            messageInput: "Hello from option 3",
+            reportInput: "Report for option 3"
+          }
+        }
+      ];
+      const registry = def.context.fieldRegistry;
+      const node = new DropdownInputNode(def)
+      if (def.onChangeFill) {
+        node.on("select", ({ option }) => {
+          if(!option.fills) return;
+          Object.entries(option.fills).forEach(([id, value]) => {
+            const target = registry.get(id);
+            console.log(registry, id, target);
+            if (target) {
+              target.value = value;
+              target.invalidate();
+            }
+          });
+        });
+      }
+ 
+    
+    registry.set(def.id, node);
+    return node; 
+  },
   };
   
   export function createUIComponent(def, context) {

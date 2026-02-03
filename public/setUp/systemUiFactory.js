@@ -5,9 +5,10 @@ import { KeyboardModule } from "./keyBoardModule.js";
 import { PopupModule } from "./popupModule.js";
 
 export const SystemUILayerFactory = {
-    create(dispatcher) {
+    create(dispatcher, context) {
       const systemRoot = new SceneNode({
         id: 'system-ui-root',
+        context,
         style: {
           background: 'transparent'  // transparent background
         },
@@ -16,7 +17,7 @@ export const SystemUILayerFactory = {
       });
   
       const popupLayer = PopupModule.create(dispatcher);
-      const keyboardLayer = KeyboardModule.create(dispatcher);
+      const keyboardLayer = KeyboardModule.create(dispatcher, context);
   
       popupLayer.add(keyboardLayer);
       systemRoot.add(popupLayer);

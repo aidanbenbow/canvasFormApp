@@ -7,10 +7,12 @@ import { canvasConfig, } from "./constants.js";
 
 import { fetchAllForms, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
+import { UIStateStore } from "./events/UiStateStore.js";
 import { ACTIONS } from "./events/actions.js";
 import { FormStore } from "./events/formStore.js";
 import { SceneInputSystem } from "./events/sceneInputSystem.js";
 import { CanvasManager } from "./managers/canvas.js";
+import { FocusManager } from "./managers/focusManager.js";
 import { LayoutManager } from "./managers/layOut.js";
 import { coreUtilsPlugin } from "./plugins/coreUtilsPlugin.js";
 import { CommandRegistry } from "./registries/commandRegistry.js";
@@ -51,6 +53,11 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 
   context.pipeline.setRendererContext(context.ctx)
 
+  const uiState = new UIStateStore()
+const focusManager = new FocusManager(uiState)
+context.focusManager = focusManager;
+context.uiState = uiState;
+
 const uiengine = new UIEngine({
   layoutStrategy: engineRootLayoutStrategy(),
   renderStrategy: containerRenderer,
@@ -67,6 +74,11 @@ context.pipeline.invalidate();
 const textEditor = new TextEditorController(context.pipeline, pop, mainCanvas);
 context.textEditorController = textEditor;
 context.pipeline.setEditor(textEditor);
+
+context.fieldRegistry = new Map();
+
+
+
 const screenRouter = new ScreenRouter({ context,uiEngine: uiengine });
 const commandRegistry = new CommandRegistry();
 

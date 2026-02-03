@@ -1,8 +1,8 @@
 import { ContainerNode } from "./containerNode.js";
 
 export class KeyboardNode extends ContainerNode {
-    constructor({ id = "keyboard", layout = "keyboard" }) {
-      super({ id, layout, children: [] });
+    constructor({ id = "keyboard",context, layout = "keyboard" }) {
+      super({ id,context, layout, children: [] });
   
       this.keyLayout = [
         ['Q','W','E','R','T','Y','U','I','O','P'],

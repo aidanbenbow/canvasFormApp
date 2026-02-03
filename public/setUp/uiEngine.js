@@ -7,14 +7,15 @@ export class UIEngine {
     constructor({ layoutStrategy, renderStrategy, dispatcher, context }) {
       this.dispatcher = dispatcher;
       this.context = context;
-  
+  console.log('UIEngine context:', context);
       this.root = new RootSceneNode({
         id: "ui-engine-root",
+        context,
         layoutStrategy,
         renderStrategy
       });
   
-      this.systemUIRoot = SystemUILayerFactory.create(dispatcher);
+      this.systemUIRoot = SystemUILayerFactory.create(dispatcher, context);
       this.root.setOverlayLayer(this.systemUIRoot.root);
 
       context.uiServices = {

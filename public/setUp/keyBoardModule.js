@@ -3,9 +3,10 @@ import { KeyboardNode } from "../components/nodes/keyboardNode.js";
 import { ACTIONS } from "../events/actions.js";
 
 export const KeyboardModule = {
-    create(dispatcher) {
+    create(dispatcher, context) {
       const keyboard = new KeyboardNode({
         id: 'keyboard-layer',
+        context,
         layout: 'keyboard',
         style: {
           position: 'absolute',

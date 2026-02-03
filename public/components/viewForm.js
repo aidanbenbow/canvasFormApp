@@ -23,7 +23,7 @@ style: {
 export class FormViewScreen extends BaseScreen {
   constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit }) {
     super({ id: "form-view", context, dispatcher, eventBusManager });
-
+this.context = context;
     this.store = store;
     this.children = this.store.getActiveForm()?.formStructure || {};
     this.childArray = Object.values(this.children);
@@ -44,7 +44,8 @@ export class FormViewScreen extends BaseScreen {
     const { rootNode, regions } = compileUIManifest(
       this.manifest,
       this.factories,
-      this.commandRegistry
+      this.commandRegistry,
+      this.context
     );
 
     this.rootNode = rootNode;

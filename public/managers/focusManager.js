@@ -5,6 +5,7 @@ export class FocusManager {
     }
   
     focus(id) {
+      console.log("Focusing ID:", id);
       if (this.focusedId === id) return;
   
       if (this.focusedId) {

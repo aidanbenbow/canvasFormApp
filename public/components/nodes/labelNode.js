@@ -3,9 +3,10 @@ import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class LabelNode extends SceneNode {
-  constructor({ id, text, selected = false, onSelect, style = {} }) {
+  constructor({ id,context, text, selected = false, onSelect, style = {} }) {
     super({
       id,
+      context,
       layoutStrategy: null,        // parent container handles layout
       renderStrategy: labelRenderer,        // we’ll attach a renderer
       hitTestStrategy: rectHitTestStrategy        // simple rect hit test

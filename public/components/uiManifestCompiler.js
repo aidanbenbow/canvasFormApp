@@ -9,7 +9,7 @@ import { PopUpNode } from './nodes/popUpNode.js';
 import { SceneNode } from './nodes/sceneNode.js';
 import { TextNode } from './nodes/textNode.js';
 
-export function compileUIManifest(manifest, factories, commandRegistry, handlers = {}) {
+export function compileUIManifest(manifest, factories, commandRegistry,context, handlers = {}) {
   const layoutFactory = layoutRegistry[manifest.layout];
 
   // Create root
@@ -26,6 +26,7 @@ export function compileUIManifest(manifest, factories, commandRegistry, handlers
   Object.entries(manifest.regions).forEach(([key, def]) => {
     const regionNode = new ContainerNode({
       id: key,
+      context,
       style: def.style || {},
       children: []
     });

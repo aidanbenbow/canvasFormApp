@@ -4,11 +4,15 @@ export const inputRenderer = {
     render(node, ctx) {
       const { x, y, width, height } = node.bounds;
       const { font, paddingX, paddingY, borderColor, focusBorderColor } = node.style;
+  const {focused} = node.getState ? node.getState() : {focused: false};
   
       ctx.save();
   
       // Border
-      ctx.strokeStyle = node.state.focused ? focusBorderColor : borderColor;
+      ctx.strokeStyle = focused ? focusBorderColor : borderColor;
+      ctx.lineWidth = 1;
+      ctx.fillStyle = "#fff"; // white background
+      ctx.fillRect(x, y, width, height);
       ctx.strokeRect(x, y, width, height);
   
       // Text

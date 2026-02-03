@@ -5,22 +5,25 @@ import { ContainerNode } from "./containerNode.js";
 import { LabelNode } from "./labelNode.js";
 
 export class DropdownMenuNode extends ContainerNode {
-    constructor({anchor, options, onSelect }) {
+    constructor({anchor,context, options, onSelect }) {
       super({
         id: "dropdown-menu",
+        context,
         layoutStrategy: layoutRegistry["anchored"](),  // use popup layout for dropdown menu
         renderStrategy: dropdownMenuRenderStrategy,      // custom renderer for dropdown menu
         children: []
       });
+      this.context = context;
   this.anchor = anchor; // reference to dropdown input node
       this.options = options;
       this.onSelect = onSelect;
 
       // create LabelNode for each option
-    options.forEach((text, i) => {
+    options.forEach((option, i) => {
         const label = new LabelNode({
           id: `dropdown-option-${i}`,
-          text,
+            context,
+          text: option.label,
           onSelect: () => {
             this.selectOption(i);
           },
@@ -40,7 +43,7 @@ export class DropdownMenuNode extends ContainerNode {
         const chosen = this.options[index];
         if (!chosen) return;
     
-        this.anchor.value = chosen;       // update input
+        this.anchor.value = chosen.value;       // update input
         this.onSelect?.(chosen, index);   // propagate callback
         this.anchor.dropdownVisible = false;
         this.invalidate();

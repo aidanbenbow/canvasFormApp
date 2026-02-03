@@ -11,6 +11,7 @@ export class UIStateStore {
         ...this.state[id],
         ...partial
       };
+      console.log("UIStateStore updated:", id, this.state[id]);
       this.notify();
     }
   
