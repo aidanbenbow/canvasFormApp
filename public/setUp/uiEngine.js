@@ -7,7 +7,7 @@ export class UIEngine {
     constructor({ layoutStrategy, renderStrategy, dispatcher, context }) {
       this.dispatcher = dispatcher;
       this.context = context;
-  console.log('UIEngine context:', context);
+
       this.root = new RootSceneNode({
         id: "ui-engine-root",
         context,

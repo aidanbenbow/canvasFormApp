@@ -33,21 +33,19 @@ this.dropdownVisible = false;
       ...style
     };
 
-    this.state = {
-      focused: false
-    };
   }
 
   // Click toggles dropdown
   onPointerDown(pointerX, pointerY) {
-    this.state.focused = true;
+    this.context.focusManager.focus(this.id);
+    
     if (this.dropdownVisible) {
       this.closeDropdown();
     } else {
       this.openDropdown();
     }
     this.selectedIndex = -1; // reset selection
-    this.emit("focus", this);
+  
     this.invalidate();
   }
   // Keyboard navigation

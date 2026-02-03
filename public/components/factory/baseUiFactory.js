@@ -96,7 +96,7 @@ export class BaseUIFactory {
           if(!option.fills) return;
           Object.entries(option.fills).forEach(([id, value]) => {
             const target = registry.get(id);
-            console.log(registry, id, target);
+          
             if (target) {
               target.value = value;
               target.invalidate();

@@ -4,7 +4,8 @@ export const inputRenderer = {
     render(node, ctx) {
       const { x, y, width, height } = node.bounds;
       const { font, paddingX, paddingY, borderColor, focusBorderColor } = node.style;
-  const {focused} = node.getState ? node.getState() : {focused: false};
+  const uiState = node.uiState || {};
+  const focused = uiState.focused || false;
   
       ctx.save();
   

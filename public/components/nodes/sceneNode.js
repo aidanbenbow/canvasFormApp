@@ -16,7 +16,7 @@ export class SceneNode {
       this.context = context;
       this.style = style;
       this.visible = visible;
-console.log(this.context);
+
       this.emitter = new TinyEmitter();
   
       this.layoutStrategy = layoutStrategy;
@@ -140,6 +140,7 @@ console.log(this.context);
     };
   }
   get uiState() {
+    console.log(this.context.uiState.get(this.id));
     return this.context.uiState.get(this.id);
   }
   setUIState(partial) {

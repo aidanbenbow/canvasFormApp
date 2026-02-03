@@ -2,11 +2,12 @@ export const dropdownInputRenderer = {
     render(node, ctx) {
       const { x, y, width, height } = node.bounds;
       const { font, paddingX, paddingY, borderColor, focusBorderColor } = node.style;
-  
+  const uiState = node.uiState || {};
+  const focused = uiState.focused || false;
       ctx.save();
   
       // --- 1. Draw input box border ---
-      ctx.strokeStyle = node.state.focused ? focusBorderColor : borderColor;
+      ctx.strokeStyle = focused ? focusBorderColor : borderColor;
       ctx.strokeRect(x, y, width, height);
   
       // --- 2. Draw input text ---
