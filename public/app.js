@@ -5,7 +5,7 @@ import { FormsUIFactory } from "./components/factory/formsUiFactory.js";
 import { ResultsUIFactory } from "./components/factory/resultsUiFactory.js";
 import { canvasConfig, } from "./constants.js";
 
-import { fetchAllForms, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
+import { fetchAllForms, fetchArticleById, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { UIStateStore } from "./events/UiStateStore.js";
 import { ACTIONS } from "./events/actions.js";
@@ -106,6 +106,7 @@ wireSystemEvents(system, context, store, screenRouter, factories, commandRegistr
 
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
+const articleID = urlParams.get('articleId');
 context.pipeline.start({
   maxWidth: mainCanvas.width,
   maxHeight: mainCanvas.height
@@ -117,7 +118,12 @@ if (formId) {
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.FORM.VIEW, form, 'bootstrap');
-} else{
+} else if(articleID){
+  const article = await fetchArticleById(articleID);
+  console.log('Fetched article:', article);
+  system.actionDispatcher.dispatch(ACTIONS.ARTICLE.VIEW, article, 'bootstrap');
+}
+else{
   const {forms} = await fetchAllForms('admin');
  
 for(const f of forms){

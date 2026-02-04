@@ -2,16 +2,13 @@
 
 import { layoutRegistry } from '../registries/layoutRegistry.js';
 import { containerRenderer } from '../renderers/containerRenderer.js';
-import { ButtonNode } from './nodes/buttonNode.js';
 import { ContainerNode } from './nodes/containerNode.js';
-import { KeyboardNode } from './nodes/keyboardNode.js';
-import { PopUpNode } from './nodes/popUpNode.js';
 import { SceneNode } from './nodes/sceneNode.js';
-import { TextNode } from './nodes/textNode.js';
 
 export function compileUIManifest(manifest, factories, commandRegistry,context, handlers = {}) {
   const layoutFactory = layoutRegistry[manifest.layout];
-
+console.log('Compiling UI Manifest:', manifest);
+console.log('Using layout factory:', layoutFactory);
   // Create root
   const rootNode = new SceneNode({
     id: manifest.id || "root",

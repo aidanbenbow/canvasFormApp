@@ -55,6 +55,18 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('getArticleById', async ({ articleID }) => {
+     
+    console.log(`Fetching article by ID: ${articleID}`);
+    try {
+      const articleData = await db.getArticleById(articleID);
+      socket.emit('articleDataById', { articleID, articleData });
+    } catch (error) {
+      console.error('Error fetching article by ID:', error);
+      socket.emit('articleDataById', { articleID, articleData: null, error: error.message });
+    }
+  });
+
   socket.on('log', async ({ message, data }) => {
     console.log(`[LOG] ${message}`);
     console.log('Received data:', data);

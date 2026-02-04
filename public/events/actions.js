@@ -4,6 +4,16 @@ export const ACTIONS = {
         FORM_SELECTED: 'dashboard:form_selected',
         CREATE: 'dashboard:create',
     },
+    ARTICLE: {
+        VIEW: 'article:view',
+        CREATE: 'article:create',
+        EDIT: 'article:edit',
+        DELETE: 'article:delete',
+        SET_ACTIVE: 'article:set_active',
+        SET_LIST: 'article:set_list',
+        ADD: 'article:add',
+        UPDATE: 'article:update',
+    },
     FORM: {
         VIEW: 'form:view',
         SUBMIT: 'form:submit',

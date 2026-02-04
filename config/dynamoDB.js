@@ -86,6 +86,23 @@ async getFormDataById(id) {
         }
     }
 
+    async getArticleById(userId) {
+        try {
+            const params = {
+                TableName: 'dorcasusers',
+                Key: { userId },
+            };
+            const data = await this.docClient.send(new GetCommand(params));
+            
+            return data.Item || null;
+        }
+        catch (error) {
+            console.error("Error fetching article by ID:", error);
+            throw new Error("Could not fetch article by ID");
+        }
+    }
+
+
 
     async updateFormData(id, formStructure, label = 'Untitled') {
         try {

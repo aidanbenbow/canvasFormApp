@@ -119,6 +119,17 @@ export function fetchFormById(formId) {
   });
 }
 
+export function fetchArticleById(articleID){
+  return new Promise((resolve, reject) => {
+    socket.emit('getArticleById', { articleID });
+
+    socket.once('articleDataById', ({ articleID, articleData, error }) => {
+      if (error) reject(error);
+      else resolve(articleData);
+    });
+  });
+}
+
 
 socket.on('formResultsUpdated', ({ formId, results }) => {
   console.log('[SOCKET] Live update for form:', formId);

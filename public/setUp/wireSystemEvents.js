@@ -1,3 +1,4 @@
+import { articleViewScreen } from "../components/articleView.js";
 import { CreateForm } from "../components/createForm.js";
 import { DashBoardScreen } from "../components/dashBoard.js";
 import { EditForm } from "../components/editForm.js";
@@ -40,6 +41,22 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
       router.push(view);
     }, "wiring");
   
+    dispatcher.on(ACTIONS.ARTICLE.VIEW, async (article) => {
+      console.log(`Viewing article with id: ${article.userId}`);
+      // Implement article viewing logic here
+      const view = new articleViewScreen({
+        context,
+        dispatcher,
+        eventBusManager: bus,
+        store,
+        factories,
+        commandRegistry,
+        article
+      });
+      router.push(view);
+
+    }
+    , "wiring");
 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
