@@ -19,11 +19,13 @@ export class InputNode extends SceneNode {
       this.cursorPos = value.length
   
       this.style = {
-        font: "14px sans-serif",
+        font: "20px sans-serif",
         paddingX: 8,
         paddingY: 6,
         borderColor: "#ccc",
         focusBorderColor: "#0078ff",
+        width: 400,
+        height: 32,
         ...style
       };
     }

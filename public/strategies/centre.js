@@ -1,6 +1,8 @@
 export class CenterLayoutStrategy {
-    constructor({ padding = 0 } = {}) {
+    constructor({ padding = 40, verticalAlign = 'top' } = {}) {
       this.padding = padding; // optional padding around children
+      this.verticalAlign = verticalAlign; // 'top', 'center', 'bottom'
+      console.log("CenterLayoutStrategy created with padding:", this.padding);
     }
   
     // Measure phase
@@ -30,10 +32,15 @@ export class CenterLayoutStrategy {
   
       for (const child of container.children) {
         const { width, height } = child.measured;
-  
+        let y;
+        if (this.verticalAlign === "top") {
+          y = bounds.y + this.padding; // top-aligned
+        } else {
+          y = bounds.y + this.padding + (innerHeight - height) / 2; // center-aligned
+        }
         child.layout({
           x: bounds.x + this.padding + (innerWidth - width) / 2,
-          y: bounds.y + this.padding + (innerHeight - height) / 2,
+          y,
           width,
           height
         }, ctx);

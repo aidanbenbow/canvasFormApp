@@ -22,8 +22,8 @@ export class ButtonNode extends SceneNode {
       };
   
       this.style = {
-        font: '12px sans-serif',
-        paddingX: 12,
+        font: '16px sans-serif',
+        paddingX: 16,
         paddingY: 6,
         radius: 4,
         ...style

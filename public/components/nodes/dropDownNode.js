@@ -23,12 +23,13 @@ this.context = context;
 this.dropdownVisible = false;
     // default styling
     this.style = {
-      font: "14px sans-serif",
+      font: "24px sans-serif",
       paddingX: 8,
       paddingY: 6,
       minHeight: 32,
       borderColor: "#ccc",
       focusBorderColor: "#0078ff",
+      width: 350,
       optionHeight: 24,   // height of each option in dropdown
       ...style
     };

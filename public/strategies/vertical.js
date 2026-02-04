@@ -1,5 +1,5 @@
 export class VerticalLayoutStrategy {
-  constructor({ padding = 18, spacing = 6 } = {}) {
+  constructor({ padding = 18, spacing = 16 } = {}) {
     this.padding = padding;
     this.spacing = spacing;
   }

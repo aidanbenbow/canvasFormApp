@@ -44,11 +44,12 @@ export class CaretController {
     drawCaret(ctx) {
         const node = this.editor.activeNode;
         if (!node || !this.editor.blinkState) return;
+        ctx.font = node.style.font;
       
         const { x, y } = node.bounds;
         const { lines, lineHeight } = node._layout;
         const text = node.value || "";
-      
+    
         let index = 0;
         let caretLine = 0;
         let caretOffset = 0;
@@ -69,7 +70,7 @@ export class CaretController {
         const lineText = lines[caretLine].slice(0, caretOffset);
         const caretX = x + node.style.paddingX + ctx.measureText(lineText).width;
         const caretY = y + node.style.paddingY + caretLine * lineHeight;
-      
+        
         ctx.strokeStyle = "#000";
         ctx.beginPath();
         ctx.moveTo(caretX, caretY);

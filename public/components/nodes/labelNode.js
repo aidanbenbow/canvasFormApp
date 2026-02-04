@@ -16,7 +16,7 @@ export class LabelNode extends SceneNode {
     this.onSelect = onSelect;
 
     this.style = {
-      font: "16px sans-serif",
+      font: "34px sans-serif",
       paddingX: 8,
       paddingY: 4,
       ...style

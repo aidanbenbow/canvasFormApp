@@ -15,7 +15,7 @@ export class TextEditorController {
         this.blinkState = true;
         this.pipeline = pipeline;
   this.popup = popupLayer
- console.log("Initializing TextEditorController with popup:", this.dispatcher);
+
         this.keyboardController = new keyboardController(pipeline, this.popup);
         this.textModel = null
         this.keyboardInput = new KeyBoardInputController(this);
