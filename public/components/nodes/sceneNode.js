@@ -140,7 +140,7 @@ export class SceneNode {
     };
   }
   get uiState() {
-    console.log(this.context.uiState.get(this.id));
+
     return this.context.uiState.get(this.id);
   }
   setUIState(partial) {

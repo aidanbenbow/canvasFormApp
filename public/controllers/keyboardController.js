@@ -2,7 +2,7 @@ export class keyboardController {
   constructor(pipeline,popup) {
     this.pipeline = pipeline;
 
-    this.popupNode = popup.popupLayer
+    this.popupNode = popup
   
   }
 

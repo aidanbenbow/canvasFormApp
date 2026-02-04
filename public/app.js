@@ -54,7 +54,7 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
   context.pipeline.setRendererContext(context.ctx)
 
   const uiState = new UIStateStore()
-const focusManager = new FocusManager(uiState)
+const focusManager = new FocusManager(uiState, system.actionDispatcher)
 context.focusManager = focusManager;
 context.uiState = uiState;
 
@@ -67,11 +67,13 @@ const uiengine = new UIEngine({
 
 context.pipeline.setRoot(uiengine.root);
 
-
-const pop = context.uiServices
 context.pipeline.invalidate();
 
-const textEditor = new TextEditorController(context.pipeline, pop, mainCanvas);
+const textEditor = new TextEditorController({
+  pipeline: context.pipeline, 
+  popupLayer: context.uiServices.popupLayer,
+  canvas: mainCanvas,
+  dispatcher: system.actionDispatcher});
 context.textEditorController = textEditor;
 context.pipeline.setEditor(textEditor);
 

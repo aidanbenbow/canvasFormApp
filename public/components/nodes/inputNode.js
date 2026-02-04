@@ -30,7 +30,7 @@ export class InputNode extends SceneNode {
   
     onPointerDown() {
       
-      this.context.focusManager.focus(this.id);
+      this.context.focusManager.focus(this);
     }
 
     updateText(newValue) {

@@ -15,11 +15,6 @@ export class LabelNode extends SceneNode {
     this.text = text;
     this.onSelect = onSelect;
 
-    this.state = {
-      hovered: false,
-      selected
-    };
-
     this.style = {
       font: "16px sans-serif",
       paddingX: 8,
@@ -29,16 +24,24 @@ export class LabelNode extends SceneNode {
   }
 
   onPointerEnter() {
-    this.state.hovered = true;
+    this.setUIState({ hovered: true });
     this.invalidate();
   }
 
   onPointerLeave() {
-    this.state.hovered = false;
+    this.setUIState({ hovered: false });
+    this.invalidate();
+  }
+
+  onPointerDown() {
+    this.setUIState({ pressed: true });
+   
     this.invalidate();
   }
 
   onPointerUp() {
+    this.setUIState({ pressed: false });
     this.onSelect?.();
+    this.invalidate();
   }
 }

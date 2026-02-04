@@ -1,18 +1,21 @@
 
+import { InputNode } from "../components/nodes/inputNode.js";
+import { ACTIONS } from "../events/actions.js";
 import { CaretController } from "./caretController.js";
 import { KeyBoardInputController } from "./keyBoardInputController.js";
 import { keyboardController } from "./keyboardController.js";
 import { TextModel } from "./textModel.js";
 
 export class TextEditorController {
-    constructor(pipeline,popup, canvas) {
+    constructor({pipeline,popupLayer, canvas, dispatcher}) {
         this.activeNode = null;
+        this.dispatcher = dispatcher;
        this.canvas = canvas;
         this.caretIndex = 0;
         this.blinkState = true;
         this.pipeline = pipeline;
-  this.popup = popup
- 
+  this.popup = popupLayer
+ console.log("Initializing TextEditorController with popup:", this.dispatcher);
         this.keyboardController = new keyboardController(pipeline, this.popup);
         this.textModel = null
         this.keyboardInput = new KeyBoardInputController(this);
@@ -20,7 +23,24 @@ export class TextEditorController {
        
         this.initCaretBlink();
         this.initClipboard();
-      
+       this.bindUIActions();
+        
+    }
+    bindUIActions() {
+      // Use your dispatcher correctly, depending on its API
+      // For example, if it's TinyEmitter-like:
+      this.unsubFocus = this.dispatcher.on(ACTIONS.UI.FOCUS, ({ Node }) => {
+        if (Node instanceof InputNode) this.startEditing(Node);
+      });
+  
+      this.unsubBlur = this.dispatcher.on(ACTIONS.UI.BLUR, ({ Node }) => {
+        if (Node instanceof InputNode) this.stopEditing();
+      });
+    }
+  
+    destroy() {
+      this.unsubFocus?.();
+      this.unsubBlur?.();
     }
 
     

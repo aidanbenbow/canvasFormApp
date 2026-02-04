@@ -1,25 +1,31 @@
+import { ACTIONS } from "../events/actions.js";
+
 export class FocusManager {
-    constructor(uiState) {
+    constructor(uiState, dispatcher) {
       this.uiState = uiState;
-      this.focusedId = null;
+      this.dispatcher = dispatcher;
+      this.focusedNode = null;
     }
   
-    focus(id) {
-      console.log("Focusing ID:", id);
-      if (this.focusedId === id) return;
+    focus(Node) {
+      console.log("Focusing Node:", Node);
+      if (this.focusedNode === Node) return;
   
-      if (this.focusedId) {
-        this.uiState.update(this.focusedId, { focused: false });
+      if (this.focusedNode) {
+        this.uiState.update(this.focusedNode, { focused: false });
+        this.dispatcher.dispatch(ACTIONS.UI.BLUR, { Node: this.focusedNode });
       }
   
-      this.focusedId = id;
-      this.uiState.update(id, { focused: true });
+      this.focusedNode = Node;
+      this.uiState.update(Node, { focused: true });
+      this.dispatcher.dispatch(ACTIONS.UI.FOCUS, { Node });
     }
   
-    blur(id) {
-      if (this.focusedId === id) {
-        this.uiState.update(id, { focused: false });
-        this.focusedId = null;
+    blur(Node) {
+      if (this.focusedNode === Node) {
+        this.uiState.update(Node, { focused: false });
+        this.focusedNode = null;
       }
+      this.dispatcher.dispatch(ACTIONS.UI.BLUR, { Node } );
     }
   }

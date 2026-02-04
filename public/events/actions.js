@@ -28,4 +28,14 @@ export const ACTIONS = {
         PRESS: 'keyboard:press',
         SUBMIT: 'keyboard:submit',
     },
+    UI: {
+        FOCUS: 'ui:focus',
+        BLUR: 'ui:blur',
+    
+        POINTER_ENTER: 'ui:pointer_enter',
+        POINTER_LEAVE: 'ui:pointer_leave',
+    
+        POINTER_DOWN: 'ui:pointer_down',
+        POINTER_UP: 'ui:pointer_up',
+      }
 };

@@ -1,3 +1,4 @@
+import { ACTIONS } from "../events/actions.js";
 import { BaseScreen } from "./baseScreen.js";
 import { InputNode } from "./nodes/inputNode.js";
 import { compileUIManifest } from "./uiManifestCompiler.js";
@@ -54,17 +55,7 @@ this.context = context;
     return rootNode;
   }
   onEnter() {
-    const editor = this.context.textEditorController;
-  
-    // Walk the tree and attach focus listeners
-    function wireInputs(node) {
-      if (node instanceof InputNode) {
-        node.on("focus", () => editor.startEditing(node));
-      }
-      node.children.forEach(wireInputs);
-    }
-  
-    wireInputs(this.rootNode);
+   
   }
 
   onExit() {

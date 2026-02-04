@@ -37,7 +37,7 @@ this.dropdownVisible = false;
 
   // Click toggles dropdown
   onPointerDown(pointerX, pointerY) {
-    this.context.focusManager.focus(this.id);
+    this.context.focusManager.focus(this);
     
     if (this.dropdownVisible) {
       this.closeDropdown();
