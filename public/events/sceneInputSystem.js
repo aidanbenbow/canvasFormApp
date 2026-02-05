@@ -81,7 +81,7 @@ const canvasX = (e.clientX - rect.left) * scaleX;
     }
     _handleWheel(e) {
       e.preventDefault(); // prevent page scrolling
-      console.log('Wheel event:', e);
+     
       const rect = this.canvas.getBoundingClientRect();
       const scaleX = this.canvas.width / rect.width;
       const scaleY = this.canvas.height / rect.height;
@@ -95,17 +95,16 @@ const canvasX = (e.clientX - rect.left) * scaleX;
       // Hit test to find which scrollable container is under pointer
       const root = this.pipeline.root;
       const target = this.hitTest.hitTest(root, x, y, this.ctx);
-  
-      // Walk up parent chain to find a scrollable container
-      let scrollNode = target;
-      while (scrollNode && !scrollNode.scroll) {
-          scrollNode = scrollNode.parent;
-      }
-  
-      if (scrollNode && scrollNode.scroll) {
-          scrollNode.scroll.scrollBy(e.deltaY);  // positive → scroll down
-          this.pipeline.invalidate();            // request redraw
-      }
+      const event = new SceneEvent({
+        type: "wheel",
+        x,
+        y,
+        target,
+        originalEvent: e
+    });
+
+    this.dispatcher.dispatch(event); // consistent event propagation
+
   }
   
   }

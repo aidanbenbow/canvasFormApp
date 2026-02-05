@@ -1,6 +1,7 @@
 import { ScrollController } from "../../controllers/scrollControllrt.js";
 import { layoutRegistry } from "../../registries/layoutRegistry.js";
 import { containerRenderer } from "../../renderers/containerRenderer.js";
+import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class ContainerNode extends SceneNode {
@@ -10,6 +11,7 @@ export class ContainerNode extends SceneNode {
         context,
         layoutStrategy: layoutStrategy ?? (layout ? layoutRegistry[layout]() : undefined),
         renderStrategy: renderStrategy ?? containerRenderer,
+        hitTestStrategy: rectHitTestStrategy
       });
   
       this.style = style;
@@ -21,21 +23,45 @@ export class ContainerNode extends SceneNode {
         viewportHeight: viewportHeight || 0
       });
     }
-  
+
+    this.onEvent = (event) => {
+    if(event.type === "wheel" && this.scroll) {
+      console.log("scroll event received in ContainerNode", event);
+      this.scroll.scrollBy(event.originalEvent.deltaY);
+      
+      this.invalidate();
+   
+    }
+    }
       for (const child of children) {
         this.add(child);
       }
     }
-    // Update scroll content height after measuring children
-  updateScroll() {
-    if (!this.scroll) return;
-    if (!this.measured) return;
+    updateScroll() {
+      if (!this.scroll) return;
+    
+      // Compute total children height
+      const contentHeight = this.children.reduce((sum, child) => {
+        const childHeight = child.measured?.height || 0;
+        const spacing = this.layoutStrategy?.spacing || 0;
+        return sum + childHeight + spacing;
+      }, 0);
+    
+      const padding = this.layoutStrategy?.padding || 0;
+      const totalContentHeight = contentHeight + padding * 2 - (this.children.length > 0 ? (this.layoutStrategy.spacing || 0) : 0);
+    
+      // Set scroll content and viewport
+      this.scroll.setContentHeight(totalContentHeight);
+      this.scroll.setViewportHeight(this.bounds.height || 300);
+    
+      console.log("Updated scroll controller:", {
+        contentHeight: this.scroll.contentHeight,
+        viewportHeight: this.scroll.viewportHeight,
+        offsetY: this.scroll.offsetY
+      });
+    }
+    
 
-    // contentHeight = total height of children including spacing/padding
-    this.scroll.setContentHeight(this.measured.height);
 
-    // viewportHeight = visible height of container
-    this.scroll.setViewportHeight(this.bounds.height || this.measured.height);
-  }
   }
   

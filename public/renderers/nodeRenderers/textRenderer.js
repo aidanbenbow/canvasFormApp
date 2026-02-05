@@ -1,8 +1,8 @@
 export const textRenderer = {
   render(node, ctx) {
-    const { x, y } = node.bounds;
+    const { x, y } = node.bounds;  // use as-is, let ctx translate handle scrolling
     const { font, color } = node.style;
-
+console.log("Rendering text node:",  "at", x, y);
     ctx.save();
     ctx.font = font;
     ctx.fillStyle = color;
