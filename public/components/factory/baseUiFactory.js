@@ -65,27 +65,27 @@ export class BaseUIFactory {
     dropDown: (def) => {
       def.options = [
         {
-          label: "Option 1",
-          value: "opt1",
+          label: "galina",
+          value: "galina",
           fills: {
-            messageInput: "Hello from option 1",
-            reportInput: "Report for option 1"
+            messageInput: "Hello from galina",
+            reportInput: "Report for galina"
           }
         },
         {
-          label: "Option 2",
-          value: "opt2",
+          label: "zinaida",
+          value: "zinaida",
           fills: {
-            messageInput: "Hello from option 2",
-            reportInput: "Report for option 2"
+            messageInput: "Hello from zinaida",
+            reportInput: "Report for zinaida"
           }
         },
         {
-          label: "Option 3",
-          value: "opt3",
+          label: "Pantelimon",
+          value: "Pantelimon",
           fills: {
-            messageInput: "Hello from option 3",
-            reportInput: "Report for option 3"
+            messageInput: "Hello from Pantelimon",
+            reportInput: "Report for Pantelimon"
           }
         }
       ];

@@ -3,8 +3,9 @@ import { layoutRegistry } from "../../registries/layoutRegistry.js";
 import { dropdownInputRenderer } from "../../renderers/nodeRenderers/dropDownRenderer.js";
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { DropdownMenuNode } from "./dopDownMenuNode.js";
+import { InputNode } from "./inputNode.js";
 
-export class DropdownInputNode extends SceneNode {
+export class DropdownInputNode extends InputNode {
   constructor({ id, context, value = "", placeholder = "", options = [], onSelect, style = {} }) {
     super({
       id,
@@ -17,6 +18,7 @@ this.context = context;
     this.value = value;
     this.placeholder = placeholder;
     this.options = options;
+    this.filteredOptions = [...this.options];
 
     this.selectedIndex = -1;
     this.onSelect = onSelect; // callback when selecting an option
@@ -35,6 +37,21 @@ this.dropdownVisible = false;
     };
 
   }
+  getValue() {
+    return this.value || "";
+  }
+  updateText(text) {
+    this.value = text;
+
+    // open dropdown automatically while typing
+    if (!this.dropdownVisible) {
+      this.openDropdown();
+    }
+
+    this.filterOptions();
+    this.invalidate();
+  }
+
 
   // Click toggles dropdown
   onPointerDown(pointerX, pointerY) {
@@ -44,6 +61,7 @@ this.dropdownVisible = false;
       this.closeDropdown();
     } else {
       this.openDropdown();
+      this.filterOptions();
     }
     this.selectedIndex = -1; // reset selection
   
@@ -53,34 +71,97 @@ this.dropdownVisible = false;
   onKeyDown(key) {
     if (!this.dropdownVisible) return false;
 
+    const opts = this.filteredOptions;
+
     if (key === "ArrowDown") {
-      this.selectedIndex = (this.selectedIndex + 1) % this.options.length;
+      if (!opts.length) return true;
+      this.selectedIndex = (this.selectedIndex + 1) % opts.length;
+      this.syncMenuHighlight();
       this.invalidate();
       return true;
-    } else if (key === "ArrowUp") {
-      this.selectedIndex =
-        (this.selectedIndex - 1 + this.options.length) % this.options.length;
+    }
+
+    if (key === "ArrowUp") {
+      if (!opts.length) return true;
+      this.selectedIndex = (this.selectedIndex - 1 + opts.length) % opts.length;
+      this.syncMenuHighlight();
       this.invalidate();
       return true;
-    } else if (key === "Enter") {
-      if (this.selectedIndex >= 0) this.selectOption(this.selectedIndex);
+    }
+
+    if (key === "Enter") {
+      if (this.selectedIndex >= 0 && this.selectedIndex < opts.length) {
+        this.selectOption(this.selectedIndex);
+      }
       return true;
-    } else if (key === "Escape") {
-      this.dropdownVisible = false;
-      this.invalidate();
+    }
+
+    if (key === "Escape") {
+      this.closeDropdown();
       return true;
     }
 
     return false;
   }
+  selectOption(index) {
+    const opt = this.filteredOptions[index];
+    if (!opt) return;
+
+    this.value = opt.value;
+
+    this.emit("select", {
+      value: opt.value,
+      option: opt,
+      index,
+      source: this
+    });
+
+    this.onSelect?.(opt, index);
+
+    this.closeDropdown();
+    this.invalidate();
+  }
+
+  filterOptions() {
+    const q = (this.value || "").trim().toLowerCase();
+
+    if (!q) {
+      this.filteredOptions = [...this.options];
+    } else {
+      this.filteredOptions = this.options.filter((opt) => {
+        const label = (opt.label ?? "").toLowerCase();
+        const value = (opt.value ?? "").toLowerCase();
+        return label.includes(q) || value.includes(q);
+      });
+    }
+
+    // reset selection to top
+    this.selectedIndex = this.filteredOptions.length ? 0 : -1;
+
+    // update popup menu live
+    if (this.dropdownVisible) {
+      const { popupLayer } = this.context.uiServices;
+      const menu = popupLayer.children?.[0];
+      menu?.updateOptions?.(this.filteredOptions);
+      menu?.setSelectedIndex?.(this.selectedIndex);
+      popupLayer.invalidate?.();
+    }
+  }
+  syncMenuHighlight() {
+    if (!this.dropdownVisible) return;
+
+    const { popupLayer } = this.context.uiServices;
+    const menu = popupLayer.children?.[0];
+    menu?.setSelectedIndex?.(this.selectedIndex);
+    popupLayer.invalidate?.();
+  }
   openDropdown() {
     const { popupLayer } = this.context.uiServices;
-    console.log(popupLayer);
-  
+    
     const menu = new DropdownMenuNode({
       anchor: this,
       context: this.context,
-      options: this.options,
+      options: this.filteredOptions,
       onSelect: (option, index) => {
         this.value = option.value;
         this.selectedIndex = index;
@@ -90,8 +171,8 @@ this.dropdownVisible = false;
     });
   this.dropdownVisible = true;
  
-  
-    popupLayer.children = [menu];
+    popupLayer.add(menu);
+    console.log(popupLayer)
     popupLayer.show();
     popupLayer.invalidate?.();
   }
@@ -101,7 +182,10 @@ this.dropdownVisible = false;
     popupLayer.clear();
     popupLayer.hide();
     popupLayer.invalidate?.();
+    this.invalidate();
   }
+  
+  
   
 }
 

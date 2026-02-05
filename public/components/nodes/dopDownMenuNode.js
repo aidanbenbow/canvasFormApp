@@ -5,7 +5,7 @@ import { ContainerNode } from "./containerNode.js";
 import { LabelNode } from "./labelNode.js";
 
 export class DropdownMenuNode extends ContainerNode {
-    constructor({anchor,context, options, onSelect }) {
+    constructor({anchor,context, options, onSelect, selectedIndex = -1 }) {
       super({
         id: "dropdown-menu",
         context,
@@ -17,35 +17,57 @@ export class DropdownMenuNode extends ContainerNode {
   this.anchor = anchor; // reference to dropdown input node
       this.options = options;
       this.onSelect = onSelect;
+        this.selectedIndex = selectedIndex;
 
-      // create LabelNode for each option
-    options.forEach((option, i) => {
-        const label = new LabelNode({
-          id: `dropdown-option-${i}`,
-            context,
-          text: option.label,
-          onSelect: () => {
-            this.selectOption(i);
-          },
-          style: {
-            font: "14px sans-serif",
-            paddingY: 6,
-            paddingX: 8,
-            backgroundColor: "#eee"
-          },
-          hitTestStrategy: rectHitTestStrategy
-        });
-  
-        this.add(label); // add as child node
-      });
+        this.rebuildChildren();
     }
-    selectOption(index) {
+    rebuildChildren() {
+        // clear old children
+        this.children = [];
+    
+        this.options.forEach((option, i) => {
+          const label = new LabelNode({
+            id: `dropdown-option-${i}`,
+            context: this.context,
+            text: option.label,
+            onSelect: () => this.selectOption(i),
+            style: {
+              font: "14px sans-serif",
+              paddingY: 6,
+              paddingX: 8,
+              backgroundColor: "#eee"
+            },
+            hitTestStrategy: rectHitTestStrategy
+          });
+    
+          this.add(label);
+        });
+        console.log("menu children:", this.children.length);
+console.log("menu bounds:", this.bounds);
+
+    
+        this.invalidate();
+      }
+    
+      selectOption(index) {
         const chosen = this.options[index];
         if (!chosen) return;
     
-        this.anchor.value = chosen.value;       // update input
-        this.onSelect?.(chosen, index);   // propagate callback
+        this.anchor.value = chosen.value;
+        this.onSelect?.(chosen, index);
+    
         this.anchor.dropdownVisible = false;
+        this.invalidate();
+      }
+    
+      updateOptions(newOptions) {
+        this.options = newOptions;
+        this.selectedIndex = newOptions.length ? 0 : -1;
+        this.rebuildChildren();
+      }
+    
+      setSelectedIndex(i) {
+        this.selectedIndex = i;
         this.invalidate();
       }
   }

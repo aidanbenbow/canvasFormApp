@@ -19,6 +19,7 @@ export class LabelNode extends SceneNode {
       font: "34px sans-serif",
       paddingX: 8,
       paddingY: 4,
+      backgroundColor: selected ? "#0078ff" : "transparent",
       ...style
     };
   }

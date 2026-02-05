@@ -25,30 +25,6 @@ export const dropdownInputRenderer = {
       ctx.closePath();
       ctx.fill();
  
-      // --- 4. Draw dropdown menu if visible ---
-      if (node.dropdownVisible) {
-        const optionHeight = 24;
-
-        // Background & border
-        ctx.fillStyle = "#fff";
-        ctx.strokeStyle = "#ccc";
-        ctx.fillRect(x, y + height, width, node.options.length * optionHeight);
-        ctx.strokeRect(x, y + height, width, node.options.length * optionHeight);
-  
-        // Draw each option
-        node.options.forEach((opt, i) => {
-          // Highlight selected
-          if (i === node.selectedIndex) {
-            ctx.fillStyle = "rgba(0, 120, 215, 0.8)";
-            ctx.fillRect(x, y + height + i * optionHeight, width, optionHeight);
-          }
-  
-          // Option text
-          ctx.fillStyle = "#000";
-          ctx.textBaseline = "middle";
-          ctx.fillText(opt, x + paddingX, y + height + i * optionHeight + optionHeight / 2);
-        });
-      }
   
       ctx.restore();
     }
