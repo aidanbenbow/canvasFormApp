@@ -25,7 +25,9 @@ console.log('Using layout factory:', layoutFactory);
       id: key,
       context,
       style: def.style || {},
-      children: []
+      children: [],
+      scrollable: def.scrollable || false,
+      viewport: def.viewport || 400
     });
 
     // Add region to root

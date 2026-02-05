@@ -19,6 +19,8 @@ export class SceneInputSystem {
       this.canvas.addEventListener('mousedown', e => this._handle(e, 'mousedown'));
       this.canvas.addEventListener('mouseup', e => this._handle(e, 'mouseup'));
       this.canvas.addEventListener('click', e => this._handle(e, 'click'));
+      this.canvas.addEventListener('wheel', e => this._handleWheel(e));
+
     }
   
     _handle(e, type) {
@@ -77,5 +79,34 @@ const canvasX = (e.clientX - rect.left) * scaleX;
         target.onPointerUp?.();
       }
     }
+    _handleWheel(e) {
+      e.preventDefault(); // prevent page scrolling
+      console.log('Wheel event:', e);
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+  
+      const canvasX = (e.clientX - rect.left) * scaleX;
+      const canvasY = (e.clientY - rect.top) * scaleY;
+  
+      // Convert to scene coords
+      const { x, y } = this.pipeline.toSceneCoords(canvasX, canvasY);
+  
+      // Hit test to find which scrollable container is under pointer
+      const root = this.pipeline.root;
+      const target = this.hitTest.hitTest(root, x, y, this.ctx);
+  
+      // Walk up parent chain to find a scrollable container
+      let scrollNode = target;
+      while (scrollNode && !scrollNode.scroll) {
+          scrollNode = scrollNode.parent;
+      }
+  
+      if (scrollNode && scrollNode.scroll) {
+          scrollNode.scroll.scrollBy(e.deltaY);  // positive → scroll down
+          this.pipeline.invalidate();            // request redraw
+      }
+  }
+  
   }
   

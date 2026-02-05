@@ -15,7 +15,9 @@ const articleManifest = {
           children: [
             { type: "label", id: "title", text: "" },
             { type: "text", id: "article", text: "Repor" }, 
-        ]
+        ],
+            scrollable: true,
+            viewport: 400
         }
       }
     
@@ -47,6 +49,14 @@ export class articleViewScreen extends BaseScreen{
         );
         this.rootNode = rootNode;
         this.regions = regions;
+
+        // Step 2: Update scroll for scrollable regions
+    for (const region of Object.values(this.regions)) {
+        if (region.scroll) {
+            region.updateScroll(); // now measured.height is available
+        }
+    }
+console.log(this.regions);
         return rootNode;
 
     }

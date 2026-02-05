@@ -52,11 +52,16 @@ export class RenderPipeline {
   
       // 3. Update
       this.root.update(dt, this.rendererContext);
-  
+  this.updateScrollableNodes(this.root);
       // 4. Render
       this.renderFrame();
     }
-  
+    updateScrollableNodes(node) {
+      if (node.scroll) node.updateScroll();
+      for (const child of node.children) {
+        this.updateScrollableNodes(child);
+      }
+    }
     renderFrame() {
       
       if (!this.dirty) return;
