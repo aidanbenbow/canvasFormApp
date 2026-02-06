@@ -10,5 +10,6 @@ export class KeyboardNode extends ContainerNode {
         ['Z','X','C','V','B','N','M'],
         ['←','Space','↵']
       ];
+      this.hitTestable = false; // Keyboard itself doesn't receive events, but its children can
     }
   }

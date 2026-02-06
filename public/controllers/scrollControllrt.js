@@ -25,7 +25,7 @@ export class ScrollController {
     }
   
     apply(ctx,{scaleY=1}={}) {
-      console.log("Applying scroll offset:", this.offsetY);
+    
       const pixelOffsetY = this.offsetY * scaleY;
       ctx.translate(0, -pixelOffsetY);
     }

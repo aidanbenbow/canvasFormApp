@@ -26,7 +26,7 @@ export class ContainerNode extends SceneNode {
 
     this.onEvent = (event) => {
     if(event.type === "wheel" && this.scroll) {
-      console.log("scroll event received in ContainerNode", event);
+      
       this.scroll.scrollBy(event.originalEvent.deltaY);
       
       this.invalidate();

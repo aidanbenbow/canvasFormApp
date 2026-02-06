@@ -2,18 +2,25 @@ export class UIStateStore {
     state = {};
     listeners = [];
   
+    // update(id, partial) {
+    //   this.state[id] = {
+    //     hovered: false,
+    //     focused: false,
+    //     active: false,
+    //     pressed: false,
+    //     ...this.state[id],
+    //     ...partial
+    //   };
+    //  console.log("Updated UI State for", id, ":", this.state[id]);
+    //   this.notify();
+    // }
     update(id, partial) {
-      this.state[id] = {
-        hovered: false,
-        focused: false,
-        active: false,
-        pressed: false,
-        ...this.state[id],
-        ...partial
-      };
-     
+      const prev = this.state[id] || {};
+      this.state[id] = { ...prev, ...partial };
+      console.log("Updated UI State for", id, ":", this.state[id]);
       this.notify();
     }
+    
   
     get(id) {
       return this.state[id] ?? {};

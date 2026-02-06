@@ -9,6 +9,9 @@ export class ActionDispatcher {
     on(actionType, handler, namespace='global') {
         this.bus.on(actionType, handler, namespace);
     }
+    off(actionType, handler, namespace = "global") {
+      this.bus.off(actionType, handler, namespace);
+    }
 
     clear(namespace) {
         this.bus.clearNamespace(namespace);

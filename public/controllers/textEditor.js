@@ -34,6 +34,7 @@ export class TextEditorController {
       });
   
       this.unsubBlur = this.dispatcher.on(ACTIONS.UI.BLUR, ({ Node }) => {
+        console.log("Blur event received for Node:", Node);
         if (Node instanceof InputNode) this.stopEditing();
       });
     }

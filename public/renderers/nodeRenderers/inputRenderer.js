@@ -2,11 +2,12 @@ import { wrapText } from "../../controllers/textModel.js";
 
 export const inputRenderer = {
     render(node, ctx) {
+    //  logUIState(node);
       const { x, y, width, height } = node.bounds;
       const { font, paddingX, paddingY, borderColor, focusBorderColor } = node.style;
   const uiState = node.uiState || {};
   const focused = uiState.focused || false;
-  
+
       ctx.save();
   
       // Border
@@ -35,3 +36,11 @@ export const inputRenderer = {
       ctx.restore();
     }
   };
+
+  function logUIState(node) {
+    const state = node.uiState || {};
+    console.log(
+      `Node "${node.id}" UI State → focused: ${state.focused}, hovered: ${state.hovered}, active: ${state.active}, pressed: ${state.pressed}`
+    );
+  }
+  

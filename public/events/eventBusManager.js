@@ -18,7 +18,21 @@ export class EventBusManager {
         entries.push({ event, handler });
         this.eventBus.on(event, handler);
     }
-    emit(event, payload) {
+    off(event, handler, namespace = "global") {
+        const entries = this.registry.get(namespace);
+        if (!entries) return;
+      
+        // remove from the real event bus
+        this.eventBus.off(event, handler);
+      
+        // remove from registry
+        const next = entries.filter(e => !(e.event === event && e.handler === handler));
+      
+        if (next.length === 0) this.registry.delete(namespace);
+        else this.registry.set(namespace, next);
+      }
+      
+    emit(event, payload, namespace='global') {
         this.eventBus.emit(event, payload);
     }
    clearNamespace(namespace) {

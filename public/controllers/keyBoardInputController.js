@@ -8,16 +8,17 @@ export class KeyBoardInputController {
         this.editor = editor;
        
         this.boundHandler = (event) => this.handleKeyDown(event);
+        this.virtualKeyHandler = ({ key }) => this.handleVirtualKey(key);
     }
 
     enable() {
         window.addEventListener('keydown', this.boundHandler);
-        dispatcher.on(ACTIONS.KEYBOARD.PRESS, ({ key }) => this.handleVirtualKey(key));
+        dispatcher.on(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler);
       }
       
       disable() {
         window.removeEventListener('keydown', this.boundHandler);
-        dispatcher.off(ACTIONS.KEYBOARD.PRESS); // remove subscription if your dispatcher supports it
+        dispatcher.off(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler); // remove subscription if your dispatcher supports it
       }
       
       handleVirtualKey(key) {

@@ -28,7 +28,7 @@ export class RenderPipeline {
     console.log("RenderPipeline: New root set:", rootNode);
       // Keep a reference to the handler so we can remove it later
       this._invalidateHandler = () =>{
-console.log("RenderPipeline: Root node invalidated, marking pipeline as dirty");
+
        this.invalidate();}
       rootNode.on("invalidate", this._invalidateHandler);
     

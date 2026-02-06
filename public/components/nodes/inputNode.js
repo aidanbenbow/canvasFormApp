@@ -31,7 +31,7 @@ export class InputNode extends SceneNode {
     }
   
     onPointerDown() {
-      
+      console.log(`InputNode "${this.id}" focused`);
       this.context.focusManager.focus(this);
     }
 

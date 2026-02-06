@@ -5,7 +5,7 @@ export class PopUpNode extends ContainerNode {
     constructor({
       id = "popup",
       layout = "popup",            // popup-specific layout strategy
-      backgroundColor,
+      backgroundColor=null,
       spacing = 10
     }) {
       super({
@@ -22,6 +22,7 @@ export class PopUpNode extends ContainerNode {
   
     show() {
       this.visible = true;
+      this.hitTestable = false; // Pop-up itself doesn't receive events, but its children can
       this.invalidate();
     }
   
