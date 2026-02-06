@@ -3,8 +3,6 @@ export const containerRenderer = {
       const b = node.bounds;
       if (!b) return;
   
-      ctx.save();
-  
       // 1️⃣ Clip to container bounds
     ctx.beginPath();
     ctx.rect(b.x, b.y, b.width, b.height);
@@ -21,15 +19,10 @@ export const containerRenderer = {
         ctx.lineWidth = width;
         ctx.strokeRect(b.x, b.y, b.width, b.height);
       }
+      
 // 4️⃣ Apply scroll translation if scrollable
 if (node.scroll) node.scroll.apply(ctx);
-      // 🔥 critical bit: render children inside the container
-    for (const child of node.children) {
-      child.render(ctx);
-    }
-
-  
-      ctx.restore();
+   
     }
   };
   

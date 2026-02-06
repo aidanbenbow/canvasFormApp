@@ -29,8 +29,7 @@ export class AnchoredOverlayLayoutStrategy {
             height: menuHeight
           };
         }
-      console.log("menu layout bounds:", node.bounds);
-      console.log(anchor ? "anchored to:" : "no anchor", anchor?.id);
+      
         // layout children as vertical stack
         node.children.forEach((child, i) => {
           child.layout({

@@ -54,11 +54,7 @@ export class ContainerNode extends SceneNode {
       this.scroll.setContentHeight(totalContentHeight);
       this.scroll.setViewportHeight(this.bounds.height || 300);
     
-      console.log("Updated scroll controller:", {
-        contentHeight: this.scroll.contentHeight,
-        viewportHeight: this.scroll.viewportHeight,
-        offsetY: this.scroll.offsetY
-      });
+      
     }
     
 

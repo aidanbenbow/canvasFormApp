@@ -77,8 +77,10 @@ export class SceneNode {
   
     render(ctx) {
       if (!this.visible) return;
+      ctx.save();
       this.renderStrategy?.render?.(this, ctx);
       for (const child of this.children) child.render(ctx);
+      ctx.restore();
     }
   
     hitTest(point) {
