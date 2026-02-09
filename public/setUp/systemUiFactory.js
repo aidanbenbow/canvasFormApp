@@ -18,11 +18,11 @@ export const SystemUILayerFactory = {
   
       const popupLayer = PopupModule.create(dispatcher);
       const keyboardLayer = KeyboardModule.create(dispatcher, context);
-  console.log("Created popupLayer:", popupLayer);
-  console.log("Created keyboardLayer:", keyboardLayer);
-      popupLayer.add(keyboardLayer);
+ 
+ 
+      popupLayer.addPersistent(keyboardLayer);
       systemRoot.add(popupLayer);
-  
+      
       return {
         root: systemRoot,
         services:{

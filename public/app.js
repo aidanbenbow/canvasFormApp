@@ -84,9 +84,7 @@ context.fieldRegistry = new Map();
 const screenRouter = new ScreenRouter({ context,uiEngine: uiengine });
 const commandRegistry = new CommandRegistry();
 
-commandRegistry.register("form.submit", (payload) => {
-  console.log("Form submitted with payload:", payload);
-});
+
 
 const factories = {
   basic: new BaseUIFactory(context, commandRegistry ),
@@ -95,6 +93,13 @@ const factories = {
   resultsUI: new ResultsUIFactory(context),
 };
 
+commandRegistry.register("form.submit", (payload) => {
+  console.log("Form submitted with payload:", payload);
+ const submitNode = factories.basic.create({type: 'text', text: "Form submitted!", id: 'submissionMessage', style: { fill: 'green', fontSize: 24 }})
+  context.uiServices.popupLayer.showMessage(submitNode, { x: 100, y: 100 }, 3000);
+  system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
+  context.pipeline.invalidate();
+});
 
 const sceneInput = new SceneInputSystem({
   canvas: mainCanvas,

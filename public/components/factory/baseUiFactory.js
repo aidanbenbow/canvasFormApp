@@ -41,10 +41,12 @@ export class BaseUIFactory {
   
         const finalPayload = {
           ...(def.payload || {}),
-          fields
+          fields,
+          done: true
         };
   
         commandRegistry.execute(def.action, finalPayload);
+        clearInputValues(rootNode);
       }
   
       });
@@ -132,4 +134,18 @@ export class BaseUIFactory {
     }
   
     return result;
+  }
+
+  export function clearInputValues(node) {
+    if (!node) return;
+  
+    if (node instanceof InputNode || node instanceof DropdownInputNode) {
+      node.clear?.();
+    }
+  
+    if (node.children) {
+      for (const child of node.children) {
+        clearInputValues(child);
+      }
+    }
   }

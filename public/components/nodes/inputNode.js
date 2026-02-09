@@ -44,6 +44,9 @@ export class InputNode extends SceneNode {
     getValue() {
       return this.value;
     }
-    
+    clear() {
+      this.updateText("");
+      this.onChange?.("");
+    }
   }
   

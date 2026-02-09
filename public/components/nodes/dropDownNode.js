@@ -19,6 +19,7 @@ this.context = context;
     this.placeholder = placeholder;
     this.options = options;
     this.filteredOptions = [...this.options];
+    this.menuNode = null; // reference to dropdown menu instance
 
     this.selectedIndex = -1;
     this.onSelect = onSelect; // callback when selecting an option
@@ -157,7 +158,7 @@ this.dropdownVisible = false;
   }
   openDropdown() {
     const { popupLayer } = this.context.uiServices;
-    
+    console.log(popupLayer)
     const menu = new DropdownMenuNode({
       anchor: this,
       context: this.context,
@@ -170,22 +171,21 @@ this.dropdownVisible = false;
       }
     });
   this.dropdownVisible = true;
- 
-    popupLayer.add(menu);
-    console.log(popupLayer)
+  this.menuNode = menu; // keep reference to menu instance
+    popupLayer.addTransient(menu);
+    
     popupLayer.show();
     popupLayer.invalidate?.();
   }
   closeDropdown() {
     const { popupLayer } = this.context.uiServices;
     this.dropdownVisible = false;
-    popupLayer.clear();
+    this.menuNode = null; // clear reference to menu instance
+   popupLayer.clearTransient();
     popupLayer.hide();
     popupLayer.invalidate?.();
     this.invalidate();
   }
-  
-  
   
 }
 

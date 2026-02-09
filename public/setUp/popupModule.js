@@ -11,7 +11,11 @@ export const PopupModule = {
       });
   
       dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => popup.show());
-      dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => popup.hide());
+      dispatcher.on(ACTIONS.KEYBOARD.HIDE, () =>{
+if(!popup.hasTransient()){
+popup.hide();
+} })
+  
 
       return popup;
     }
