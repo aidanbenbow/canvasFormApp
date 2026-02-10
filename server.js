@@ -125,10 +125,21 @@ io.on('connection', (socket) => {
   socket.on('getFormResults', async ({ formId, tableName }) => {
     try {
       const results = await db.getFormResults(formId, tableName);
-      
+      console.log(`Fetched results for form ${formId} from table ${tableName}:`, results);
       socket.emit('formResultsData', { formId, results });
     } catch (err) {
       socket.emit('formResultsData', { formId, results: [], error: err.message });
+    }
+  
+  });
+
+  socket.on('getAllFormResults', async ({ tableName }) => {
+    try {
+      const results = await db.getAllFormResults(tableName);
+      console.log(`Fetched all results for table ${tableName}:`, results);
+      socket.emit('allFormResultsData', { tableName, results });
+    } catch (err) {
+      socket.emit('allFormResultsData', { tableName, results: [], error: err.message });
     }
   
   });

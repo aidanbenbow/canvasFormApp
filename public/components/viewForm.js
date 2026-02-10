@@ -22,18 +22,21 @@ style: {
 
 
 export class FormViewScreen extends BaseScreen {
-  constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit }) {
+  constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit, results }) {
     super({ id: "form-view", context, dispatcher, eventBusManager });
 this.context = context;
     this.store = store;
     this.children = this.store.getActiveForm()?.formStructure || {};
+    console.log(this.store.getActiveForm())
     this.childArray = Object.values(this.children);
-    console.log("Child Array:", this.childArray);
+ 
     this.manifest = formViewUIManifest;
     this.createManfest();
     this.factories = factories;
     this.commandRegistry = commandRegistry;
     this.onSubmit = onSubmit;
+    this.results = results;
+    
   }
   createManfest() {
         for(let child of this.childArray){
@@ -46,7 +49,8 @@ this.context = context;
       this.manifest,
       this.factories,
       this.commandRegistry,
-      this.context
+      this.context,
+      this.results
     );
 
     this.rootNode = rootNode;

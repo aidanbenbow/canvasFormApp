@@ -34,8 +34,9 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
           dispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
             form: store.getActiveForm(),
             responseData
-          });
-        }
+          })
+        },
+        results: store.getFormResults(form.id)
       });
   
       router.push(view);

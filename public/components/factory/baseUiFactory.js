@@ -65,32 +65,7 @@ export class BaseUIFactory {
     container: (def) => new ScrollNode(def),
     fieldContainer: (def) => new ContainerNode(def),
     dropDown: (def) => {
-      def.options = [
-        {
-          label: "galina",
-          value: "galina",
-          fills: {
-            messageInput: "Hello from galina",
-            reportInput: "Report for galina"
-          }
-        },
-        {
-          label: "zinaida",
-          value: "zinaida",
-          fills: {
-            messageInput: "Hello from zinaida",
-            reportInput: "Report for zinaida"
-          }
-        },
-        {
-          label: "Pantelimon",
-          value: "Pantelimon",
-          fills: {
-            messageInput: "Hello from Pantelimon",
-            reportInput: "Report for Pantelimon"
-          }
-        }
-      ];
+    
       const registry = def.context.fieldRegistry;
       const node = new DropdownInputNode(def)
       if (def.onChangeFill) {

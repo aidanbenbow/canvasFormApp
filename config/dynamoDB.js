@@ -206,9 +206,23 @@ async deleteFormData(id) {
           console.error("Error fetching form results:", error);
           throw new Error("Could not fetch form results");
         }
+
+    
       }
       
+    async getAllFormResults(tableName = 'cscstudents') {
+        try {
+          const params = {
+            TableName: tableName,
+          };
     
+          const data = await this.docClient.send(new ScanCommand(params));
+          return data.Items || [];
+        } catch (error) {
+          console.error("Error fetching all form results:", error);
+          throw new Error("Could not fetch all form results");
+        }
+      }
     
 }
 

@@ -5,7 +5,7 @@ import { FormsUIFactory } from "./components/factory/formsUiFactory.js";
 import { ResultsUIFactory } from "./components/factory/resultsUiFactory.js";
 import { canvasConfig, } from "./constants.js";
 
-import { fetchAllForms, fetchArticleById, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
+import { fetchAllFormResults, fetchAllForms, fetchArticleById, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { UIStateStore } from "./events/UiStateStore.js";
 import { ACTIONS } from "./events/actions.js";
@@ -120,8 +120,11 @@ context.pipeline.start({
 
 if (formId) {
   const form = await fetchFormById(formId);
+  const results = await fetchAllFormResults(form.resultsTable || 'progressreports');
+  console.log('Fetched results for form:', results);
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
+  system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: form.id, results }, 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.FORM.VIEW, form, 'bootstrap');
 } else if(articleID){
   const article = await fetchArticleById(articleID);

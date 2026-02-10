@@ -108,6 +108,19 @@ export function fetchFormResults(formId, tableName = 'faithandbelief') {
   });
 }
 
+export function fetchAllFormResults(tableName = 'faithandbelief') {
+  return new Promise((resolve, reject) => {
+    socket.emit('getAllFormResults', { tableName });
+
+    socket.once('allFormResultsData', ({ tableName, results }) => {
+      console.log('[SOCKET] Received allFormResultsData:', results);
+      resolve(results);
+    });
+
+    // Optional: add timeout or error handling
+  });
+}
+
 export function fetchFormById(formId) {
   return new Promise((resolve, reject) => {
     socket.emit('getFormById', { formId });

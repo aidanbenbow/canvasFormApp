@@ -24,8 +24,8 @@ export class InputNode extends SceneNode {
         paddingY: 6,
         borderColor: "#ccc",
         focusBorderColor: "#0078ff",
-        width: 400,
-        height: 32,
+        width: 800,
+        minHeight: 32,
         ...style
       };
     }
