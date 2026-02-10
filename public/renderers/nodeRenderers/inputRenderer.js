@@ -29,7 +29,7 @@ export const inputRenderer = {
 
      for (const line of lines) {
       ctx.fillStyle = node.value ? "#000" : "#888";
-      ctx.fillText(line, textX, textY);
+      ctx.fillText(line.text, textX, textY);
       textY += lineHeight;
     }
   

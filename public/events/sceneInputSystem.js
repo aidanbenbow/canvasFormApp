@@ -72,7 +72,7 @@ const canvasX = (e.clientX - rect.left) * scaleX;
     
       // Pointer down/up
       if (type === "mousedown") {
-        target.onPointerDown?.();
+        target.onPointerDown?.(x,y);
       }
     
       if (type === "mouseup") {

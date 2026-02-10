@@ -30,9 +30,13 @@ export class InputNode extends SceneNode {
       };
     }
   
-    onPointerDown() {
+    onPointerDown(pointerX, pointerY) {
       console.log(`InputNode "${this.id}" focused`);
+      console.log(this.context)
       this.context.focusManager.focus(this);
+      const ctx = this.context.ctx
+      this.context.textEditorController.caretController.moveCaretToMousePosition(pointerX, pointerY, ctx);
+     
     }
 
     updateText(newValue) {

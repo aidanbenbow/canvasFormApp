@@ -9,7 +9,7 @@ export class InputLayoutStrategy {
     context.font = node.style.font;
     const maxTextWidth = width - node.style.paddingX * 2;
   
-    //const lines = wrapText(context, node.value || node.placeholder, maxTextWidth);
+   
     const lines = wrapTextByWords(context, node.value || node.placeholder, maxTextWidth);
     const lineHeight = parseInt(node.style.font) + 2;
   

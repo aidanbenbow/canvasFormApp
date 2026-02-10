@@ -121,7 +121,7 @@ context.pipeline.start({
 if (formId) {
   const form = await fetchFormById(formId);
   const results = await fetchAllFormResults(form.resultsTable || 'progressreports');
-  console.log('Fetched results for form:', results);
+
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: form.id, results }, 'bootstrap');

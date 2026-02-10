@@ -77,6 +77,8 @@ export function wrapTextByWords(ctx, text, maxWidth) {
   const words = text.split(/\s+/);
   const lines = [];
   let currentLine = "";
+  let lineStartIndex = 0; // track start index in the full string
+  let currentIndex = 0;   // tracks position in original text
 
   for (const word of words) {
     const testLine = currentLine ? currentLine + " " + word : word;
@@ -85,7 +87,9 @@ export function wrapTextByWords(ctx, text, maxWidth) {
     if (width <= maxWidth) {
       currentLine = testLine;
     } else {
-      if (currentLine) lines.push(currentLine);
+      if (currentLine) {
+        lines.push({ text: currentLine, startIndex: lineStartIndex, endIndex: currentIndex });
+      }
       // Word itself may be longer than maxWidth
       if (ctx.measureText(word).width > maxWidth) {
         // Hard break the word if it’s super long
@@ -95,19 +99,25 @@ export function wrapTextByWords(ctx, text, maxWidth) {
           if (ctx.measureText(testPartial).width <= maxWidth) {
             partial = testPartial;
           } else {
-            if (partial) lines.push(partial);
+            if (partial) lines.push({ text: partial, startIndex: lineStartIndex, endIndex: currentIndex });
             partial = char;
+            lineStartIndex = currentIndex;
           }
+          currentIndex++;
         }
-        if (partial) currentLine = partial;
-        else currentLine = "";
+        currentLine = partial;
+        lineStartIndex = currentIndex - partial.length;
       } else {
         currentLine = word;
+        lineStartIndex = currentIndex - word.length;
       }
     }
+    currentIndex += word.length + 1; // +1 for space
   }
 
-  if (currentLine) lines.push(currentLine);
+  if (currentLine) lines.push({ text: currentLine, startIndex: lineStartIndex, endIndex: currentIndex });
 
   return lines;
-}
+    
+  }
+

@@ -52,10 +52,12 @@ export class TextEditorController {
   const initialValue = box.getValue?.() || '';
   this.textModel = new TextModel(this);     // re‑create or reset model
   this.textModel.setText(initialValue);     // ensure buffer is populated
-  
+
       this.caretController.setCaretToEnd(initialValue);
       this.keyboardInput.enable();
+      if(isSmallScreen()){
        this.keyboardController.showKeyboard();
+      }
 this.clipboardProxy.focus();
         this.pipeline.invalidate();
       }
@@ -96,6 +98,64 @@ this.clipboardProxy.focus();
       moveCaretLinearly(offset, shiftKey) {
         this.caretController.moveCaret(offset, shiftKey);
       }
+      moveCaretUp(shiftKey) {
+        const node = this.activeNode;
+        if (!node) return;
+        
+        const { lines } = node._layout;
+        let caretIndex = this.caretController.caretIndex;
+    
+        // Find current line
+        let lineStart = 0;
+        let lineIndex = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const lineEnd = lineStart + lines[i].text.length;
+            if (caretIndex <= lineEnd) {
+                lineIndex = i;
+                break;
+            }
+            lineStart = lineEnd;
+        }
+    
+        if (lineIndex === 0) return; // already at top
+    
+        // Move caret to roughly same X offset on line above
+        const currentLineOffset = caretIndex - lineStart;
+        const prevLineLength = lines[lineIndex - 1].text.length;
+        const newIndex = lineStart - lines[lineIndex - 1].text.length + Math.min(currentLineOffset, prevLineLength);
+    
+        this.caretController.moveCaretTo(newIndex, shiftKey);
+    }
+    
+    moveCaretDown(shiftKey) {
+        const node = this.activeNode;
+        if (!node) return;
+        
+        const { lines } = node._layout;
+        let caretIndex = this.caretController.caretIndex;
+    
+        // Find current line
+        let lineStart = 0;
+        let lineIndex = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const lineEnd = lineStart + lines[i].text.length;
+            if (caretIndex <= lineEnd) {
+                lineIndex = i;
+                break;
+            }
+            lineStart = lineEnd;
+        }
+    
+        if (lineIndex >= lines.length - 1) return; // already at bottom
+    
+        // Move caret to roughly same X offset on line below
+        const currentLineOffset = caretIndex - lineStart;
+        const nextLineLength = lines[lineIndex + 1].text.length;
+        const newIndex = lineStart + lines[lineIndex].text.length + Math.min(currentLineOffset, nextLineLength);
+    
+        this.caretController.moveCaretTo(newIndex, shiftKey);
+    }
+    
    
     initCaretBlink() {
         setInterval(() => {
@@ -187,4 +247,9 @@ this.clipboardProxy.addEventListener("copy", (e) => {
     }
     
     
+}
+
+function isSmallScreen() {
+  // tweak the breakpoint as needed
+  return window.innerWidth < 1024;
 }
