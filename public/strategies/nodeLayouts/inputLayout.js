@@ -1,4 +1,4 @@
-import { wrapText } from "../../controllers/textModel.js";
+import { wrapText, wrapTextByWords } from "../../controllers/textModel.js";
 
 export class InputLayoutStrategy {
   measure(node, constraints, ctx) {
@@ -9,7 +9,8 @@ export class InputLayoutStrategy {
     context.font = node.style.font;
     const maxTextWidth = width - node.style.paddingX * 2;
   
-    const lines = wrapText(context, node.value || node.placeholder, maxTextWidth);
+    //const lines = wrapText(context, node.value || node.placeholder, maxTextWidth);
+    const lines = wrapTextByWords(context, node.value || node.placeholder, maxTextWidth);
     const lineHeight = parseInt(node.style.font) + 2;
   
     const contentHeight = lines.length * lineHeight + node.style.paddingY * 2;

@@ -55,7 +55,7 @@ console.log('Root Node:', rootNode);
 function preprocessManifest(manifest, results) {
   const clone = structuredClone(manifest);
   const beneficiaries = Array.isArray(results) ? results : [];
-
+  beneficiaries.sort((a, b) => a.name.localeCompare(b.name));
   walkDefs(clone, (def) => {
     if (def.type === "dropDown" && def.dataSource === "beneficiaries") {
       def.options = beneficiaries.map(b => ({

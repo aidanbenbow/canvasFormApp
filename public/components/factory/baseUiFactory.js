@@ -54,7 +54,12 @@ export class BaseUIFactory {
     
     ,
     label: (def) => new LabelNode(def),
-    text: (def) => new TextNode(def),
+    text: (def) =>{ 
+    const { context } = def;
+      const node = new TextNode(def)
+      context.fieldRegistry.set(def.id, node);
+      return node;
+    },
     input: (def) => {
       const { context } = def;
     const node =  new InputNode(def)

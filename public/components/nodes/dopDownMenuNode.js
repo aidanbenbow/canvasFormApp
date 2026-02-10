@@ -42,8 +42,7 @@ export class DropdownMenuNode extends ContainerNode {
     
           this.add(label);
         });
-        console.log("menu children:", this.children.length);
-console.log("menu bounds:", this.bounds);
+
 
     
         this.invalidate();

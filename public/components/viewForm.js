@@ -56,8 +56,20 @@ this.context = context;
     this.rootNode = rootNode;
     this.regions = regions;
 
+    this.updateDeFacut()
+
     return rootNode;
   }
+  updateDeFacut() {
+    const remaining = (this.results || []).filter(r => r.done !== true).length;
+  
+    const node = this.context.fieldRegistry.get("defacut-text");
+    if (!node) return;
+  
+    node.text = String(remaining);
+    node.invalidate();
+  }
+  
   onEnter() {
    
   }

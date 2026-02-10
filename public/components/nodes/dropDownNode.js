@@ -139,14 +139,11 @@ this.dropdownVisible = false;
     // reset selection to top
     this.selectedIndex = this.filteredOptions.length ? 0 : -1;
 
-    // update popup menu live
-    if (this.dropdownVisible) {
-      const { popupLayer } = this.context.uiServices;
-      const menu = popupLayer.children?.[0];
-      menu?.updateOptions?.(this.filteredOptions);
-      menu?.setSelectedIndex?.(this.selectedIndex);
-      popupLayer.invalidate?.();
-    }
+     // Update menu correctly
+  if (this.dropdownVisible && this.menuNode) {
+    this.menuNode.updateOptions(this.filteredOptions);
+    this.menuNode.setSelectedIndex(this.selectedIndex);
+  }
   }
   syncMenuHighlight() {
     if (!this.dropdownVisible) return;

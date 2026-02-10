@@ -67,4 +67,47 @@ export function wrapText(ctx, text, maxWidth) {
     if (currentLine) lines.push(currentLine);
     return lines;
   }
-  
+  /**
+ * Wrap text by words, not characters.
+ * Returns array of lines that fit in maxWidth.
+ */
+export function wrapTextByWords(ctx, text, maxWidth) {
+  if (!text) return [];
+
+  const words = text.split(/\s+/);
+  const lines = [];
+  let currentLine = "";
+
+  for (const word of words) {
+    const testLine = currentLine ? currentLine + " " + word : word;
+    const width = ctx.measureText(testLine).width;
+
+    if (width <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      // Word itself may be longer than maxWidth
+      if (ctx.measureText(word).width > maxWidth) {
+        // Hard break the word if it’s super long
+        let partial = "";
+        for (const char of word) {
+          const testPartial = partial + char;
+          if (ctx.measureText(testPartial).width <= maxWidth) {
+            partial = testPartial;
+          } else {
+            if (partial) lines.push(partial);
+            partial = char;
+          }
+        }
+        if (partial) currentLine = partial;
+        else currentLine = "";
+      } else {
+        currentLine = word;
+      }
+    }
+  }
+
+  if (currentLine) lines.push(currentLine);
+
+  return lines;
+}
