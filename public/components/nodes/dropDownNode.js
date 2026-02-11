@@ -42,15 +42,23 @@ this.dropdownVisible = false;
   getValue() {
     return this.value || "";
   }
-  updateText(text) {
+  updateText(text, { openDropdown = true } = {}) {
     this.value = text;
 
     // open dropdown automatically while typing
-    if (!this.dropdownVisible) {
+    if (openDropdown && !this.dropdownVisible) {
       this.openDropdown();
     }
 
     this.filterOptions();
+    this.invalidate();
+  }
+
+  clear() {
+    this.closeDropdown();
+    this.value = "";
+    this.filteredOptions = [...this.options];
+    this.selectedIndex = -1;
     this.invalidate();
   }
 

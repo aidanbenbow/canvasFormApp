@@ -76,6 +76,7 @@ moveCaretToMousePosition(x, y, ctx) {
   const node = this.editor.activeNode;
   if (!node) return;
 
+    ctx.font = node.style.font;
   const { lines, lineHeight } = node._layout;
   const { bounds, style } = node;
 
@@ -141,6 +142,7 @@ moveCaretToMousePosition(x, y, ctx) {
         const node = this.editor.activeNode;
         if (!node) return;
     
+        ctx.font = node.style.font;
         const { x, y } = node.bounds;
         const { lines, lineHeight } = node._layout;
     

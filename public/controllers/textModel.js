@@ -74,48 +74,70 @@ export function wrapText(ctx, text, maxWidth) {
 export function wrapTextByWords(ctx, text, maxWidth) {
   if (!text) return [];
 
-  const words = text.split(/\s+/);
+  const tokens = text.match(/\s+|[^\s]+/g) || [];
   const lines = [];
   let currentLine = "";
-  let lineStartIndex = 0; // track start index in the full string
-  let currentIndex = 0;   // tracks position in original text
+  let lineStartIndex = 0;
+  let currentIndex = 0;
 
-  for (const word of words) {
-    const testLine = currentLine ? currentLine + " " + word : word;
-    const width = ctx.measureText(testLine).width;
+  for (const token of tokens) {
+    if (!currentLine) {
+      lineStartIndex = currentIndex;
+    }
 
-    if (width <= maxWidth) {
+    const testLine = currentLine + token;
+    if (ctx.measureText(testLine).width <= maxWidth) {
       currentLine = testLine;
-    } else {
-      if (currentLine) {
-        lines.push({ text: currentLine, startIndex: lineStartIndex, endIndex: currentIndex });
-      }
-      // Word itself may be longer than maxWidth
-      if (ctx.measureText(word).width > maxWidth) {
-        // Hard break the word if it’s super long
-        let partial = "";
-        for (const char of word) {
-          const testPartial = partial + char;
-          if (ctx.measureText(testPartial).width <= maxWidth) {
-            partial = testPartial;
-          } else {
-            if (partial) lines.push({ text: partial, startIndex: lineStartIndex, endIndex: currentIndex });
-            partial = char;
-            lineStartIndex = currentIndex;
-          }
-          currentIndex++;
-        }
-        currentLine = partial;
-        lineStartIndex = currentIndex - partial.length;
+      currentIndex += token.length;
+      continue;
+    }
+
+    if (currentLine) {
+      lines.push({
+        text: currentLine,
+        startIndex: lineStartIndex,
+        endIndex: lineStartIndex + currentLine.length
+      });
+      currentLine = "";
+    }
+
+    lineStartIndex = currentIndex;
+
+    if (ctx.measureText(token).width <= maxWidth) {
+      currentLine = token;
+      currentIndex += token.length;
+      continue;
+    }
+
+    // Hard break long tokens (including long whitespace runs)
+    let partial = "";
+    for (const char of token) {
+      const testPartial = partial + char;
+      if (ctx.measureText(testPartial).width <= maxWidth || partial === "") {
+        partial = testPartial;
+        currentIndex += 1;
       } else {
-        currentLine = word;
-        lineStartIndex = currentIndex - word.length;
+        lines.push({
+          text: partial,
+          startIndex: lineStartIndex,
+          endIndex: lineStartIndex + partial.length
+        });
+        lineStartIndex += partial.length;
+        partial = char;
+        currentIndex += 1;
       }
     }
-    currentIndex += word.length + 1; // +1 for space
+
+    currentLine = partial;
   }
 
-  if (currentLine) lines.push({ text: currentLine, startIndex: lineStartIndex, endIndex: currentIndex });
+  if (currentLine) {
+    lines.push({
+      text: currentLine,
+      startIndex: lineStartIndex,
+      endIndex: lineStartIndex + currentLine.length
+    });
+  }
 
   return lines;
     
