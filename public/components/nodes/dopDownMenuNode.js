@@ -3,6 +3,7 @@ import { dropdownMenuRenderStrategy } from "../../renderers/nodeRenderers/dropDo
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { ContainerNode } from "./containerNode.js";
 import { LabelNode } from "./labelNode.js";
+import { ScrollController } from "../../controllers/scrollControllrt.js";
 
 export class DropdownMenuNode extends ContainerNode {
     constructor({anchor,context, options, onSelect, selectedIndex = -1 }) {
@@ -19,11 +20,20 @@ export class DropdownMenuNode extends ContainerNode {
       this.onSelect = onSelect;
         this.selectedIndex = selectedIndex;
 
+        this.scroll = new ScrollController({ contentHeight: 0, viewportHeight: 0 });
+        this.maxHeight = anchor?.style?.menuMaxHeight ?? 240;
+
         this.rebuildChildren();
     }
     rebuildChildren() {
         // clear old children
         this.children = [];
+
+        const baseFontSize = parseInt(this.anchor?.style?.font || "16px", 10) || 16;
+        const fontSize = isSmallScreen() ? Math.max(20, Math.round(baseFontSize * 1.0)) : Math.max(16, Math.round(baseFontSize * 0.9));
+        const font = `${fontSize}px 'Segoe UI', Tahoma, sans-serif`;
+        const paddingY = isSmallScreen() ? 10 : 8;
+        const paddingX = isSmallScreen() ? 12 : 10;
     
         this.options.forEach((option, i) => {
           const label = new LabelNode({
@@ -32,10 +42,11 @@ export class DropdownMenuNode extends ContainerNode {
             text: option.label,
             onSelect: () => this.selectOption(i),
             style: {
-              font: "14px sans-serif",
-              paddingY: 6,
-              paddingX: 8,
-              backgroundColor: "#eee"
+              font,
+              paddingY,
+              paddingX,
+              textColor: "#111",
+              backgroundColor: "transparent"
             },
             hitTestStrategy: rectHitTestStrategy
           });
@@ -69,5 +80,18 @@ export class DropdownMenuNode extends ContainerNode {
         this.selectedIndex = i;
         this.invalidate();
       }
+
+      onEvent(event) {
+        if (event.type === "wheel" && this.scroll) {
+          this.scroll.scrollBy(event.originalEvent.deltaY);
+          this.invalidate();
+          return true;
+        }
+        return false;
+      }
   }
+
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
+}
   

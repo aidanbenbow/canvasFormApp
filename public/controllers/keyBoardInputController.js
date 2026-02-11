@@ -31,6 +31,14 @@ export class KeyBoardInputController {
     handleKeyDown(event) {
         if (!this.editor.activeNode) return;
 
+        if (this.editor.activeNode?.onKeyDown) {
+            const handled = this.editor.activeNode.onKeyDown(event.key);
+            if (handled) {
+                event.preventDefault();
+                return;
+            }
+        }
+
         if(event.key.length === 1){
             event.preventDefault();
             this.editor.insertText(event.key);

@@ -19,18 +19,21 @@ export class InputNode extends SceneNode {
       this.cursorPos = value.length
   
       const baseStyle = {
-        font: "20px sans-serif",
+        font: "20px 'Segoe UI', Tahoma, sans-serif",
         paddingX: 8,
         paddingY: 6,
         borderColor: "#ccc",
         focusBorderColor: "#0078ff",
+        textColor: "#1f2937",
+        placeholderColor: "#9ca3af",
         width: 800,
+        fillWidth: true,
         minHeight: 32
       };
 
       const responsiveStyle = isSmallScreen()
         ? {
-            font: "24px sans-serif",
+            font: "24px 'Segoe UI', Tahoma, sans-serif",
             paddingX: 12,
             paddingY: 10,
             minHeight: 44,

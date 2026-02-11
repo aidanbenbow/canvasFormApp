@@ -6,8 +6,10 @@ export class AnchoredOverlayLayoutStrategy {
     }
   
     measure(node, constraints, ctx) {
-      let width = constraints.maxWidth;
-      let height = Math.min(node.options?.length * this.optionHeight || 0, this.maxHeight);
+        const optionHeight = node.anchor?.style?.optionHeight ?? node.optionHeight ?? this.optionHeight;
+        const maxHeight = node.anchor?.style?.menuMaxHeight ?? node.maxHeight ?? this.maxHeight;
+        const width = constraints.maxWidth;
+        const height = Math.min((node.options?.length || 0) * optionHeight, maxHeight);
   
       node._measured = { width, height };
       return { width, height };
@@ -15,26 +17,35 @@ export class AnchoredOverlayLayoutStrategy {
   
     layout(node, bounds, ctx) {
         const anchor = node.anchor;
-        const optionHeight = this.optionHeight;
-        const menuHeight = Math.min((node.options?.length || 0) * optionHeight, this.maxHeight);
+        const optionHeight = node.anchor?.style?.optionHeight ?? node.optionHeight ?? this.optionHeight;
+        const maxHeight = node.anchor?.style?.menuMaxHeight ?? node.maxHeight ?? this.maxHeight;
+        const contentHeight = (node.options?.length || 0) * optionHeight;
+        const menuHeight = Math.min(contentHeight, maxHeight);
       
         if (!anchor) {
           node.bounds = { ...bounds, height: menuHeight };
         } else {
+          const scrollOffsetY = getScrollOffsetY(anchor);
           const ab = anchor.bounds;
           node.bounds = {
             x: ab.x,
-            y: ab.y + ab.height,
+            y: ab.y - scrollOffsetY + ab.height,
             width: ab.width,
             height: menuHeight
           };
         }
+
+        if (node.scroll) {
+          node.scroll.setContentHeight(contentHeight);
+          node.scroll.setViewportHeight(menuHeight);
+        }
       
         // layout children as vertical stack
+        const scrollOffset = node.scroll?.offsetY ?? 0;
         node.children.forEach((child, i) => {
           child.layout({
             x: node.bounds.x,
-            y: node.bounds.y + i * optionHeight,
+            y: node.bounds.y + i * optionHeight - scrollOffset,
             width: node.bounds.width,
             height: optionHeight
           }, ctx);
@@ -42,4 +53,16 @@ export class AnchoredOverlayLayoutStrategy {
       }
       
   }
+
+function getScrollOffsetY(node) {
+  let offset = 0;
+  let current = node.parent;
+  while (current) {
+    if (current.scroll?.offsetY) {
+      offset += current.scroll.offsetY;
+    }
+    current = current.parent;
+  }
+  return offset;
+}
   

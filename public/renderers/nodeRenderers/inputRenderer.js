@@ -4,7 +4,15 @@ export const inputRenderer = {
     render(node, ctx) {
     //  logUIState(node);
       const { x, y, width, height } = node.bounds;
-      const { font, paddingX, paddingY, borderColor, focusBorderColor } = node.style;
+      const {
+        font,
+        paddingX,
+        paddingY,
+        borderColor,
+        focusBorderColor,
+        textColor = "#111",
+        placeholderColor = "#999"
+      } = node.style;
   const uiState = node.uiState || {};
   const focused = uiState.focused || false;
 
@@ -20,7 +28,7 @@ export const inputRenderer = {
       // Text
       ctx.font = font;
       ctx.textBaseline = "top";
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = textColor;
   
       const textX = x + paddingX;
       let textY = y + paddingY;
@@ -28,8 +36,11 @@ export const inputRenderer = {
      const { lines, lineHeight} = node._layout 
 
      for (const line of lines) {
-      ctx.fillStyle = node.value ? "#000" : "#888";
-      ctx.fillText(line.text, textX, textY);
+      const isPlaceholder = !node.value && !focused;
+      ctx.fillStyle = isPlaceholder ? placeholderColor : textColor;
+      if (!focused || node.value) {
+        ctx.fillText(line.text, textX, textY);
+      }
       textY += lineHeight;
     }
   

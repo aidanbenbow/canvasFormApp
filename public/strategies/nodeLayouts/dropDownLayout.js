@@ -1,6 +1,8 @@
 export class DropdownLayoutStrategy {
     measure(node, constraints, ctx) {
-      const width = node.style.width ?? Math.min(300, constraints.maxWidth);
+      const width = node.style.fillWidth
+        ? constraints.maxWidth
+        : node.style.width ?? Math.min(300, constraints.maxWidth);
       const height = node.style.height ?? (parseInt(node.style.font) + node.style.paddingY * 2);
   
       // no multi-line wrapping needed

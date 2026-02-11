@@ -95,7 +95,23 @@ const factories = {
 
 commandRegistry.register("form.submit", (payload) => {
   console.log("Form submitted with payload:", payload);
- const submitNode = factories.basic.create({type: 'text', text: "Form submitted!", id: 'submissionMessage', style: { fill: 'green', fontSize: 24 }})
+ const submitNode = factories.basic.create({
+  type: 'text',
+  text: "Form submitted!",
+  id: 'submissionMessage',
+  style: {
+    font: "28px sans-serif",
+    color: "#ffffff",
+    backgroundColor: "#0b8f3a",
+    borderColor: "#06702c",
+    paddingX: 20,
+    paddingY: 12,
+    radius: 10,
+    align: "center",
+    shrinkToFit: true,
+    maxWidth: Math.floor(mainCanvas.width * 0.9)
+  }
+ });
  context.uiServices.toastLayer.showMessage(submitNode, { timeoutMs: 3000 });
 
   system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);

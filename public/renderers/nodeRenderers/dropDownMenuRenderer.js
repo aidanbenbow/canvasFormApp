@@ -7,6 +7,11 @@ export const dropdownMenuRenderStrategy = {
     const optionHeight = node.anchor?.style?.optionHeight ?? 24;
     ctx.save();
 
+     // clip menu contents
+     ctx.beginPath();
+     ctx.rect(x, y, width, height);
+     ctx.clip();
+
      // menu container background + border
      ctx.strokeStyle = node.style?.borderColor ?? "#ccc";
      ctx.lineWidth = 1;
@@ -16,10 +21,11 @@ export const dropdownMenuRenderStrategy = {
  
      // highlight selected row
      if (node.selectedIndex >= 0) {
+       const scrollOffset = node.scroll?.offsetY ?? 0;
        ctx.fillStyle = "rgba(0, 120, 215, 0.25)";
        ctx.fillRect(
          x,
-         y + node.selectedIndex * optionHeight,
+         y + node.selectedIndex * optionHeight - scrollOffset,
          width,
          optionHeight
        );

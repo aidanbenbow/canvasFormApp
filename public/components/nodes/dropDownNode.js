@@ -27,24 +27,27 @@ this.context = context;
 this.dropdownVisible = false;
     // default styling
     const baseStyle = {
-      font: "24px sans-serif",
+      font: "24px 'Segoe UI', Tahoma, sans-serif",
       paddingX: 8,
       paddingY: 6,
       minHeight: 32,
       borderColor: "#ccc",
       focusBorderColor: "#0078ff",
+      textColor: "#1f2937",
+      placeholderColor: "#9ca3af",
       width: 350,
-      optionHeight: 24
+      fillWidth: true,
+      optionHeight: 36
     };
 
     const responsiveStyle = isSmallScreen()
       ? {
-          font: "28px sans-serif",
+          font: "28px 'Segoe UI', Tahoma, sans-serif",
           paddingX: 12,
           paddingY: 10,
           minHeight: 48,
           width: Math.min(560, Math.floor(window.innerWidth * 0.9)),
-          optionHeight: 32
+          optionHeight: 44
         }
       : {};
 

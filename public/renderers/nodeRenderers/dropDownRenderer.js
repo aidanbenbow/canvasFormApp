@@ -1,7 +1,15 @@
 export const dropdownInputRenderer = {
     render(node, ctx) {
       const { x, y, width, height } = node.bounds;
-      const { font, paddingX, paddingY, borderColor, focusBorderColor } = node.style;
+      const {
+        font,
+        paddingX,
+        paddingY,
+        borderColor,
+        focusBorderColor,
+        textColor = "#111",
+        placeholderColor = "#999"
+      } = node.style;
   const uiState = node.uiState || {};
   const focused = uiState.focused || false;
       ctx.save();
@@ -13,8 +21,12 @@ export const dropdownInputRenderer = {
       // --- 2. Draw input text ---
       ctx.font = font;
       ctx.textBaseline = "top";
-      ctx.fillStyle = node.value ? "#000" : "#888"; // placeholder color
-      ctx.fillText(node.value || node.placeholder, x + paddingX, y + paddingY);
+      const displayText = node.value || (focused ? "" : node.placeholder);
+      const isPlaceholder = !node.value && !focused;
+      ctx.fillStyle = isPlaceholder ? placeholderColor : textColor;
+      if (displayText) {
+        ctx.fillText(displayText, x + paddingX, y + paddingY);
+      }
   
       // --- 3. Draw dropdown arrow ---
       ctx.fillStyle = "#000";
