@@ -42,12 +42,12 @@ this.dropdownVisible = false;
 
     const responsiveStyle = isSmallScreen()
       ? {
-          font: "28px 'Segoe UI', Tahoma, sans-serif",
-          paddingX: 12,
-          paddingY: 10,
-          minHeight: 48,
-          width: Math.min(560, Math.floor(window.innerWidth * 0.9)),
-          optionHeight: 44
+          font: "30px 'Segoe UI', Tahoma, sans-serif",
+          paddingX: 16,
+          paddingY: 14,
+          minHeight: 60,
+          width: Math.min(720, Math.floor(window.innerWidth * 0.94)),
+          optionHeight: 52
         }
       : {};
 
@@ -84,16 +84,20 @@ this.dropdownVisible = false;
 
   // Click toggles dropdown
   onPointerDown(pointerX, pointerY) {
+    const wasFocused = this.uiState?.focused || false;
     this.context.focusManager.focus(this);
-    
-    if (this.dropdownVisible) {
-      this.closeDropdown();
-    } else {
+
+    if (!wasFocused) {
       this.openDropdown();
       this.filterOptions();
+      this.selectedIndex = -1; // reset selection
     }
-    this.selectedIndex = -1; // reset selection
-  
+
+    if (this.context?.textEditorController?.caretController) {
+      const ctx = this.context.ctx;
+      this.context.textEditorController.caretController.moveCaretToMousePosition(pointerX, pointerY, ctx);
+    }
+
     this.invalidate();
   }
   // Keyboard navigation

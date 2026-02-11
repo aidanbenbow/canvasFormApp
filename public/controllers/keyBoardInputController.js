@@ -23,6 +23,7 @@ export class KeyBoardInputController {
       
       handleVirtualKey(key) {
         if (!this.editor.activeNode) return;
+                if (key === '⇧') return;
         if (key === 'Backspace' || key === '←') this.editor.backspace();
         else if (key === 'Space') this.editor.insertText(' ');
         else if (key === '↵') this.editor.insertText('\n');

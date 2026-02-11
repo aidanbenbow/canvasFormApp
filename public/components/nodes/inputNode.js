@@ -33,11 +33,11 @@ export class InputNode extends SceneNode {
 
       const responsiveStyle = isSmallScreen()
         ? {
-            font: "24px 'Segoe UI', Tahoma, sans-serif",
-            paddingX: 12,
-            paddingY: 10,
-            minHeight: 44,
-            width: Math.min(560, Math.floor(window.innerWidth * 0.9))
+            font: "28px 'Segoe UI', Tahoma, sans-serif",
+            paddingX: 16,
+            paddingY: 14,
+            minHeight: 56,
+            width: Math.min(720, Math.floor(window.innerWidth * 0.94))
           }
         : {};
 

@@ -14,6 +14,11 @@ export class DropdownMenuNode extends ContainerNode {
         renderStrategy: dropdownMenuRenderStrategy,      // custom renderer for dropdown menu
         children: []
       });
+        this.style = {
+          backgroundColor: "#ffffff",
+          borderColor: "#cbd5e1",
+          clipChildren: true
+        };
       this.context = context;
   this.anchor = anchor; // reference to dropdown input node
       this.options = options;

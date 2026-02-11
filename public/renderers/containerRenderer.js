@@ -4,10 +4,11 @@ export const containerRenderer = {
       if (!b) return;
   
       // 1️⃣ Clip to container bounds
-      if(node.scroll) {
-    ctx.beginPath();
-    ctx.rect(b.x, b.y, b.width, b.height);
-    ctx.clip();}
+      if (node.scroll || node.style?.clipChildren) {
+        ctx.beginPath();
+        ctx.rect(b.x, b.y, b.width, b.height);
+        ctx.clip();
+      }
   
       if (node.style?.background) {
         ctx.fillStyle = node.style.background;
