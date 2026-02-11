@@ -1,8 +1,11 @@
 import { SceneNode } from "../components/nodes/sceneNode.js";
 import { containerRenderer } from "../renderers/containerRenderer.js";
 import { overlayLayoutStrategy } from "../strategies/overlayLayout.js";
+import { DropdownModule } from "./dropDownModule.js";
 import { KeyboardModule } from "./keyBoardModule.js";
 import { PopupModule } from "./popupModule.js";
+import { ToastModule } from "./toastModule.js";
+
 
 export const SystemUILayerFactory = {
     create(dispatcher, context) {
@@ -18,16 +21,21 @@ export const SystemUILayerFactory = {
   
       const popupLayer = PopupModule.create(dispatcher);
       const keyboardLayer = KeyboardModule.create(dispatcher, context);
+      const toastLayer = ToastModule.create(dispatcher, context);
+ const dropDownLayer = DropdownModule.create(dispatcher, context);
  
- 
-      popupLayer.addPersistent(keyboardLayer);
+ systemRoot.add(keyboardLayer);
+ systemRoot.add(dropDownLayer);
       systemRoot.add(popupLayer);
+        systemRoot.add(toastLayer);
       
       return {
         root: systemRoot,
         services:{
           popupLayer,
-          keyboardLayer
+          keyboardLayer,
+          toastLayer,
+          dropDownLayer
         }
       }
     }

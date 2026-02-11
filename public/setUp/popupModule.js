@@ -10,13 +10,16 @@ export const PopupModule = {
         spacing: 10
       });
   
-      dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => popup.show());
-      dispatcher.on(ACTIONS.KEYBOARD.HIDE, () =>{
-if(!popup.hasTransient()){
-popup.hide();
-} })
-  
+    // Hook up dispatcher actions
+    dispatcher.on(ACTIONS.POPUP?.SHOW, (node) => {
+      popup.addTransient(node);
+      popup.show();
+    });
 
+    dispatcher.on(ACTIONS.POPUP?.HIDE, () => {
+      popup.clearTransient();
+      popup.hide();
+    });
       return popup;
     }
   };

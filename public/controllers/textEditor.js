@@ -7,16 +7,14 @@ import { keyboardController } from "./keyboardController.js";
 import { TextModel } from "./textModel.js";
 
 export class TextEditorController {
-    constructor({pipeline,popupLayer, canvas, dispatcher}) {
+    constructor({pipeline, canvas, dispatcher}) {
         this.activeNode = null;
         this.dispatcher = dispatcher;
        this.canvas = canvas;
         this.caretIndex = 0;
         this.blinkState = true;
         this.pipeline = pipeline;
-  this.popup = popupLayer
-
-        this.keyboardController = new keyboardController(pipeline, this.popup);
+  
         this.textModel = null
         this.keyboardInput = new KeyBoardInputController(this);
         this.caretController = new CaretController(this);
@@ -56,7 +54,7 @@ export class TextEditorController {
       this.caretController.setCaretToEnd(initialValue);
       this.keyboardInput.enable();
       if(isSmallScreen()){
-       this.keyboardController.showKeyboard();
+       this.dispatcher.dispatch(ACTIONS.KEYBOARD.SHOW, { initialValue });
       }
 this.clipboardProxy.focus();
         this.pipeline.invalidate();
@@ -66,7 +64,7 @@ this.clipboardProxy.focus();
     stopEditing() {
         this.activeNode = null;
         
-        this.keyboardController.hideKeyboard();
+        this.dispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
         this.keyboardInput.disable();
         this.textModel = null;
         this.clipboardProxy.blur();

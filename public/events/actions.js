@@ -47,5 +47,18 @@ export const ACTIONS = {
     
         POINTER_DOWN: 'ui:pointer_down',
         POINTER_UP: 'ui:pointer_up',
-      }
+      },
+      DROPDOWN: {
+        SHOW: 'dropdown:show',
+        HIDE: 'dropdown:hide',
+        SELECT: 'dropdown:select',  // optional, for selecting an option
+      },
+      POPUP: {
+        SHOW: 'popup:show',
+        HIDE: 'popup:hide',
+      },
+      TOAST: {
+        SHOW: 'toast:show',
+        HIDE: 'toast:hide',
+      },
 };

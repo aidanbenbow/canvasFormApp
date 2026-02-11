@@ -4,6 +4,7 @@ import { dropdownInputRenderer } from "../../renderers/nodeRenderers/dropDownRen
 import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { DropdownMenuNode } from "./dopDownMenuNode.js";
 import { InputNode } from "./inputNode.js";
+import { ACTIONS } from "../../events/actions.js";
 
 export class DropdownInputNode extends InputNode {
   constructor({ id, context, value = "", placeholder = "", options = [], onSelect, style = {} }) {
@@ -154,8 +155,7 @@ this.dropdownVisible = false;
     popupLayer.invalidate?.();
   }
   openDropdown() {
-    const { popupLayer } = this.context.uiServices;
-    console.log(popupLayer)
+    
     const menu = new DropdownMenuNode({
       anchor: this,
       context: this.context,
@@ -167,22 +167,19 @@ this.dropdownVisible = false;
         this.closeDropdown();
       }
     });
-  this.dropdownVisible = true;
+ 
   this.menuNode = menu; // keep reference to menu instance
-    popupLayer.addTransient(menu);
-    
-    popupLayer.show();
-    popupLayer.invalidate?.();
+ // Dispatch show event
+ this.context.dispatcher.dispatch(ACTIONS.DROPDOWN.SHOW, menu);
+ this.dropdownVisible = true;
   }
-  closeDropdown() {
-    const { popupLayer } = this.context.uiServices;
-    this.dropdownVisible = false;
-    this.menuNode = null; // clear reference to menu instance
-   popupLayer.clearTransient();
-    popupLayer.hide();
-    popupLayer.invalidate?.();
-    this.invalidate();
-  }
+
+    closeDropdown() {
+      this.dropdownVisible = false;
+      this.menuNode = null;
+      this.context.dispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
+    }
+  
   
 }
 

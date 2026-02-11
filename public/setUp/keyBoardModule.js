@@ -15,6 +15,20 @@ export const KeyboardModule = {
           backgroundColor: '#ccc'
         }
       });
+
+      keyboard.visible = false;
+keyboard.hitTestable = false;
+
+dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => {
+  keyboard.visible = true;
+  keyboard.invalidate();
+});
+
+dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
+  keyboard.visible = false;
+  keyboard.invalidate();
+});
+
   
       keyboard.keyLayout.forEach((row, rowIndex) => {
         row.forEach((key, keyIndex) => {

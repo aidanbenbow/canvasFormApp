@@ -57,7 +57,7 @@ const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 const focusManager = new FocusManager(uiState, system.actionDispatcher)
 context.focusManager = focusManager;
 context.uiState = uiState;
-
+context.dispatcher = system.actionDispatcher;
 const uiengine = new UIEngine({
   layoutStrategy: engineRootLayoutStrategy(),
   renderStrategy: containerRenderer,
@@ -96,8 +96,11 @@ const factories = {
 commandRegistry.register("form.submit", (payload) => {
   console.log("Form submitted with payload:", payload);
  const submitNode = factories.basic.create({type: 'text', text: "Form submitted!", id: 'submissionMessage', style: { fill: 'green', fontSize: 24 }})
-  context.uiServices.popupLayer.showMessage(submitNode, { x: 100, y: 100 }, 3000);
+ context.uiServices.toastLayer.showMessage(submitNode, { timeoutMs: 3000 });
+
   system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
+  system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);
+  system.actionDispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
   context.pipeline.invalidate();
 });
 

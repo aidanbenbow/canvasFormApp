@@ -8,6 +8,7 @@ import { KeyboardLayoutStrategy } from "../strategies/nodeLayouts/keyBoardLayout
 import { PopupLayoutStrategy} from "../strategies/nodeLayouts/popUpLayout.js";
 import { RootLayoutStrategy } from "../strategies/nodeLayouts/rootLayout.js";
 import { TextLayoutStrategy } from "../strategies/nodeLayouts/textLayout.js";
+import { ToastLayoutStrategy } from "../strategies/nodeLayouts/toastLayout.js";
 import { overlayLayoutStrategy } from "../strategies/overlayLayout.js";
 import { VerticalLayoutStrategy } from "../strategies/vertical.js";
 
@@ -23,5 +24,6 @@ export const layoutRegistry = {
     overlay: ()=> new overlayLayoutStrategy(),
     centre: ()=> new CenterLayoutStrategy(),
     dropDown: ()=> new DropdownLayoutStrategy(),
-    anchored: ()=> new AnchoredOverlayLayoutStrategy()
+    anchored: ()=> new AnchoredOverlayLayoutStrategy(),
+    toast: ()=> new ToastLayoutStrategy()
 }
