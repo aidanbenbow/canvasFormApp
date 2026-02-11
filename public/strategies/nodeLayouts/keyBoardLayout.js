@@ -1,11 +1,17 @@
 export class KeyboardLayoutStrategy {
   measure(node, constraints, ctx) {
     const maxWidth = constraints.maxWidth;
-    const spacing = 8;
+    const maxHeight = constraints.maxHeight;
+    const spacing = isSmallScreen() ? 6 : 8;
     const rowCount = node.keyLayout.length;
+    const maxCols = Math.max(...node.keyLayout.map((row) => row.length));
 
-    const keyWidth = (maxWidth - (10 * spacing)) / 10;
-    const keyHeight = 48;
+    const targetHeight = isSmallScreen()
+      ? Math.max(240, Math.floor(maxHeight * 0.4))
+      : Math.min(260, maxHeight);
+
+    const keyWidth = (maxWidth - (maxCols - 1) * spacing) / maxCols;
+    const keyHeight = Math.max(44, Math.floor((targetHeight - (rowCount - 1) * spacing) / rowCount));
 
     for (const child of node.children) {
       child.measure({ maxWidth: keyWidth, maxHeight: keyHeight }, ctx);
@@ -19,16 +25,17 @@ export class KeyboardLayoutStrategy {
   layout(node, bounds, ctx) {
     node.bounds = bounds;
 
-    const spacing = 8;
-    const keyWidth = (bounds.width - (10 * spacing)) / 10;
-    const keyHeight = 48;
+    const spacing = isSmallScreen() ? 6 : 8;
+    const maxCols = Math.max(...node.keyLayout.map((row) => row.length));
+    const keyWidth = (bounds.width - (maxCols - 1) * spacing) / maxCols;
+    const keyHeight = Math.max(44, Math.floor((bounds.height - (node.keyLayout.length - 1) * spacing) / node.keyLayout.length));
 
-   
-  let y = bounds.y + bounds.height + spacing;
+    let y = bounds.y + spacing;
     let childIndex = 0;
 
     node.keyLayout.forEach(row => {
-      let x = bounds.x;
+      const rowWidth = row.length * keyWidth + (row.length - 1) * spacing;
+      let x = bounds.x + Math.max(0, (bounds.width - rowWidth) / 2);
 
       row.forEach(() => {
         const child = node.children[childIndex++];
@@ -40,4 +47,8 @@ export class KeyboardLayoutStrategy {
     });
   }
   
+}
+
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
 }

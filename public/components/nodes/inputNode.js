@@ -18,14 +18,29 @@ export class InputNode extends SceneNode {
       this.onChange = onChange;
       this.cursorPos = value.length
   
-      this.style = {
+      const baseStyle = {
         font: "20px sans-serif",
         paddingX: 8,
         paddingY: 6,
         borderColor: "#ccc",
         focusBorderColor: "#0078ff",
         width: 800,
-        minHeight: 32,
+        minHeight: 32
+      };
+
+      const responsiveStyle = isSmallScreen()
+        ? {
+            font: "24px sans-serif",
+            paddingX: 12,
+            paddingY: 10,
+            minHeight: 44,
+            width: Math.min(560, Math.floor(window.innerWidth * 0.9))
+          }
+        : {};
+
+      this.style = {
+        ...baseStyle,
+        ...responsiveStyle,
         ...style
       };
     }
@@ -53,4 +68,8 @@ export class InputNode extends SceneNode {
       this.onChange?.("");
     }
   }
+
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
+}
   

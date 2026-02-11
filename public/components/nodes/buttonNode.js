@@ -21,11 +21,26 @@ export class ButtonNode extends SceneNode {
         disabled: false
       };
   
-      this.style = {
+      const baseStyle = {
         font: '16px sans-serif',
         paddingX: 16,
         paddingY: 6,
         radius: 4,
+        minHeight: 30
+      };
+
+      const responsiveStyle = isSmallScreen()
+        ? {
+            font: '20px sans-serif',
+            paddingX: 20,
+            paddingY: 10,
+            minHeight: 48
+          }
+        : {};
+
+      this.style = {
+        ...baseStyle,
+        ...responsiveStyle,
         ...style
       };
     }
@@ -62,4 +77,7 @@ export class ButtonNode extends SceneNode {
     }
   }
   
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
+}
   

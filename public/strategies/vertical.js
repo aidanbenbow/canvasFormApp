@@ -30,13 +30,15 @@ export class VerticalLayoutStrategy {
   
     let y = bounds.y + this.padding 
   
+    const availableWidth = bounds.width - this.padding * 2;
+
     for (const child of container.children) {
-      const { width, height } = child.measured;
+      const { height } = child.measured;
   
       child.layout({
         x: bounds.x + this.padding,
         y,
-        width,
+        width: availableWidth,
         height
       }, ctx);
   

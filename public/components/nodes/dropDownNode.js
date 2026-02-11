@@ -26,7 +26,7 @@ this.context = context;
     this.onSelect = onSelect; // callback when selecting an option
 this.dropdownVisible = false;
     // default styling
-    this.style = {
+    const baseStyle = {
       font: "24px sans-serif",
       paddingX: 8,
       paddingY: 6,
@@ -34,7 +34,23 @@ this.dropdownVisible = false;
       borderColor: "#ccc",
       focusBorderColor: "#0078ff",
       width: 350,
-      optionHeight: 24,   // height of each option in dropdown
+      optionHeight: 24
+    };
+
+    const responsiveStyle = isSmallScreen()
+      ? {
+          font: "28px sans-serif",
+          paddingX: 12,
+          paddingY: 10,
+          minHeight: 48,
+          width: Math.min(560, Math.floor(window.innerWidth * 0.9)),
+          optionHeight: 32
+        }
+      : {};
+
+    this.style = {
+      ...baseStyle,
+      ...responsiveStyle,
       ...style
     };
 
@@ -189,5 +205,9 @@ this.dropdownVisible = false;
     }
   
   
+}
+
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
 }
 

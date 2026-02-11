@@ -4,7 +4,8 @@ export class InputLayoutStrategy {
   measure(node, constraints, ctx) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
-    const width = node.style.width ?? Math.min(800, constraints.maxWidth);
+    const preferredWidth = node.style.width ?? 800;
+    const width = Math.min(preferredWidth, constraints.maxWidth);
   
     context.font = node.style.font;
     const maxTextWidth = width - node.style.paddingX * 2;

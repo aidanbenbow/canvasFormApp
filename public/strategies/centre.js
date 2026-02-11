@@ -8,10 +8,12 @@ export class CenterLayoutStrategy {
     // Measure phase
     measure(container, constraints = { maxWidth: Infinity, maxHeight: Infinity }, ctx) {
       // Measure all children first
+      const padding = this._getPadding(constraints.maxWidth, constraints.maxHeight);
+
       for (const child of container.children) {
         child.measure(
-          { maxWidth: constraints.maxWidth - 2 * this.padding, 
-            maxHeight: constraints.maxHeight - 2 * this.padding }, 
+          { maxWidth: constraints.maxWidth - 2 * padding, 
+            maxHeight: constraints.maxHeight - 2 * padding }, 
           ctx
         );
       }
@@ -27,24 +29,42 @@ export class CenterLayoutStrategy {
     layout(container, bounds, ctx) {
       container.bounds = bounds;
   
-      const innerWidth = bounds.width - 2 * this.padding;
-      const innerHeight = bounds.height - 2 * this.padding;
+      const padding = this._getPadding(bounds.width, bounds.height);
+      const innerWidth = bounds.width - 2 * padding;
+      const innerHeight = bounds.height - 2 * padding;
   
       for (const child of container.children) {
-        const { width, height } = child.measured;
+        const measured = child.measured;
+        const width = innerWidth;
+        const height = innerHeight;
         let y;
-        if (this.verticalAlign === "top") {
-          y = bounds.y + this.padding; // top-aligned
+        const canCenter = height <= innerHeight;
+        const useAutoCenter = isSmallScreen() && this.verticalAlign === "top" && canCenter;
+
+        if (this.verticalAlign === "center" || useAutoCenter) {
+          y = bounds.y + padding + (innerHeight - height) / 2;
         } else {
-          y = bounds.y + this.padding + (innerHeight - height) / 2; // center-aligned
+          y = bounds.y + padding; // top-aligned
         }
         child.layout({
-          x: bounds.x + this.padding + (innerWidth - width) / 2,
+          x: bounds.x + padding,
           y,
           width,
           height
         }, ctx);
       }
     }
+
+    _getPadding(maxWidth, maxHeight) {
+      if (isSmallScreen()) {
+        const relative = Math.floor(Math.min(maxWidth, maxHeight) * 0.04);
+        return Math.max(16, Math.min(this.padding, relative));
+      }
+      return this.padding;
+    }
   }
+
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
+}
   
