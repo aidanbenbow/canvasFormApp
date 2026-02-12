@@ -441,7 +441,7 @@ this.clipboardProxy.addEventListener("cut", (e) => {
         }
       }
 
-      if (!this.clipboardProxy) return;
+      if (!this.clipboardProxy || this.useVirtualKeyboard) return;
       this.clipboardProxy.value = text;
       this.clipboardProxy.focus();
       this.clipboardProxy.select();
@@ -460,7 +460,7 @@ this.clipboardProxy.addEventListener("cut", (e) => {
         } catch (err) {
           console.warn("Clipboard writeText failed, falling back:", err);
         }
-      } else if (this.clipboardProxy) {
+      } else if (this.clipboardProxy && !this.useVirtualKeyboard) {
         this.clipboardProxy.value = text;
         this.clipboardProxy.focus();
         this.clipboardProxy.select();

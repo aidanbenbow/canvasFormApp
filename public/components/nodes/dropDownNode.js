@@ -110,8 +110,8 @@ this.dropdownVisible = false;
       if (!opts.length) return true;
       this.selectedIndex = (this.selectedIndex + 1) % opts.length;
       this.syncMenuHighlight();
-      this.invalidate();
-      return true;
+      // don't auto-select; wait for explicit user selection
+      this.selectedIndex = -1;
     }
 
     if (key === "ArrowUp") {

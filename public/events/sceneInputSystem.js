@@ -7,6 +7,8 @@ export class SceneInputSystem {
       this.canvas = canvas;
       this.pipeline = pipeline;
       this.ctx = ctx;
+
+      this._ignoreMouseUntil = 0;
   
       this.hitTest = new SceneHitTestSystem();
       this.dispatcher = new SceneEventDispatcher();
@@ -29,13 +31,18 @@ export class SceneInputSystem {
     }
   
     _handle(e, type) {
+      if (this._ignoreMouseUntil && Date.now() < this._ignoreMouseUntil) {
+        return;
+      }
       this._handleFromClient(type, e.clientX, e.clientY, e);
     }
 
     _handleTouch(e, type) {
-      if (type === "mousemove") {
+      if (type === "mousedown" || type === "mousemove" || type === "mouseup") {
         e.preventDefault();
       }
+
+      this._ignoreMouseUntil = Date.now() + 1200;
 
       const touch = e.touches[0] || e.changedTouches[0];
       if (!touch) return;

@@ -20,16 +20,35 @@ export class AnchoredOverlayLayoutStrategy {
         const optionHeight = node.anchor?.style?.optionHeight ?? node.optionHeight ?? this.optionHeight;
         const maxHeight = node.anchor?.style?.menuMaxHeight ?? node.maxHeight ?? this.maxHeight;
         const contentHeight = (node.options?.length || 0) * optionHeight;
-        const menuHeight = Math.min(contentHeight, maxHeight);
+        let menuHeight = Math.min(contentHeight, maxHeight);
       
         if (!anchor) {
           node.bounds = { ...bounds, height: menuHeight };
         } else {
           const scrollOffsetY = getScrollOffsetY(anchor);
           const ab = anchor.bounds;
+          const keyboardLayer = node.context?.uiServices?.keyboardLayer;
+          const keyboardVisible = keyboardLayer?.visible && keyboardLayer?.bounds;
+          const keyboardTop = keyboardVisible ? keyboardLayer.bounds.y : bounds.y + bounds.height;
+
+          const belowY = ab.y - scrollOffsetY + ab.height;
+          const spaceBelow = keyboardTop - belowY - 8;
+          const spaceAbove = ab.y - scrollOffsetY - bounds.y - 8;
+
+          let y = belowY;
+
+          if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+            // Place above the anchor if there's more room
+            menuHeight = Math.min(menuHeight, Math.max(0, spaceAbove));
+            y = ab.y - scrollOffsetY - menuHeight;
+          } else {
+            // Clamp below to avoid covering the keyboard
+            menuHeight = Math.min(menuHeight, Math.max(0, spaceBelow));
+          }
+
           node.bounds = {
             x: ab.x,
-            y: ab.y - scrollOffsetY + ab.height,
+            y,
             width: ab.width,
             height: menuHeight
           };
