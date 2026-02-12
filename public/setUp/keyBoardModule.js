@@ -32,35 +32,52 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
 });
 
   
-      keyboard.baseLayout.forEach((row, rowIndex) => {
+      keyboard.keyLayout.forEach((row, rowIndex) => {
         row.forEach((baseKey, keyIndex) => {
+          const entry = { button: null, baseKey };
           const button = new ButtonNode({
             id: `key-${rowIndex}-${keyIndex}`,
             label: keyboard.getKeyLabel(baseKey),
             style: {
               radius: 10,
-              background: "#f7f7f7",
-              hoverBackground: "#dbeafe",
-              pressedBackground: "#bfdbfe",
+              background: "rgba(247, 247, 247, 0.85)",
+              hoverBackground: "rgba(219, 234, 254, 0.9)",
+              pressedBackground: "rgba(191, 219, 254, 0.95)",
               borderColor: "#cbd5e1",
               textColor: "#0f172a"
             },
             onClick: () => {
-              if (baseKey === '⇧') {
+              const currentKey = entry.baseKey;
+
+              if (currentKey === '⇧') {
                 keyboard.toggleCase();
-                keyboard.keyButtons.forEach(({ button, baseKey }) => {
-                  button.label = keyboard.getKeyLabel(baseKey);
+                const flat = keyboard.getFlatLayout();
+                keyboard.keyButtons.forEach((entry, index) => {
+                  entry.baseKey = flat[index] ?? entry.baseKey;
+                  entry.button.label = keyboard.getKeyLabel(entry.baseKey);
                 });
                 keyboard.invalidate();
                 return;
               }
 
-              const key = keyboard.getKeyLabel(baseKey);
+              if (currentKey === 'SYM' || currentKey === 'ABC') {
+                keyboard.toggleMode();
+                const flat = keyboard.getFlatLayout();
+                keyboard.keyButtons.forEach((entry, index) => {
+                  entry.baseKey = flat[index] ?? entry.baseKey;
+                  entry.button.label = keyboard.getKeyLabel(entry.baseKey);
+                });
+                keyboard.invalidate();
+                return;
+              }
+
+              const key = keyboard.getKeyLabel(currentKey);
               dispatcher.dispatch(ACTIONS.KEYBOARD.PRESS, { key });
             }
           });
 
-          keyboard.keyButtons.push({ button, baseKey });
+          entry.button = button;
+          keyboard.keyButtons.push(entry);
           keyboard.add(button);
         });
       });

@@ -5,17 +5,26 @@ export class KeyboardNode extends ContainerNode {
       super({ id,context, layout, children: [] });
 
       this.isUppercase = false;
-      this.baseLayout = [
+      this.mode = "alpha";
+      this.alphaLayout = [
+        ['1','2','3','4','5','6','7','8','9','0'],
         ['q','w','e','r','t','y','u','i','o','p'],
         ['a','s','d','f','g','h','j','k','l','⇧'],
-        ['z','x','c','v','b','n','m','←','Space','↵']
+        ['SYM','z','x','c','v','b','n','m','←','↵','Space']
+      ];
+      this.punctLayout = [
+        ['1','2','3','4','5','6','7','8','9','0'],
+        ['!','@','#','$','%','^','&','*','(',')'],
+        ['-','_','/',';',':','"','\'','?','.',','],
+        ['ABC','[',']','{','}','+','=','|','←','↵','Space']
       ];
       this.keyLayout = this.getDisplayLayout();
       this.hitTestable = false; // Keyboard itself doesn't receive events, but its children can
     }
 
     getDisplayLayout() {
-      return this.baseLayout.map((row) =>
+      const layout = this.mode === "punct" ? this.punctLayout : this.alphaLayout;
+      return layout.map((row) =>
         row.map((key) => this.isLetter(key)
           ? (this.isUppercase ? key.toUpperCase() : key)
           : key
@@ -37,9 +46,19 @@ export class KeyboardNode extends ContainerNode {
       this.keyLayout = this.getDisplayLayout();
     }
 
+    toggleMode() {
+      this.mode = this.mode === "punct" ? "alpha" : "punct";
+      this.keyLayout = this.getDisplayLayout();
+    }
+
+    getFlatLayout() {
+      return this.keyLayout.flat();
+    }
+
     getKeyWeight(key) {
-      if (key === "Space") return 3;
-      if (key === "↵") return 2;
+      if (key === "Space") return 2.5;
+      if (key === "↵") return 1.8;
+      if (key === "SYM" || key === "ABC") return 1.4;
       return 1;
     }
   }

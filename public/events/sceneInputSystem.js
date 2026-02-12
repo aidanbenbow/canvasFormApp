@@ -9,6 +9,7 @@ export class SceneInputSystem {
       this.ctx = ctx;
 
       this._ignoreMouseUntil = 0;
+      this._lastTouch = null;
   
       this.hitTest = new SceneHitTestSystem();
       this.dispatcher = new SceneEventDispatcher();
@@ -46,6 +47,21 @@ export class SceneInputSystem {
 
       const touch = e.touches[0] || e.changedTouches[0];
       if (!touch) return;
+
+      if (type === "mousedown") {
+        const now = Date.now();
+        const last = this._lastTouch;
+        const dx = last ? Math.abs(touch.clientX - last.x) : 0;
+        const dy = last ? Math.abs(touch.clientY - last.y) : 0;
+        const isDoubleTap = last && now - last.time < 350 && dx < 24 && dy < 24;
+
+        this._lastTouch = { time: now, x: touch.clientX, y: touch.clientY };
+
+        if (isDoubleTap) {
+          this._handleFromClient("dblclick", touch.clientX, touch.clientY, e);
+          return;
+        }
+      }
 
       this._handleFromClient(type, touch.clientX, touch.clientY, e);
     }

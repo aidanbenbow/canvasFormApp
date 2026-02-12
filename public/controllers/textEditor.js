@@ -17,6 +17,7 @@ export class TextEditorController {
       this.selectionDragActive = false;
       this.suppressSelectionMenu = false;
         this.useVirtualKeyboard = isSmallScreen();
+      this.showSelectionMenuForKeyboard = !isSmallScreen();
   
         this.textModel = null
         this.keyboardInput = new KeyBoardInputController(this);
@@ -181,10 +182,20 @@ export class TextEditorController {
       this.caretController.drawSelection(ctx);
     }
 
-    onSelectionChanged(pointer) {
+    onSelectionChanged(pointer, reason = "pointer") {
       if (!this.activeNode || !this.caretController) return;
       const { selectionStart, selectionEnd } = this.caretController;
       if (selectionStart === selectionEnd) return;
+
+      if (reason === "keyboard" && !this.showSelectionMenuForKeyboard) {
+        return;
+      }
+
+      if (reason === "pointer" || reason === "word" || reason === "keyboard") {
+        // allowed
+      } else {
+        return;
+      }
 
       if (pointer && typeof pointer.x === "number" && typeof pointer.y === "number") {
         this.showSelectionMenuAtScene(pointer.x, pointer.y);
@@ -250,9 +261,9 @@ export class TextEditorController {
       }
 
       if (pointer) {
-        this.onSelectionChanged(pointer);
+        this.onSelectionChanged(pointer, "pointer");
       } else {
-        this.onSelectionChanged();
+        this.onSelectionChanged(null, "pointer");
       }
     }
 

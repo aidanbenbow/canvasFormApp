@@ -22,11 +22,12 @@ export class TextModel{
         
         const caret = this.editor.caretController
         const original = this.getText();
-        const before = original.slice(0, caret.selectionStart);
-        const after = original.slice(caret.selectionEnd);
-        const updated = before + newText + after;
+      const safeText = newText ?? "";
+      const before = original.slice(0, caret.selectionStart);
+      const after = original.slice(caret.selectionEnd);
+      const updated = before + safeText + after;
         this.setText(updated);
-        const newCaretPos = before.length + newText.length;
+      const newCaretPos = before.length + safeText.length;
         caret.caretIndex = newCaretPos;
         caret.selectionStart = newCaretPos;
         caret.selectionEnd = newCaretPos;
@@ -74,11 +75,33 @@ export function wrapText(ctx, text, maxWidth) {
 export function wrapTextByWords(ctx, text, maxWidth) {
   if (!text) return [];
 
+  const lines = [];
+  const parts = text.split("\n");
+  let globalIndex = 0;
+
+  parts.forEach((part, partIndex) => {
+    if (part.length === 0) {
+      lines.push({ text: "", startIndex: globalIndex, endIndex: globalIndex });
+    } else {
+      const partLines = wrapTextByWordsNoNewline(ctx, part, maxWidth, globalIndex);
+      lines.push(...partLines);
+    }
+
+    globalIndex += part.length;
+    if (partIndex < parts.length - 1) {
+      globalIndex += 1; // account for the newline character
+    }
+  });
+
+  return lines;
+}
+
+function wrapTextByWordsNoNewline(ctx, text, maxWidth, offset) {
   const tokens = text.match(/\s+|[^\s]+/g) || [];
   const lines = [];
   let currentLine = "";
-  let lineStartIndex = 0;
-  let currentIndex = 0;
+  let lineStartIndex = offset;
+  let currentIndex = offset;
 
   for (const token of tokens) {
     if (!currentLine) {
@@ -140,6 +163,5 @@ export function wrapTextByWords(ctx, text, maxWidth) {
   }
 
   return lines;
-    
-  }
+}
 

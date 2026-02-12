@@ -49,7 +49,7 @@ export class CaretController {
                 this.editor.pipeline.invalidate();
 
                 if (shiftKey && this.selectionStart !== this.selectionEnd && !this.editor.suppressSelectionMenu) {
-                    this.editor.onSelectionChanged?.();
+                    this.editor.onSelectionChanged?.(null, "keyboard");
                 } else if (!shiftKey) {
                     this.editor.hideSelectionMenu?.();
                 }
@@ -79,7 +79,7 @@ export class CaretController {
         this.editor.pipeline.invalidate();
 
         if (shiftKey && this.selectionStart !== this.selectionEnd && !this.editor.suppressSelectionMenu) {
-            this.editor.onSelectionChanged?.();
+            this.editor.onSelectionChanged?.(null, "keyboard");
         } else if (!shiftKey) {
             this.editor.hideSelectionMenu?.();
         }
@@ -155,7 +155,7 @@ moveCaretToMousePosition(x, y, ctx) {
         this.normalizeSelection();
         this.editor.pipeline.invalidate();
         if (!this.editor.suppressSelectionMenu) {
-            this.editor.onSelectionChanged?.({ x, y });
+            this.editor.onSelectionChanged?.({ x, y }, "word");
         }
     }
 
@@ -177,7 +177,7 @@ moveCaretToMousePosition(x, y, ctx) {
         this.editor.pipeline.invalidate();
 
         if (!this.editor.suppressSelectionMenu && this.selectionStart !== this.selectionEnd) {
-            this.editor.onSelectionChanged?.({ x, y });
+            this.editor.onSelectionChanged?.({ x, y }, "pointer");
         }
     }
 

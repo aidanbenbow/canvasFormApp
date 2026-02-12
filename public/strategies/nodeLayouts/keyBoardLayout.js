@@ -7,10 +7,10 @@ export class KeyboardLayoutStrategy {
     const maxCols = Math.max(...node.keyLayout.map((row) => row.length));
 
     const targetHeight = isSmallScreen()
-      ? Math.max(240, Math.floor(maxHeight * 0.4))
+      ? Math.max(200, Math.floor(maxHeight * 0.32))
       : Math.min(260, maxHeight);
 
-    const keyHeight = Math.max(44, Math.floor((targetHeight - (rowCount - 1) * spacing) / rowCount));
+    const keyHeight = Math.max(40, Math.floor((targetHeight - (rowCount - 1) * spacing) / rowCount));
 
     let childIndex = 0;
     node.keyLayout.forEach((row) => {
@@ -33,7 +33,7 @@ export class KeyboardLayoutStrategy {
     node.bounds = bounds;
 
     const spacing = isSmallScreen() ? 6 : 8;
-    const keyHeight = Math.max(44, Math.floor((bounds.height - (node.keyLayout.length - 1) * spacing) / node.keyLayout.length));
+    const keyHeight = Math.max(40, Math.floor((bounds.height - (node.keyLayout.length - 1) * spacing) / node.keyLayout.length));
 
     let y = bounds.y + spacing;
     let childIndex = 0;
