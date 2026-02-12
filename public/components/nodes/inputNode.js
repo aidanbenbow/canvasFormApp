@@ -52,9 +52,36 @@ export class InputNode extends SceneNode {
       console.log(`InputNode "${this.id}" focused`);
       console.log(this.context)
       this.context.focusManager.focus(this);
-      const ctx = this.context.ctx
-      this.context.textEditorController.caretController.moveCaretToMousePosition(pointerX, pointerY, ctx);
+      const ctx = this.context.ctx;
+      const editor = this.context.textEditorController;
+      if (editor?.beginPointerSelection) {
+        editor.beginPointerSelection(this, pointerX, pointerY, ctx);
+      } else {
+        editor?.caretController?.moveCaretToMousePosition(pointerX, pointerY, ctx);
+      }
      
+    }
+
+    onPointerUp(pointerX, pointerY) {
+      const editor = this.context.textEditorController;
+      editor?.endPointerSelection?.({ x: pointerX, y: pointerY });
+    }
+
+    onEvent(event) {
+      if (event.type === "mousemove") {
+        const editor = this.context.textEditorController;
+        if (editor?.selectionDragActive && editor.activeNode === this) {
+          editor.updatePointerSelection(event.x, event.y, this.context.ctx);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    onPointerDoubleClick(pointerX, pointerY) {
+      this.context.focusManager.focus(this);
+      const ctx = this.context.ctx;
+      this.context.textEditorController.caretController.selectWordAtMousePosition(pointerX, pointerY, ctx);
     }
 
     updateText(newValue) {

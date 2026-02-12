@@ -14,6 +14,8 @@ export class TextEditorController {
         this.caretIndex = 0;
         this.blinkState = true;
         this.pipeline = pipeline;
+      this.selectionDragActive = false;
+      this.suppressSelectionMenu = false;
   
         this.textModel = null
         this.keyboardInput = new KeyBoardInputController(this);
@@ -21,6 +23,8 @@ export class TextEditorController {
        
         this.initCaretBlink();
         this.initClipboard();
+        this.initSelectionMenu();
+      this.initPointerSelectionListeners();
        this.bindUIActions();
         
     }
@@ -68,6 +72,9 @@ this.clipboardProxy.focus();
         this.keyboardInput.disable();
         this.textModel = null;
         this.clipboardProxy.blur();
+      this.selectionDragActive = false;
+      this.suppressSelectionMenu = false;
+      this.hideSelectionMenu();
         this.pipeline.invalidate();
         
     }
@@ -170,6 +177,81 @@ this.clipboardProxy.focus();
       this.caretController.drawSelection(ctx);
     }
 
+    onSelectionChanged(pointer) {
+      if (!this.activeNode || !this.caretController) return;
+      const { selectionStart, selectionEnd } = this.caretController;
+      if (selectionStart === selectionEnd) return;
+
+      if (pointer && typeof pointer.x === "number" && typeof pointer.y === "number") {
+        this.showSelectionMenuAtScene(pointer.x, pointer.y);
+        return;
+      }
+
+      const ctx = this.activeNode.context?.ctx;
+      if (!ctx) return;
+
+      const caretPos = this.caretController.getCaretScenePosition(ctx);
+      this.showSelectionMenuAtScene(caretPos.x, caretPos.y);
+    }
+
+    showSelectionMenuAtScene(sceneX, sceneY) {
+      if (!this.selectionMenu || !this.canvas) return;
+
+      const rect = this.canvas.getBoundingClientRect();
+      const constraints = this.pipeline?.constraints;
+      const scaleX = constraints?.maxWidth ? this.canvas.width / constraints.maxWidth : 1;
+      const scaleY = constraints?.maxHeight ? this.canvas.height / constraints.maxHeight : 1;
+
+      const canvasX = sceneX * scaleX;
+      const canvasY = sceneY * scaleY;
+
+      const clientX = rect.left + (canvasX / this.canvas.width) * rect.width;
+      const clientY = rect.top + (canvasY / this.canvas.height) * rect.height;
+
+      this.selectionMenu.style.left = `${clientX}px`;
+      this.selectionMenu.style.top = `${clientY}px`;
+      this.selectionMenu.style.display = "flex";
+    }
+
+    hideSelectionMenu() {
+      if (!this.selectionMenu) return;
+      this.selectionMenu.style.display = "none";
+    }
+
+    beginPointerSelection(node, x, y, ctx) {
+      if (!node) return;
+      if (this.activeNode !== node) {
+        this.startEditing(node);
+      }
+
+      this.selectionDragActive = true;
+      this.suppressSelectionMenu = true;
+      this.caretController.startSelectionAtMousePosition(x, y, ctx);
+    }
+
+    updatePointerSelection(x, y, ctx) {
+      if (!this.selectionDragActive) return;
+      this.caretController.updateSelectionToMousePosition(x, y, ctx);
+    }
+
+    endPointerSelection(pointer) {
+      if (!this.selectionDragActive) return;
+      this.selectionDragActive = false;
+      this.suppressSelectionMenu = false;
+
+      const { selectionStart, selectionEnd } = this.caretController;
+      if (selectionStart === selectionEnd) {
+        this.hideSelectionMenu();
+        return;
+      }
+
+      if (pointer) {
+        this.onSelectionChanged(pointer);
+      } else {
+        this.onSelectionChanged();
+      }
+    }
+
     renderOverlay(ctx) {
      
       if (this.activeNode) {
@@ -229,6 +311,23 @@ this.clipboardProxy.addEventListener("copy", (e) => {
   e.preventDefault();
 });
 
+this.clipboardProxy.addEventListener("cut", (e) => {
+  if (!this.activeNode || !this.textModel) return;
+
+  const { selectionStart, selectionEnd } = this.caretController;
+  if (selectionStart === selectionEnd) return;
+
+  const start = Math.min(selectionStart, selectionEnd);
+  const end = Math.max(selectionStart, selectionEnd);
+
+  const text = this.textModel.getText().slice(start, end);
+  e.clipboardData.setData("text/plain", text);
+  e.preventDefault();
+
+  this.textModel.replaceSelection("");
+  this.pipeline.invalidate();
+});
+
     
       this.clipboardProxy.addEventListener("paste", (e) => {
         if (!this.activeNode || !this.textModel) return;
@@ -242,6 +341,147 @@ this.clipboardProxy.addEventListener("copy", (e) => {
         this.activeNode.updateText(this.textModel.getText());
         this.pipeline.invalidate();
       });
+    }
+
+    initSelectionMenu() {
+      this.selectionMenu = document.createElement("div");
+      Object.assign(this.selectionMenu.style, {
+        position: "fixed",
+        display: "none",
+        gap: "6px",
+        padding: "6px",
+        background: "rgba(255, 255, 255, 0.85)",
+        border: "1px solid #d0d0d0",
+        borderRadius: "8px",
+        boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
+        zIndex: "9999",
+        fontFamily: "Segoe UI, Tahoma, sans-serif"
+      });
+
+      const cutBtn = this.createSelectionButton("Cut", () => this.cutSelection());
+      const copyBtn = this.createSelectionButton("Copy", () => this.copySelection());
+      const pasteBtn = this.createSelectionButton("Paste", () => this.pasteFromClipboard());
+
+      this.selectionMenu.appendChild(cutBtn);
+      this.selectionMenu.appendChild(copyBtn);
+      this.selectionMenu.appendChild(pasteBtn);
+
+      document.body.appendChild(this.selectionMenu);
+
+      this._selectionMenuDocHandler = (event) => {
+        if (this.selectionMenu.style.display === "none") return;
+        if (!this.selectionMenu.contains(event.target)) {
+          this.hideSelectionMenu();
+        }
+      };
+      document.addEventListener("mousedown", this._selectionMenuDocHandler);
+    }
+
+    initPointerSelectionListeners() {
+      this._selectionPointerEndHandler = () => {
+        if (!this.selectionDragActive) return;
+        this.endPointerSelection();
+      };
+
+      document.addEventListener("mouseup", this._selectionPointerEndHandler);
+      document.addEventListener("touchend", this._selectionPointerEndHandler);
+      document.addEventListener("touchcancel", this._selectionPointerEndHandler);
+    }
+
+    createSelectionButton(label, onClick) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = label;
+      Object.assign(btn.style, {
+        border: "1px solid #c7c7c7",
+        background: "#f7f7f7",
+        borderRadius: "6px",
+        padding: "4px 8px",
+        cursor: "pointer",
+        fontSize: "12px"
+      });
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        onClick();
+        this.hideSelectionMenu();
+      });
+      return btn;
+    }
+
+    getSelectionRange() {
+      if (!this.caretController) return null;
+      const { selectionStart, selectionEnd } = this.caretController;
+      if (selectionStart === selectionEnd) return null;
+      return {
+        start: Math.min(selectionStart, selectionEnd),
+        end: Math.max(selectionStart, selectionEnd)
+      };
+    }
+
+    getSelectedText() {
+      const range = this.getSelectionRange();
+      if (!range || !this.textModel) return "";
+      return this.textModel.getText().slice(range.start, range.end);
+    }
+
+    async copySelection() {
+      const text = this.getSelectedText();
+      if (!text) return;
+
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return;
+        } catch (err) {
+          console.warn("Clipboard writeText failed, falling back:", err);
+        }
+      }
+
+      if (!this.clipboardProxy) return;
+      this.clipboardProxy.value = text;
+      this.clipboardProxy.focus();
+      this.clipboardProxy.select();
+      document.execCommand("copy");
+      this.clipboardProxy.value = "";
+      this.clipboardProxy.blur();
+    }
+
+    async cutSelection() {
+      const text = this.getSelectedText();
+      if (!text || !this.textModel) return;
+
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (err) {
+          console.warn("Clipboard writeText failed, falling back:", err);
+        }
+      } else if (this.clipboardProxy) {
+        this.clipboardProxy.value = text;
+        this.clipboardProxy.focus();
+        this.clipboardProxy.select();
+        document.execCommand("copy");
+        this.clipboardProxy.value = "";
+        this.clipboardProxy.blur();
+      }
+
+      this.textModel.replaceSelection("");
+      this.pipeline.invalidate();
+    }
+
+    async pasteFromClipboard() {
+      if (!this.textModel) return;
+
+      if (navigator.clipboard?.readText) {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (!text) return;
+          this.textModel.replaceSelection(text);
+          this.pipeline.invalidate();
+        } catch (err) {
+          console.warn("Clipboard readText failed:", err);
+        }
+      }
     }
     
     

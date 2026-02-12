@@ -1,9 +1,9 @@
-import { UIFieldContainer } from "../legacy/UiFieldContainer.js";
-import { UIInput } from "../legacy/UiInput.js";
-import { UiText } from "../legacy/UiText.js";
-import { UIButton } from "../legacy/button.js";
+import { UIFieldContainer } from "./UiFieldContainer.js";
+import { UIInput } from "./UiInput.js";
+import { UiText } from "./UiText.js";
+import { UIButton } from "./button.js";
 
-import { UIScrollContainer } from "../legacy/scrollContainer.js";
+import { UIScrollContainer } from "./scrollContainer.js";
 
 
 const componentRegistry = {

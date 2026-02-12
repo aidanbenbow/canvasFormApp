@@ -5,33 +5,30 @@ export const dropdownMenuRenderStrategy = {
 
     const { x, y, width, height } = node.bounds;
     const optionHeight = node.anchor?.style?.optionHeight ?? 24;
-    ctx.save();
 
-     // clip menu contents
-     ctx.beginPath();
-     ctx.rect(x, y, width, height);
-     ctx.clip();
+    // clip menu contents (kept active for child renders)
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.clip();
 
-     // menu container background + border
-     ctx.strokeStyle = node.style?.borderColor ?? "#ccc";
-     ctx.lineWidth = 1;
-     ctx.fillStyle = node.style?.backgroundColor ?? "#fff";
-     ctx.fillRect(x, y, width, height);
-     ctx.strokeRect(x, y, width, height);
- 
-     // highlight selected row
-     if (node.selectedIndex >= 0) {
-       const scrollOffset = node.scroll?.offsetY ?? 0;
-       ctx.fillStyle = "rgba(0, 120, 215, 0.25)";
-       ctx.fillRect(
-         x,
-         y + node.selectedIndex * optionHeight - scrollOffset,
-         width,
-         optionHeight
-       );
-     }
+    // menu container background + border
+    ctx.strokeStyle = node.style?.borderColor ?? "#ccc";
+    ctx.lineWidth = 1;
+    ctx.fillStyle = node.style?.backgroundColor ?? "#fff";
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeRect(x, y, width, height);
 
-    ctx.restore();
+    // highlight selected row
+    if (node.selectedIndex >= 0) {
+      const scrollOffset = node.scroll?.offsetY ?? 0;
+      ctx.fillStyle = "rgba(0, 120, 215, 0.25)";
+      ctx.fillRect(
+        x,
+        y + node.selectedIndex * optionHeight - scrollOffset,
+        width,
+        optionHeight
+      );
+    }
 
     // The children (LabelNodes) render themselves
   }

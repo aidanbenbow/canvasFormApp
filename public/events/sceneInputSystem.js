@@ -19,33 +19,51 @@ export class SceneInputSystem {
       this.canvas.addEventListener('mousedown', e => this._handle(e, 'mousedown'));
       this.canvas.addEventListener('mouseup', e => this._handle(e, 'mouseup'));
       this.canvas.addEventListener('click', e => this._handle(e, 'click'));
+      this.canvas.addEventListener('dblclick', e => this._handle(e, 'dblclick'));
       this.canvas.addEventListener('wheel', e => this._handleWheel(e));
+
+      this.canvas.addEventListener('touchstart', e => this._handleTouch(e, 'mousedown'), { passive: false });
+      this.canvas.addEventListener('touchmove', e => this._handleTouch(e, 'mousemove'), { passive: false });
+      this.canvas.addEventListener('touchend', e => this._handleTouch(e, 'mouseup'));
 
     }
   
     _handle(e, type) {
+      this._handleFromClient(type, e.clientX, e.clientY, e);
+    }
+
+    _handleTouch(e, type) {
+      if (type === "mousemove") {
+        e.preventDefault();
+      }
+
+      const touch = e.touches[0] || e.changedTouches[0];
+      if (!touch) return;
+
+      this._handleFromClient(type, touch.clientX, touch.clientY, e);
+    }
+
+    _handleFromClient(type, clientX, clientY, originalEvent) {
       const rect = this.canvas.getBoundingClientRect();
       const scaleX = this.canvas.width / rect.width;
-const scaleY = this.canvas.height / rect.height;
+      const scaleY = this.canvas.height / rect.height;
 
-  // Convert screen → canvas
-const canvasX = (e.clientX - rect.left) * scaleX;
-  const canvasY = (e.clientY - rect.top) * scaleY;
+      const canvasX = (clientX - rect.left) * scaleX;
+      const canvasY = (clientY - rect.top) * scaleY;
 
-  // NEW: convert canvas → scene
-  const { x, y } = this.pipeline.toSceneCoords(canvasX, canvasY);
-  this.handlePointer(type, x, y);
-      const root = this.pipeline.root
-      const target = this.hitTest.hitTest(root,x, y, this.ctx);
+      const { x, y } = this.pipeline.toSceneCoords(canvasX, canvasY);
+      this.handlePointer(type, x, y);
+      const root = this.pipeline.root;
+      const target = this.hitTest.hitTest(root, x, y, this.ctx);
 
       const event = new SceneEvent({
         type,
         x,
         y,
         target,
-        originalEvent: e
+        originalEvent
       });
- 
+
       this.dispatcher.dispatch(event);
     }
     handlePointer(type, x, y) {
@@ -77,6 +95,10 @@ const canvasX = (e.clientX - rect.left) * scaleX;
     
       if (type === "mouseup") {
         target.onPointerUp?.();
+      }
+
+      if (type === "dblclick") {
+        target.onPointerDoubleClick?.(x, y);
       }
     }
     _handleWheel(e) {

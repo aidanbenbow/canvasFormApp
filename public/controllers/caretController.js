@@ -45,8 +45,14 @@ export class CaretController {
           this.selectionAnchor = pos; // reset anchor
       }
     
-        this.normalizeSelection();
-        this.editor.pipeline.invalidate();
+                this.normalizeSelection();
+                this.editor.pipeline.invalidate();
+
+                if (shiftKey && this.selectionStart !== this.selectionEnd && !this.editor.suppressSelectionMenu) {
+                    this.editor.onSelectionChanged?.();
+                } else if (!shiftKey) {
+                    this.editor.hideSelectionMenu?.();
+                }
       }
 
       // ✅ NEW: Move caret directly to a specific position
@@ -69,42 +75,138 @@ export class CaretController {
         this.selectionAnchor = pos;
     }
 
-    this.normalizeSelection();
-    this.editor.pipeline.invalidate();
+        this.normalizeSelection();
+        this.editor.pipeline.invalidate();
+
+        if (shiftKey && this.selectionStart !== this.selectionEnd && !this.editor.suppressSelectionMenu) {
+            this.editor.onSelectionChanged?.();
+        } else if (!shiftKey) {
+            this.editor.hideSelectionMenu?.();
+        }
 }
 moveCaretToMousePosition(x, y, ctx) {
   const node = this.editor.activeNode;
   if (!node) return;
 
-    ctx.font = node.style.font;
-  const { lines, lineHeight } = node._layout;
-  const { bounds, style } = node;
+        const closestIndex = this.getCaretIndexFromMousePosition(x, y, ctx);
+        this.moveCaretTo(closestIndex, false); // false → no shift selection
+    }
 
-  // Determine which line was clicked
-  let lineIndex = Math.floor((y - bounds.y - style.paddingY) / lineHeight);
-  lineIndex = Math.max(0, Math.min(lineIndex, lines.length - 1));
+    getCaretIndexFromMousePosition(x, y, ctx) {
+        const node = this.editor.activeNode;
+        if (!node) return 0;
 
-  const line = lines[lineIndex];
-  let clickX = x - bounds.x - style.paddingX;
+        ctx.font = node.style.font;
+        const { lines, lineHeight } = node._layout;
+        const { bounds, style } = node;
 
-  // Determine which character in the line is closest to clickX
-  let closestIndex = line.startIndex; // start of line in full text
-  let accumulatedWidth = 0;
-  const text = node.value || "";
+        // Determine which line was clicked
+        let lineIndex = Math.floor((y - bounds.y - style.paddingY) / lineHeight);
+        lineIndex = Math.max(0, Math.min(lineIndex, lines.length - 1));
 
-  for (let i = 0; i < line.text.length; i++) {
-      const char = line.text[i];
-      const charWidth = ctx.measureText(char).width;
-      if (accumulatedWidth + charWidth / 2 >= clickX) {
-          break;
-      }
-      accumulatedWidth += charWidth;
-      closestIndex++;
-  }
+        const line = lines[lineIndex];
+        const clickX = x - bounds.x - style.paddingX;
 
-  // Move caret to that position
-  this.moveCaretTo(closestIndex, false); // false → no shift selection
-}
+        // Determine which character in the line is closest to clickX
+        let closestIndex = line.startIndex;
+        let accumulatedWidth = 0;
+
+        for (let i = 0; i < line.text.length; i++) {
+            const char = line.text[i];
+            const charWidth = ctx.measureText(char).width;
+            if (accumulatedWidth + charWidth / 2 >= clickX) {
+                break;
+            }
+            accumulatedWidth += charWidth;
+            closestIndex++;
+        }
+
+        return closestIndex;
+    }
+
+    selectWordAtMousePosition(x, y, ctx) {
+        const node = this.editor.activeNode;
+        if (!node) return;
+
+        const text = node.value || "";
+        if (!text) return;
+
+        let index = this.getCaretIndexFromMousePosition(x, y, ctx);
+        if (index >= text.length) index = text.length - 1;
+
+        // If clicked on whitespace, move left to find a word char
+        if (isWhitespace(text[index])) {
+            let scan = index - 1;
+            while (scan >= 0 && isWhitespace(text[scan])) scan--;
+            if (scan < 0) return;
+            index = scan;
+        }
+
+        let start = index;
+        let end = index + 1;
+
+        while (start > 0 && !isWhitespace(text[start - 1])) start--;
+        while (end < text.length && !isWhitespace(text[end])) end++;
+
+        this.selectionStart = start;
+        this.selectionEnd = end;
+        this.selectionAnchor = start;
+        this.caretIndex = end;
+        this.normalizeSelection();
+        this.editor.pipeline.invalidate();
+        if (!this.editor.suppressSelectionMenu) {
+            this.editor.onSelectionChanged?.({ x, y });
+        }
+    }
+
+    startSelectionAtMousePosition(x, y, ctx) {
+        const index = this.getCaretIndexFromMousePosition(x, y, ctx);
+        this.caretIndex = index;
+        this.selectionStart = index;
+        this.selectionEnd = index;
+        this.selectionAnchor = index;
+        this.editor.pipeline.invalidate();
+    }
+
+    updateSelectionToMousePosition(x, y, ctx) {
+        const index = this.getCaretIndexFromMousePosition(x, y, ctx);
+        this.caretIndex = index;
+        this.selectionStart = this.selectionAnchor;
+        this.selectionEnd = index;
+        this.normalizeSelection();
+        this.editor.pipeline.invalidate();
+
+        if (!this.editor.suppressSelectionMenu && this.selectionStart !== this.selectionEnd) {
+            this.editor.onSelectionChanged?.({ x, y });
+        }
+    }
+
+    getCaretScenePosition(ctx) {
+        const node = this.editor.activeNode;
+        if (!node || !node._layout) return { x: 0, y: 0 };
+
+        ctx.font = node.style.font;
+        const { x, y } = node.bounds;
+        const { lines, lineHeight } = node._layout;
+
+        let caretLine = 0;
+        let caretOffset = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (this.caretIndex >= line.startIndex && this.caretIndex <= line.endIndex) {
+                caretLine = i;
+                caretOffset = this.caretIndex - line.startIndex;
+                break;
+            }
+        }
+
+        const lineText = lines[caretLine].text.slice(0, caretOffset);
+        const caretX = x + node.style.paddingX + ctx.measureText(lineText).width;
+        const caretY = y + node.style.paddingY + caretLine * lineHeight;
+
+        return { x: caretX, y: caretY };
+    }
 
     drawCaret(ctx) {
         const node = this.editor.activeNode;
@@ -177,4 +279,8 @@ moveCaretToMousePosition(x, y, ctx) {
     
     
    
+}
+
+function isWhitespace(char) {
+    return /\s/.test(char);
 }

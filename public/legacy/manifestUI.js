@@ -2,7 +2,7 @@
 import { UIElement } from "./UiElement.js";
 import { UIFieldContainer } from "./UiFieldContainer.js";
 
-import { createUIComponent } from "../components/createUIComponent.js";
+import { createUIComponent } from "./createUIComponent.js";
 
 
 export class UIElementFactory {
