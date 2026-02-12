@@ -15,11 +15,20 @@ export class LabelNode extends SceneNode {
     this.text = text;
     this.onSelect = onSelect;
 
+    const responsiveStyle = isSmallScreen()
+      ? {
+          font: "42px sans-serif",
+          paddingX: 12,
+          paddingY: 6
+        }
+      : {};
+
     this.style = {
       font: "34px sans-serif",
       paddingX: 8,
       paddingY: 4,
       backgroundColor: selected ? "#0078ff" : "transparent",
+      ...responsiveStyle,
       ...style
     };
   }
@@ -45,4 +54,8 @@ export class LabelNode extends SceneNode {
     this.onSelect?.();
     this.invalidate();
   }
+}
+
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
 }

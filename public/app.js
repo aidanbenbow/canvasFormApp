@@ -100,19 +100,21 @@ commandRegistry.register("form.submit", (payload) => {
   text: "Form submitted!",
   id: 'submissionMessage',
   style: {
-    font: "28px sans-serif",
+    font: "32px sans-serif",
     color: "#ffffff",
     backgroundColor: "#0b8f3a",
     borderColor: "#06702c",
-    paddingX: 20,
-    paddingY: 12,
+    paddingX: 24,
+    paddingY: 16,
     radius: 10,
     align: "center",
     shrinkToFit: true,
     maxWidth: Math.floor(mainCanvas.width * 0.9)
   }
  });
- context.uiServices.toastLayer.showMessage(submitNode, { timeoutMs: 3000 });
+ const toastLayer = context.uiServices.toastLayer;
+ toastLayer.marginBottom = 70;
+ toastLayer.showMessage(submitNode, { timeoutMs: 3000 });
 
   system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
   system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);

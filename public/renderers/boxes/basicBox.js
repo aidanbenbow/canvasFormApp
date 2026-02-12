@@ -40,7 +40,7 @@ export class BoxRenderer {
           box.Gizmo = new Gizmo(box.getCentre());
         }
         box.Gizmo.draw(ctx, hitCtx);
-        if (!box._gizmoRegistered) {
+        if (hitCtx && !box._gizmoRegistered) {
           boxHitManager.registerGizmoHits(box);
           box._gizmoRegistered = true;
         }

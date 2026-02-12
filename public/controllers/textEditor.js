@@ -16,6 +16,7 @@ export class TextEditorController {
         this.pipeline = pipeline;
       this.selectionDragActive = false;
       this.suppressSelectionMenu = false;
+        this.useVirtualKeyboard = isSmallScreen();
   
         this.textModel = null
         this.keyboardInput = new KeyBoardInputController(this);
@@ -57,10 +58,12 @@ export class TextEditorController {
 
       this.caretController.setCaretToEnd(initialValue);
       this.keyboardInput.enable();
-      if(isSmallScreen()){
+      if (this.useVirtualKeyboard) {
        this.dispatcher.dispatch(ACTIONS.KEYBOARD.SHOW, { initialValue });
       }
-this.clipboardProxy.focus();
+      if (!this.useVirtualKeyboard) {
+        this.clipboardProxy.focus();
+      }
         this.pipeline.invalidate();
       }
 
@@ -74,6 +77,7 @@ this.clipboardProxy.focus();
         this.clipboardProxy.blur();
       this.selectionDragActive = false;
       this.suppressSelectionMenu = false;
+        this.useVirtualKeyboard = isSmallScreen();
       this.hideSelectionMenu();
         this.pipeline.invalidate();
         

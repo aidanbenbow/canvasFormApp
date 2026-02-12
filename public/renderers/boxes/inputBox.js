@@ -29,24 +29,26 @@ const inputWidth = width - (inputX - x) - 10;
     ctx.fillText(box.text, x + 65, y + height / 2);
 
     // Hit regions
-    hitCtx.fillStyle = box.hitColors.label;
-    hitCtx.fillRect(x + 10, y + 10, 50, box.fontSize + 5);
+    if (hitCtx) {
+      hitCtx.fillStyle = box.hitColors.label;
+      hitCtx.fillRect(x + 10, y + 10, 50, box.fontSize + 5);
 
-    hitCtx.fillStyle = box.hitColors.text;
-    hitCtx.fillRect(x + 60, y + 10, width - 70, height - 20);
+      hitCtx.fillStyle = box.hitColors.text;
+      hitCtx.fillRect(x + 60, y + 10, width - 70, height - 20);
 
-    // Register hit region actions
-    hitRegistry?.register(box.hitColors.text, {
-      box,
-      region: 'text',
-      metadata: { actionKey: 'writeText' }
-    });
+      // Register hit region actions
+      hitRegistry?.register(box.hitColors.text, {
+        box,
+        region: 'text',
+        metadata: { actionKey: 'writeText' }
+      });
 
-    hitRegistry?.register(box.hitColors.label, {
-      box,
-      region: 'label',
-      metadata: { actionKey: box.actionKey }
-    });
+      hitRegistry?.register(box.hitColors.label, {
+        box,
+        region: 'label',
+        metadata: { actionKey: box.actionKey }
+      });
+    }
 
     // Shared overlays
     this.renderCommon(box, ctx, hitCtx, textEditorController, boxHitManager);

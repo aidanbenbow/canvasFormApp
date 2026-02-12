@@ -12,12 +12,18 @@ export class KeyBoardInputController {
     }
 
     enable() {
-        window.addEventListener('keydown', this.boundHandler);
+                if (!this.editor.useVirtualKeyboard) {
+                    window.addEventListener('keydown', this.boundHandler);
+                    this._keydownEnabled = true;
+                }
         dispatcher.on(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler);
       }
       
       disable() {
-        window.removeEventListener('keydown', this.boundHandler);
+                if (this._keydownEnabled) {
+                    window.removeEventListener('keydown', this.boundHandler);
+                    this._keydownEnabled = false;
+                }
         dispatcher.off(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler); // remove subscription if your dispatcher supports it
       }
       

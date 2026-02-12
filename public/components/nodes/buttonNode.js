@@ -31,10 +31,10 @@ export class ButtonNode extends SceneNode {
 
       const responsiveStyle = isSmallScreen()
         ? {
-            font: '24px sans-serif',
-            paddingX: 24,
-            paddingY: 14,
-            minHeight: 56
+            font: '30px sans-serif',
+            paddingX: 30,
+            paddingY: 18,
+            minHeight: 68
           }
         : {};
 

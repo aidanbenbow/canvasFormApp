@@ -17,16 +17,20 @@ function resizeCanvas(canvas, width, height) {
       for (const layer in config) {
         const layerConfig = config[layer];
         const mainCanvas = document.querySelector(layerConfig.mainId);
-        const hitCanvas = document.querySelector(layerConfig.hitId);
+        const hitCanvas = layerConfig.hitId
+          ? document.querySelector(layerConfig.hitId)
+          : null;
   
         const width = window.innerWidth;
         const height = window.innerHeight;
   
         const ctx = resizeCanvas(mainCanvas, width, height);
-        const hitCtx = resizeCanvas(hitCanvas, width, height);
+        const hitCtx = hitCanvas ? resizeCanvas(hitCanvas, width, height) : null;
   
         mainCanvas.style.backgroundColor = layerConfig.bg;
-        hitCanvas.style.backgroundColor = layerConfig.hitBg;
+        if (hitCanvas) {
+          hitCanvas.style.backgroundColor = layerConfig.hitBg;
+        }
   
         this.layers[layer] = {
           canvas: mainCanvas,
@@ -44,11 +48,13 @@ function resizeCanvas(canvas, width, height) {
     resizeAll() {
       for (const layer in this.layers) {
         const { canvas, hitCanvas } = this.layers[layer];
-        const width = 1000
-        const height = 1000
+        const width = window.innerWidth
+        const height = window.innerHeight
   
         this.layers[layer].ctx = resizeCanvas(canvas, width, height);
-        this.layers[layer].hitCtx = resizeCanvas(hitCanvas, width, height);
+        if (hitCanvas) {
+          this.layers[layer].hitCtx = resizeCanvas(hitCanvas, width, height);
+        }
       }
     }
   

@@ -15,14 +15,16 @@ export class TextBoxRenderer extends BoxRenderer {
       ctx.fillText(box.text, x + 10, y + 20);
 
       // Hit regions
-      hitCtx.fillStyle = box.hitColors.main;
-      hitCtx.fillRect(x, y, width, height);
-      // Register hit region actions
-      hitRegistry?.register(box.hitColors.main, {
-        box,
-        region: 'main',
-        metadata: { actionKey: box.actionKey }
-      });
+      if (hitCtx) {
+        hitCtx.fillStyle = box.hitColors.main;
+        hitCtx.fillRect(x, y, width, height);
+        // Register hit region actions
+        hitRegistry?.register(box.hitColors.main, {
+          box,
+          region: 'main',
+          metadata: { actionKey: box.actionKey }
+        });
+      }
   
       this.renderCommon(box, ctx, hitCtx, textEditorController, boxHitManager);
     }

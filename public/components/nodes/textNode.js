@@ -13,11 +13,22 @@ export class TextNode extends SceneNode {
   
       this.text = text;
   
+      const responsiveStyle = isSmallScreen()
+        ? {
+            font: "46px sans-serif"
+          }
+        : {};
+
       this.style = {
         font: "38px sans-serif",
         color: "#CF3113",
+        ...responsiveStyle,
         ...style
       };
     }
   }
+
+function isSmallScreen() {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
+}
   
