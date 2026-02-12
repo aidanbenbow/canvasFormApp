@@ -10,12 +10,19 @@ export class KeyboardLayoutStrategy {
       ? Math.max(240, Math.floor(maxHeight * 0.4))
       : Math.min(260, maxHeight);
 
-    const keyWidth = (maxWidth - (maxCols - 1) * spacing) / maxCols;
     const keyHeight = Math.max(44, Math.floor((targetHeight - (rowCount - 1) * spacing) / rowCount));
 
-    for (const child of node.children) {
-      child.measure({ maxWidth: keyWidth, maxHeight: keyHeight }, ctx);
-    }
+    let childIndex = 0;
+    node.keyLayout.forEach((row) => {
+      const rowUnits = row.reduce((sum, key) => sum + node.getKeyWeight(key), 0);
+      const unitWidth = (maxWidth - (row.length - 1) * spacing) / rowUnits;
+
+      row.forEach((key) => {
+        const child = node.children[childIndex++];
+        const keyWidth = unitWidth * node.getKeyWeight(key);
+        child.measure({ maxWidth: keyWidth, maxHeight: keyHeight }, ctx);
+      });
+    });
 
     const height = rowCount * keyHeight + (rowCount - 1) * spacing;
 
@@ -26,19 +33,20 @@ export class KeyboardLayoutStrategy {
     node.bounds = bounds;
 
     const spacing = isSmallScreen() ? 6 : 8;
-    const maxCols = Math.max(...node.keyLayout.map((row) => row.length));
-    const keyWidth = (bounds.width - (maxCols - 1) * spacing) / maxCols;
     const keyHeight = Math.max(44, Math.floor((bounds.height - (node.keyLayout.length - 1) * spacing) / node.keyLayout.length));
 
     let y = bounds.y + spacing;
     let childIndex = 0;
 
     node.keyLayout.forEach(row => {
-      const rowWidth = row.length * keyWidth + (row.length - 1) * spacing;
+      const rowUnits = row.reduce((sum, key) => sum + node.getKeyWeight(key), 0);
+      const unitWidth = (bounds.width - (row.length - 1) * spacing) / rowUnits;
+      const rowWidth = row.reduce((sum, key) => sum + unitWidth * node.getKeyWeight(key), 0) + (row.length - 1) * spacing;
       let x = bounds.x + Math.max(0, (bounds.width - rowWidth) / 2);
 
-      row.forEach(() => {
+      row.forEach((key) => {
         const child = node.children[childIndex++];
+        const keyWidth = unitWidth * node.getKeyWeight(key);
         child.layout({ x, y, width: keyWidth, height: keyHeight }, ctx);
         x += keyWidth + spacing;
       });

@@ -37,6 +37,14 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
           const button = new ButtonNode({
             id: `key-${rowIndex}-${keyIndex}`,
             label: keyboard.getKeyLabel(baseKey),
+            style: {
+              radius: 10,
+              background: "#f7f7f7",
+              hoverBackground: "#dbeafe",
+              pressedBackground: "#bfdbfe",
+              borderColor: "#cbd5e1",
+              textColor: "#0f172a"
+            },
             onClick: () => {
               if (baseKey === '⇧') {
                 keyboard.toggleCase();

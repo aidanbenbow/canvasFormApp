@@ -7,9 +7,8 @@ export class KeyboardNode extends ContainerNode {
       this.isUppercase = false;
       this.baseLayout = [
         ['q','w','e','r','t','y','u','i','o','p'],
-        ['a','s','d','f','g','h','j','k','l'],
-        ['⇧','z','x','c','v','b','n','m','←'],
-        ['Space','↵']
+        ['a','s','d','f','g','h','j','k','l','⇧'],
+        ['z','x','c','v','b','n','m','←','Space','↵']
       ];
       this.keyLayout = this.getDisplayLayout();
       this.hitTestable = false; // Keyboard itself doesn't receive events, but its children can
@@ -36,5 +35,11 @@ export class KeyboardNode extends ContainerNode {
     toggleCase() {
       this.isUppercase = !this.isUppercase;
       this.keyLayout = this.getDisplayLayout();
+    }
+
+    getKeyWeight(key) {
+      if (key === "Space") return 3;
+      if (key === "↵") return 2;
+      return 1;
     }
   }

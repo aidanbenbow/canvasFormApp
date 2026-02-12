@@ -77,7 +77,7 @@ export class DropdownMenuNode extends ContainerNode {
     
       updateOptions(newOptions) {
         this.options = newOptions;
-        this.selectedIndex = newOptions.length ? 0 : -1;
+        this.selectedIndex = -1;
         this.rebuildChildren();
       }
     

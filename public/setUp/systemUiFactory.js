@@ -24,8 +24,8 @@ export const SystemUILayerFactory = {
       const toastLayer = ToastModule.create(dispatcher, context);
  const dropDownLayer = DropdownModule.create(dispatcher, context);
  
- systemRoot.add(keyboardLayer);
  systemRoot.add(dropDownLayer);
+ systemRoot.add(keyboardLayer);
       systemRoot.add(popupLayer);
         systemRoot.add(toastLayer);
       

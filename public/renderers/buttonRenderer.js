@@ -6,22 +6,22 @@ export const buttonRenderer = {
   
       ctx.save();
       // 🎨 Background
-    let bg = '#f5f5f5';
-    if (state.pressed) bg = '#dcdcdc';
-    else if (state.hovered) bg = '#eaeaea';
+    let bg = style.background ?? '#f5f5f5';
+    if (state.pressed) bg = style.pressedBackground ?? '#dcdcdc';
+    else if (state.hovered) bg = style.hoverBackground ?? '#eaeaea';
   
     ctx.fillStyle = bg;
     roundRect(ctx, x, y, width, height, style.radius);
     ctx.fill();
   
     // 🧱 Border
-    ctx.strokeStyle = '#bbb';
+    ctx.strokeStyle = style.borderColor ?? '#bbb';
     ctx.lineWidth = 1;
     ctx.stroke();
   
     // 🔤 Text
     ctx.font = style.font;
-    ctx.fillStyle = '#222';
+    ctx.fillStyle = style.textColor ?? '#222';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
   

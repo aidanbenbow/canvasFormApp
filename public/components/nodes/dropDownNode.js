@@ -108,15 +108,23 @@ this.dropdownVisible = false;
 
     if (key === "ArrowDown") {
       if (!opts.length) return true;
-      this.selectedIndex = (this.selectedIndex + 1) % opts.length;
+      if (this.selectedIndex < 0) {
+        this.selectedIndex = 0;
+      } else {
+        this.selectedIndex = (this.selectedIndex + 1) % opts.length;
+      }
       this.syncMenuHighlight();
-      // don't auto-select; wait for explicit user selection
-      this.selectedIndex = -1;
+      this.invalidate();
+      return true;
     }
 
     if (key === "ArrowUp") {
       if (!opts.length) return true;
-      this.selectedIndex = (this.selectedIndex - 1 + opts.length) % opts.length;
+      if (this.selectedIndex < 0) {
+        this.selectedIndex = opts.length - 1;
+      } else {
+        this.selectedIndex = (this.selectedIndex - 1 + opts.length) % opts.length;
+      }
       this.syncMenuHighlight();
       this.invalidate();
       return true;
@@ -168,8 +176,8 @@ this.dropdownVisible = false;
       });
     }
 
-    // reset selection to top
-    this.selectedIndex = this.filteredOptions.length ? 0 : -1;
+    // don't auto-select; wait for explicit user selection
+    this.selectedIndex = -1;
 
      // Update menu correctly
   if (this.dropdownVisible && this.menuNode) {

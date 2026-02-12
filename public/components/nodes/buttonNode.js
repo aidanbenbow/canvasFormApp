@@ -61,6 +61,7 @@ export class ButtonNode extends SceneNode {
    
       if (this.state.disabled) return;
       this.state.pressed = true;
+      this.state.hovered = true;
       this.invalidate();
     }
   
@@ -73,6 +74,10 @@ export class ButtonNode extends SceneNode {
       }
   
       this.state.pressed = false;
+      if (!this.state.hovered) {
+        this.invalidate();
+        return;
+      }
       this.invalidate();
     }
   }
