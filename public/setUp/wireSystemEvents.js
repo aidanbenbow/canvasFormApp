@@ -30,6 +30,7 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
         store,
         factories,
         commandRegistry,
+        formId: form.id,
         onSubmit: (responseData) => {
           dispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
             form: store.getActiveForm(),

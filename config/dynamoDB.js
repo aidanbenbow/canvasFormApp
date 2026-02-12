@@ -188,6 +188,11 @@ async deleteFormData(id) {
 
       async getFormResults(formId, tableName = 'cscstudents') {
         try {
+          if (tableName === 'progressreports') {
+            // progressreports table does not store formId; return all items
+            return await this.getAllFormResults(tableName);
+          }
+
           const params = {
             TableName: tableName,
             FilterExpression: '#formId = :formIdVal',
@@ -200,8 +205,14 @@ async deleteFormData(id) {
           };
       
           const data = await this.docClient.send(new ScanCommand(params));
-         
-          return data.Items || [];
+          const items = data.Items || [];
+
+          if (items.length === 0) {
+            const fallback = await this.getAllFormResults(tableName);
+            return fallback;
+          }
+
+          return items;
         } catch (error) {
           console.error("Error fetching form results:", error);
           throw new Error("Could not fetch form results");

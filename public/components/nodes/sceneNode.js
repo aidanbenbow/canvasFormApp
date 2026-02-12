@@ -41,6 +41,14 @@ export class SceneNode {
       }
       this.children.push(child);
     }
+
+    remove(child) {
+      const index = this.children.indexOf(child);
+      if (index >= 0) {
+        this.children.splice(index, 1);
+        child.parent = null;
+      }
+    }
   
     // --- Lifecycle Pipelines ---
   

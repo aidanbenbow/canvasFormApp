@@ -31,6 +31,10 @@ export class LabelNode extends SceneNode {
       ...responsiveStyle,
       ...style
     };
+
+    if (selected) {
+      this.setUIState({ selected: true });
+    }
   }
 
   onPointerEnter() {

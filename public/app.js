@@ -141,7 +141,8 @@ context.pipeline.start({
 
 if (formId) {
   const form = await fetchFormById(formId);
-  const results = await fetchAllFormResults(form.resultsTable || 'progressreports');
+  const tableName = (form.resultsTable || 'progressreports').trim();
+  const results = await fetchFormResults(form.id, tableName);
 
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
@@ -156,10 +157,12 @@ else{
   const {forms} = await fetchAllForms('admin');
  
 for(const f of forms){
-  const results = await fetchFormResults(f.id, f.resultsTable || 'faithandbelief');
+  const tableName = (f.resultsTable || 'faithandbelief').trim();
+  const results = await fetchFormResults(f.id, tableName);
+  console.log(`Fetched results for form ${f.id} from table ${tableName}:`, results);
 system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
 
-context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
+//context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
 }
 system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
 

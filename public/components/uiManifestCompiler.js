@@ -55,17 +55,59 @@ console.log('Root Node:', rootNode);
 function preprocessManifest(manifest, results) {
   const clone = structuredClone(manifest);
   const beneficiaries = Array.isArray(results) ? results : [];
-  beneficiaries.sort((a, b) => a.name.localeCompare(b.name));
+  beneficiaries.sort((a, b) => {
+    const nameA = (a?.name ?? "").toString();
+    const nameB = (b?.name ?? "").toString();
+    return nameA.localeCompare(nameB);
+  });
   walkDefs(clone, (def) => {
     if (def.type === "dropDown" && def.dataSource === "beneficiaries") {
-      def.options = beneficiaries.map(b => ({
-        label: b.name,
-        value: b.name,
-        fills: {
-          messageInput: b.message,
-          reportInput: b.report
-        }
-      }));
+      def.options = beneficiaries.map((b, index) => {
+        const label = firstNonEmpty(
+          pickField(b, [
+            "name",
+            "nameInput",
+            "input-name",
+            "input-nameInput",
+            "beneficiary",
+            "beneficiaryName",
+            "fullName",
+            "title"
+          ]),
+          b?.name,
+          b?.label,
+          b?.fullName,
+          b?.title,
+          b?.id,
+          b?.value
+        ) ?? `Option ${index + 1}`;
+        const value = firstNonEmpty(
+          pickField(b, ["name", "nameInput", "input-name", "input-nameInput"]),
+          b?.name,
+          b?.value,
+          b?.id,
+          label
+        );
+
+        return {
+          label,
+          value,
+          fills: {
+            messageInput: firstNonEmpty(
+              pickField(b, ["messageInput", "message", "messageText"]),
+              b?.message,
+              b?.messageInput,
+              b?.messageText
+            ),
+            reportInput: firstNonEmpty(
+              pickField(b, ["reportInput", "report", "reportText"]),
+              b?.report,
+              b?.reportInput,
+              b?.reportText
+            )
+          }
+        };
+      });
     }
   });
 
@@ -85,6 +127,10 @@ function walkDefArray(children, visitor) {
   for (const def of children) {
     if (!def) continue;
 
+    if (def.command && !def.action) {
+      def.action = def.command;
+    }
+
     // Run your callback on this node
     visitor(def);
 
@@ -96,4 +142,36 @@ function walkDefArray(children, visitor) {
     // Optional: if you later support other nested fields
     // e.g. def.content, def.items, def.fields, etc
   }
+}
+
+function firstNonEmpty(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    const str = String(value).trim();
+    if (str) return str;
+  }
+  return null;
+}
+
+function pickField(entry, keys) {
+  if (!entry) return null;
+
+  const sources = [
+    entry,
+    entry.fields,
+    entry.responses,
+    entry.responseData?.responses,
+    entry.data,
+    entry.payload
+  ].filter(Boolean);
+
+  for (const key of keys) {
+    for (const source of sources) {
+      if (source && source[key] !== undefined && source[key] !== null) {
+        return source[key];
+      }
+    }
+  }
+
+  return null;
 }
