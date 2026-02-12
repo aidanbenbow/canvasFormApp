@@ -36,17 +36,20 @@ export class BaseUIFactory {
     return new ButtonNode({
       ...def,
       onClick: () => {
-        const rootNode = pipeline.root
-        const fields = collectInputValues(rootNode);
-  
+        const rootNode = pipeline.root;
+        const shouldCollect = !def.skipCollect;
+        const shouldClear = !def.skipClear;
+
+        const fields = shouldCollect ? collectInputValues(rootNode) : {};
         const finalPayload = {
           ...(def.payload || {}),
-          fields,
-          done: true
+          ...(shouldCollect ? { fields, done: true } : {})
         };
   
         commandRegistry.execute(def.action, finalPayload);
-        clearInputValues(rootNode);
+        if (shouldClear) {
+          clearInputValues(rootNode);
+        }
       }
   
       });

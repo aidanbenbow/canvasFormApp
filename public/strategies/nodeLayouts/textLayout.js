@@ -2,8 +2,9 @@ export class TextLayoutStrategy {
   measure(node, constraints, ctx) {
     ctx.save();
     ctx.font = node.style.font;
-  
-    const words = node.text.split(" ");
+
+    const text = (node.text ?? "").toString();
+    const words = text.split(" ");
     const lines = [];
     let line = "";
   

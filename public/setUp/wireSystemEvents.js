@@ -76,7 +76,7 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
     dispatcher.on(ACTIONS.FORM.CREATE, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
 
-        const creator = new CreateForm({ id: 'createFormScreen', context,dispatcher, eventBusManager: bus,store,
+      const creator = new CreateForm({ id: 'createFormScreen', context, dispatcher, eventBusManager: bus, store, factories, commandRegistry,
         onSubmit: (updatedForm) => {
             dispatcher.dispatch(ACTIONS.FORM.ADD, updatedForm);
             saveFormStructure({
@@ -87,14 +87,13 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
               });
               context.overlayManager.showSuccess(`Form ${updatedForm.label} created successfully!`);
         } });
-        creator.attachToStage(context.uiStage);
-        context.pipeline.invalidate();
+      router.push(creator);
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.EDIT, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
 
-        const editor = new EditForm({ id: 'editFormScreen', context, dispatcher, eventBusManager: bus, store,
+      const editor = new EditForm({ id: 'editFormScreen', context, dispatcher, eventBusManager: bus, store, factories, commandRegistry,
         onSubmit: (updatedForm) => {
             dispatcher.dispatch(ACTIONS.FORM.UPDATE, updatedForm);
             saveFormStructure({
@@ -104,8 +103,7 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
                 user: updatedForm.user,
             });
         } });
-        editor.attachToStage(context.uiStage);
-        context.pipeline.invalidate();
+      router.push(editor);
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData}) => {

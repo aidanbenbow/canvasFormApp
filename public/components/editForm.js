@@ -4,20 +4,11 @@ import { CreateForm } from "./createForm.js";
 
 
 export class EditForm extends CreateForm{
-    constructor({ id='editForm', context, dispatcher, eventBusManager, store, onSubmit }) {
-        super({ id, context, dispatcher, eventBusManager, store, onSubmit });
-        this.manifest = this.store.getActiveForm() 
-
-        this.manifestUI.formContainer.clearChildren();
-        this.manifestUI.buildFormFromManifest(this.manifest, this.manifestUI.formContainer, {
-            onSubmit: (responseData) => {
-                this.handleSubmit(responseData);
-            }
-        });
-        this.context.pipeline.invalidate();
+    constructor({ id='editForm', context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit }) {
+        super({ id, context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit, form: store.getActiveForm() });
     }
     handleSubmit() {
-        const normalizedForm = normalizeForm(this.manifest);
+        const normalizedForm = normalizeForm(this.form);
         this.onSubmit?.(normalizedForm);
         this.dispatcher.dispatch(
             ACTIONS.FORM.UPDATE,
