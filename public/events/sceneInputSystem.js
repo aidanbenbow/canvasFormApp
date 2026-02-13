@@ -12,6 +12,12 @@ export class SceneInputSystem {
       this._lastTouch = null;
       this._lastTouchMoveY = null;
       this.touchScrollMultiplier = 1.6;
+      this.touchScrollFriction = 0.92;
+      this.touchScrollMinVelocity = 0.02;
+      this._touchScrollTarget = null;
+      this._touchVelocityY = 0;
+      this._lastTouchMoveTime = 0;
+      this._touchMomentumFrame = null;
   
       this.hitTest = new SceneHitTestSystem();
       this.dispatcher = new SceneEventDispatcher();
@@ -51,7 +57,14 @@ export class SceneInputSystem {
       if (!touch) return;
 
       if (type === "mousedown") {
+        if (this._touchMomentumFrame) {
+          cancelAnimationFrame(this._touchMomentumFrame);
+          this._touchMomentumFrame = null;
+        }
         this._lastTouchMoveY = touch.clientY;
+        this._lastTouchMoveTime = performance.now();
+        this._touchVelocityY = 0;
+        this._touchScrollTarget = null;
         const now = Date.now();
         const last = this._lastTouch;
         const dx = last ? Math.abs(touch.clientX - last.x) : 0;
@@ -67,12 +80,18 @@ export class SceneInputSystem {
       }
 
       if (type === "mousemove") {
+        const now = performance.now();
         const deltaY = this._lastTouchMoveY !== null ? (this._lastTouchMoveY - touch.clientY) * this.touchScrollMultiplier : 0;
+        const dt = Math.max(1, now - this._lastTouchMoveTime);
+        const velocity = deltaY / dt;
         this._lastTouchMoveY = touch.clientY;
+        this._lastTouchMoveTime = now;
 
         if (Math.abs(deltaY) > 0) {
           const scrollTarget = this._getScrollableTarget(touch.clientX, touch.clientY);
           if (scrollTarget) {
+            this._touchVelocityY = this._touchVelocityY * 0.7 + velocity * 0.3;
+            this._touchScrollTarget = scrollTarget;
             const scrollEvent = new SceneEvent({
               type: "wheel",
               x: scrollTarget.x,
@@ -83,6 +102,12 @@ export class SceneInputSystem {
             this.dispatcher.dispatch(scrollEvent);
             return;
           }
+        }
+      }
+
+      if (type === "mouseup") {
+        if (this._touchScrollTarget && Math.abs(this._touchVelocityY) > this.touchScrollMinVelocity) {
+          this._startTouchMomentum();
         }
       }
 
@@ -133,6 +158,42 @@ export class SceneInputSystem {
       }
 
       return null;
+    }
+
+    _startTouchMomentum() {
+      let velocity = this._touchVelocityY;
+      let lastTime = performance.now();
+      const target = this._touchScrollTarget;
+
+      const step = () => {
+        const now = performance.now();
+        const dt = Math.max(1, now - lastTime);
+        lastTime = now;
+
+        const deltaY = velocity * dt;
+        if (Math.abs(deltaY) > 0.01) {
+          const scrollEvent = new SceneEvent({
+            type: "wheel",
+            x: target.x,
+            y: target.y,
+            target: target.target,
+            originalEvent: { deltaY }
+          });
+          this.dispatcher.dispatch(scrollEvent);
+        }
+
+        const decay = Math.pow(this.touchScrollFriction, dt / 16);
+        velocity *= decay;
+
+        if (Math.abs(velocity) <= this.touchScrollMinVelocity) {
+          this._touchMomentumFrame = null;
+          return;
+        }
+
+        this._touchMomentumFrame = requestAnimationFrame(step);
+      };
+
+      this._touchMomentumFrame = requestAnimationFrame(step);
     }
     handlePointer(type, x, y) {
       const root = this.pipeline.root;

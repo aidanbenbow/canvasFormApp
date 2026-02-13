@@ -493,10 +493,21 @@ this.clipboardProxy.addEventListener("cut", (e) => {
           if (!text) return;
           this.textModel.replaceSelection(text);
           this.pipeline.invalidate();
+          return;
         } catch (err) {
           console.warn("Clipboard readText failed:", err);
         }
       }
+
+      if (!this.clipboardProxy) return;
+      this.clipboardProxy.value = "";
+      this.clipboardProxy.focus();
+      this.clipboardProxy.select();
+      document.execCommand?.("paste");
+      setTimeout(() => {
+        this.clipboardProxy.blur();
+        this.clipboardProxy.value = "";
+      }, 0);
     }
     
     
