@@ -4,7 +4,7 @@ import { TextLayoutStrategy } from "../../strategies/nodeLayouts/textLayout.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class TextNode extends SceneNode {
-    constructor({ id, text, style = {} }) {
+    constructor({ id, text, runs = null, style = {} }) {
       super({
         id,
         layoutStrategy: layoutRegistry["text"]() || new TextLayoutStrategy(),
@@ -12,6 +12,7 @@ export class TextNode extends SceneNode {
       });
   
       this.text = text;
+      this.runs = runs;
   
       const responsiveStyle = isSmallScreen()
         ? {

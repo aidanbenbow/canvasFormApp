@@ -1,50 +1,107 @@
 export class TextLayoutStrategy {
   measure(node, constraints, ctx) {
     ctx.save();
-    ctx.font = node.style.font;
+    const defaultFont = node.style.font;
+    const defaultColor = node.style.color;
 
-    const text = (node.text ?? "").toString();
-    const words = text.split(" ");
-    const lines = [];
-    let line = "";
-  
-    const fontSize = parseInt(node.style.font, 10);
-    const lineHeight = fontSize * (node.style.lineHeight || 1.2);
     const paddingX = node.style.paddingX || 0;
     const paddingY = node.style.paddingY || 0;
     const maxWidth = node.style.maxWidth ?? constraints.maxWidth;
     const shrinkToFit = node.style.shrinkToFit === true;
+    const lineHeightScale = node.style.lineHeight || 1.2;
+
+    const lines = [];
+    let currentLine = { segments: [], width: 0, height: 0 };
     let maxLineWidth = 0;
-  
-    for (const word of words) {
-      const testLine = line ? line + " " + word : word;
-      const metrics = ctx.measureText(testLine);
-  
-      if (metrics.width > maxWidth) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = testLine;
+
+    const getFontSize = (fontValue) => {
+      const size = parseInt(fontValue, 10);
+      return Number.isFinite(size) ? size : 16;
+    };
+
+    const pushLine = () => {
+      if (!currentLine.segments.length) return;
+      lines.push(currentLine);
+      if (currentLine.width > maxLineWidth) maxLineWidth = currentLine.width;
+      currentLine = { segments: [], width: 0, height: 0 };
+    };
+
+    const addToken = (token) => {
+      if (token.type === "newline") {
+        pushLine();
+        return;
       }
-    }
-    if (line) lines.push(line);
-  
-    ctx.restore();
-  
-    for (const textLine of lines) {
-      const lineWidth = ctx.measureText(textLine).width;
-      if (lineWidth > maxLineWidth) maxLineWidth = lineWidth;
+
+      const text = token.text;
+      if (!text) return;
+
+      const isSpace = token.isSpace === true;
+      if (isSpace && currentLine.segments.length === 0) return;
+
+      ctx.font = token.font;
+      const width = ctx.measureText(text).width;
+      if (currentLine.width + width > maxWidth && currentLine.segments.length > 0 && !isSpace) {
+        pushLine();
+      }
+
+      const fontSize = getFontSize(token.font);
+      currentLine.height = Math.max(currentLine.height, fontSize * lineHeightScale);
+      currentLine.segments.push({
+        text,
+        font: token.font,
+        color: token.color,
+        width
+      });
+      currentLine.width += width;
+    };
+
+    const tokenizeText = (text, font, color) => {
+      const parts = text.split("\n");
+      parts.forEach((part, index) => {
+        const pieces = part.split(/(\s+)/);
+        pieces.forEach((piece) => {
+          if (!piece) return;
+          if (/^\s+$/.test(piece)) {
+            addToken({ type: "text", text: " ", isSpace: true, font, color });
+            return;
+          }
+          addToken({ type: "text", text: piece, font, color });
+        });
+        if (index < parts.length - 1) {
+          addToken({ type: "newline" });
+        }
+      });
+    };
+
+    if (Array.isArray(node.runs) && node.runs.length > 0) {
+      node.runs.forEach((run) => {
+        const runText = (run?.text ?? "").toString();
+        if (!runText) return;
+        const font = run.font || defaultFont;
+        const color = run.color || defaultColor;
+        tokenizeText(runText, font, color);
+      });
+    } else {
+      const text = (node.text ?? "").toString();
+      tokenizeText(text, defaultFont, defaultColor);
     }
 
+    pushLine();
+    if (!lines.length) {
+      const fontSize = getFontSize(defaultFont);
+      lines.push({ segments: [], width: 0, height: fontSize * lineHeightScale });
+    }
+
+    ctx.restore();
+
     node._lines = lines;
-    node._lineHeight = lineHeight;
     node.measured = {
       width: shrinkToFit
         ? Math.min(maxLineWidth + paddingX * 2, maxWidth)
         : maxWidth,
-      height: lines.length * lineHeight + (shrinkToFit ? paddingY * 2 : 0)
+      height: lines.reduce((sum, line) => sum + line.height, 0) + (shrinkToFit ? paddingY * 2 : 0)
     };
-  
+
     return node.measured;
   }
   

@@ -54,6 +54,13 @@ export const KeyboardModule = {
         keyboard.invalidate();
       };
 
+      const isSymbolKey = (key) => {
+        if (!key || key.length !== 1) return false;
+        if (keyboard.isLetter(key)) return false;
+        if (/\d/.test(key)) return false;
+        return true;
+      };
+
       const startBackspaceRepeat = () => {
         stopBackspaceRepeat();
         dispatchKeyPress('←');
@@ -104,7 +111,8 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
               hoverBackground: "rgba(191, 219, 254, 0.95)",
               pressedBackground: "rgba(147, 197, 253, 0.98)",
               borderColor: "#94a3b8",
-              textColor: "#0f172a"
+              textColor: "#0f172a",
+              fontWeight: 600
             },
             onPressStart: () => {
               if (entry.baseKey === '←') {
@@ -147,6 +155,14 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
               if (keyboard.shiftOnce && keyboard.isLetter(currentKey)) {
                 keyboard.shiftOnce = false;
                 keyboard.toggleCase();
+                refreshKeyLabels();
+              }
+
+              if (isSymbolKey(currentKey)) {
+                keyboard.shiftOnce = true;
+                if (!keyboard.isUppercase) {
+                  keyboard.toggleCase();
+                }
                 refreshKeyLabels();
               }
             }

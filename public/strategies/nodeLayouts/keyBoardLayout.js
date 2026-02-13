@@ -2,13 +2,13 @@ export class KeyboardLayoutStrategy {
   measure(node, constraints, ctx) {
     const maxWidth = constraints.maxWidth;
     const maxHeight = constraints.maxHeight;
-    const spacing = isSmallScreen() ? 6 : 8;
+    const spacing = isSmallScreen() ? 10 : 12;
     const rowCount = node.keyLayout.length;
     const maxCols = Math.max(...node.keyLayout.map((row) => row.length));
 
     const targetHeight = isSmallScreen()
-      ? Math.max(200, Math.floor(maxHeight * 0.32))
-      : Math.min(260, maxHeight);
+      ? Math.max(220, Math.floor(maxHeight * 0.36))
+      : Math.min(300, maxHeight);
 
     const keyHeight = Math.max(40, Math.floor((targetHeight - (rowCount - 1) * spacing) / rowCount));
 
@@ -32,7 +32,7 @@ export class KeyboardLayoutStrategy {
   layout(node, bounds, ctx) {
     node.bounds = bounds;
 
-    const spacing = isSmallScreen() ? 6 : 8;
+    const spacing = isSmallScreen() ? 10 : 12;
     const keyHeight = Math.max(40, Math.floor((bounds.height - (node.keyLayout.length - 1) * spacing) / node.keyLayout.length));
 
     let y = bounds.y + spacing;
