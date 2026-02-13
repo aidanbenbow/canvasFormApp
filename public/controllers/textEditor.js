@@ -35,12 +35,14 @@ export class TextEditorController {
       // Use your dispatcher correctly, depending on its API
       // For example, if it's TinyEmitter-like:
       this.unsubFocus = this.dispatcher.on(ACTIONS.UI.FOCUS, ({ Node }) => {
-        if (Node instanceof InputNode) this.startEditing(Node);
+        if (Node instanceof InputNode || Node?.editable) this.startEditing(Node);
       });
   
       this.unsubBlur = this.dispatcher.on(ACTIONS.UI.BLUR, ({ Node }) => {
         console.log("Blur event received for Node:", Node);
-        if (Node instanceof InputNode) this.stopEditing();
+        if ((Node instanceof InputNode || Node?.editable) && Node === this.activeNode) {
+          this.stopEditing();
+        }
       });
     }
   

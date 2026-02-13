@@ -1,3 +1,5 @@
+import { wrapTextByWords } from "../../controllers/textModel.js";
+
 export class TextLayoutStrategy {
   measure(node, constraints, ctx) {
     ctx.save();
@@ -73,6 +75,10 @@ export class TextLayoutStrategy {
       });
     };
 
+    const fullText = Array.isArray(node.runs) && node.runs.length > 0
+      ? node.runs.map((run) => (run?.text ?? "")).join("")
+      : (node.text ?? "").toString();
+
     if (Array.isArray(node.runs) && node.runs.length > 0) {
       node.runs.forEach((run) => {
         const runText = (run?.text ?? "").toString();
@@ -94,6 +100,16 @@ export class TextLayoutStrategy {
 
     ctx.restore();
 
+    const maxTextWidth = Math.max(0, maxWidth - paddingX * 2);
+    const caretLines = wrapTextByWords(ctx, fullText, maxTextWidth);
+    if (caretLines.length === 0) {
+      caretLines.push({ text: "", startIndex: 0, endIndex: 0 });
+    }
+    const caretFontSize = getFontSize(defaultFont);
+    const caretLineHeight = caretFontSize * lineHeightScale;
+    node._layout = { lines: caretLines, lineHeight: caretLineHeight };
+
+    node._renderLines = lines;
     node._lines = lines;
     node.measured = {
       width: shrinkToFit

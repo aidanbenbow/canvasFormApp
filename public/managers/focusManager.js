@@ -15,14 +15,18 @@ export class FocusManager {
   
       if (this.focusedNode) {
         console.log("Node is already focused:", Node);
-        this.uiState.update(this.focusedNode, { focused: false });
+        if (this.focusedNode.id) {
+          this.uiState.update(this.focusedNode.id, { focused: false });
+        }
         this.focusedNode.setUIState?.({ focused: false }); // if Node has setUIState method, call it
         this.dispatcher.dispatch(ACTIONS.UI.BLUR, { Node: this.focusedNode });
         this.focusedNode.context.pipeline.invalidate();
       }
   
       this.focusedNode = Node;
-      this.uiState.update(Node, { focused: true });
+      if (Node?.id) {
+        this.uiState.update(Node.id, { focused: true });
+      }
       Node.setUIState?.({ focused: true }); // if Node has setUIState method, call it
       this.dispatcher.dispatch(ACTIONS.UI.FOCUS, { Node });
       Node.context.pipeline.invalidate();
@@ -30,7 +34,9 @@ export class FocusManager {
   
     blur(Node) {
       if (this.focusedNode === Node) {
-        this.uiState.update(Node, { focused: false });
+        if (Node?.id) {
+          this.uiState.update(Node.id, { focused: false });
+        }
         Node.setUIState?.({ focused: false }); // if Node has setUIState method, call it
          Node.context.pipeline.invalidate();
         this.focusedNode = null;

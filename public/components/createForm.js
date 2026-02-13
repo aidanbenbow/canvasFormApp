@@ -77,6 +77,7 @@ export class CreateForm extends BaseScreen {
 
     this.rootNode = rootNode;
     this.regions = regions;
+    this.bindEditableNodes(this.regions?.formContainer);
 
     return rootNode;
   }
@@ -139,6 +140,10 @@ export class CreateForm extends BaseScreen {
         delete def.command;
       }
 
+      if (def.type === 'text' || def.type === 'label') {
+        def.editable = true;
+      }
+
       return def;
     });
   }
@@ -147,7 +152,32 @@ export class CreateForm extends BaseScreen {
     if (!this.regions?.formContainer) return;
     const nodes = this.getDisplayFields().map((def) => this.factories.basic.create(def));
     this.regions.formContainer.setChildren(nodes);
+    this.bindEditableNodes(this.regions.formContainer);
     this.rootNode.invalidate();
+  }
+
+  bindEditableNodes(container) {
+    if (!container) return;
+    const fields = this.form?.formStructure?.fields || [];
+    const fieldMap = new Map(fields.map((field) => [field.id, field]));
+
+    const walk = (node) => {
+      if (!node) return;
+      const field = fieldMap.get(node.id);
+      if (field && node.editable) {
+        node.onChange = (value) => {
+          field.text = value;
+          if (field.label !== undefined) {
+            field.label = value;
+          }
+        };
+      }
+      if (node.children) {
+        node.children.forEach(walk);
+      }
+    };
+
+    walk(container);
   }
 
   addComponent(type) {

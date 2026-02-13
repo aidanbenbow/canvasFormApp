@@ -27,7 +27,7 @@ export class CaretController {
         const node = this.editor.activeNode;
         if (!node) return;
     
-        const text = node.value || "";
+        const text = typeof node.getValue === "function" ? node.getValue() : (node.value || "");
         let pos = this.caretIndex + offset;
         pos = Math.max(0, Math.min(pos, text.length));
     
@@ -60,7 +60,7 @@ export class CaretController {
     const node = this.editor.activeNode;
     if (!node) return;
 
-    const text = node.value || "";
+        const text = typeof node.getValue === "function" ? node.getValue() : (node.value || "");
     pos = Math.max(0, Math.min(pos, text.length));
     this.caretIndex = pos;
 
@@ -95,19 +95,28 @@ moveCaretToMousePosition(x, y, ctx) {
     getCaretIndexFromMousePosition(x, y, ctx) {
         const node = this.editor.activeNode;
         if (!node) return 0;
+        if (!node._layout || !Array.isArray(node._layout.lines) || node._layout.lines.length === 0) {
+            return 0;
+        }
 
         ctx.font = node.style.font;
         const { lines, lineHeight } = node._layout;
         const { bounds, style } = node;
 
         const textTop = getTextAreaTop(node);
+        const paddingY = style.paddingY || 0;
+        const paddingX = style.paddingX || 0;
 
         // Determine which line was clicked
-        let lineIndex = Math.floor((y - textTop - style.paddingY) / lineHeight);
+        const safeLineHeight = lineHeight || parseInt(node.style.font, 10) || 1;
+        let lineIndex = Math.floor((y - textTop - paddingY) / safeLineHeight);
         lineIndex = Math.max(0, Math.min(lineIndex, lines.length - 1));
 
         const line = lines[lineIndex];
-        const clickX = x - bounds.x - style.paddingX;
+        if (!line) {
+            return 0;
+        }
+        const clickX = x - bounds.x - paddingX;
 
         // Determine which character in the line is closest to clickX
         let closestIndex = line.startIndex;
@@ -130,7 +139,7 @@ moveCaretToMousePosition(x, y, ctx) {
         const node = this.editor.activeNode;
         if (!node) return;
 
-        const text = node.value || "";
+        const text = typeof node.getValue === "function" ? node.getValue() : (node.value || "");
         if (!text) return;
 
         let index = this.getCaretIndexFromMousePosition(x, y, ctx);
