@@ -11,6 +11,7 @@ export class SceneInputSystem {
       this._ignoreMouseUntil = 0;
       this._lastTouch = null;
       this._lastTouchMoveY = null;
+      this.touchScrollMultiplier = 1.6;
   
       this.hitTest = new SceneHitTestSystem();
       this.dispatcher = new SceneEventDispatcher();
@@ -66,7 +67,7 @@ export class SceneInputSystem {
       }
 
       if (type === "mousemove") {
-        const deltaY = this._lastTouchMoveY !== null ? this._lastTouchMoveY - touch.clientY : 0;
+        const deltaY = this._lastTouchMoveY !== null ? (this._lastTouchMoveY - touch.clientY) * this.touchScrollMultiplier : 0;
         this._lastTouchMoveY = touch.clientY;
 
         if (Math.abs(deltaY) > 0) {

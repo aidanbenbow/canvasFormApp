@@ -6,13 +6,16 @@ export class KeyboardNode extends ContainerNode {
 
       this.isUppercase = false;
       this.mode = "alpha";
+      this.hasClipboardBar = true;
       this.alphaLayout = [
+        ['Paste'],
         ['1','2','3','4','5','6','7','8','9','0'],
         ['q','w','e','r','t','y','u','i','o','p'],
         ['a','s','d','f','g','h','j','k','l','⇧'],
         ['SYM','z','x','c','v','b','n','m','←','↵','Space']
       ];
       this.punctLayout = [
+        ['Paste'],
         ['1','2','3','4','5','6','7','8','9','0'],
         ['!','@','#','$','%','^','&','*','(',')'],
         ['-','_','/',';',':','"','\'','?','.',','],
@@ -56,6 +59,7 @@ export class KeyboardNode extends ContainerNode {
     }
 
     getKeyWeight(key) {
+      if (key === "Paste") return 6;
       if (key === "Space") return 2.5;
       if (key === "↵") return 1.8;
       if (key === "SYM" || key === "ABC") return 1.4;

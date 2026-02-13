@@ -40,14 +40,19 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
             label: keyboard.getKeyLabel(baseKey),
             style: {
               radius: 10,
-              background: "rgba(247, 247, 247, 0.85)",
-              hoverBackground: "rgba(219, 234, 254, 0.9)",
-              pressedBackground: "rgba(191, 219, 254, 0.95)",
-              borderColor: "#cbd5e1",
+              background: "rgba(209, 213, 219, 0.95)",
+              hoverBackground: "rgba(191, 219, 254, 0.95)",
+              pressedBackground: "rgba(147, 197, 253, 0.98)",
+              borderColor: "#94a3b8",
               textColor: "#0f172a"
             },
             onClick: () => {
               const currentKey = entry.baseKey;
+
+              if (currentKey === 'Paste') {
+                context.textEditorController?.pasteFromClipboard?.();
+                return;
+              }
 
               if (currentKey === '⇧') {
                 keyboard.toggleCase();
