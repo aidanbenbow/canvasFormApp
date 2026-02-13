@@ -4,7 +4,7 @@ import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class ButtonNode extends SceneNode {
-    constructor({ id, label, onClick, style = {} }) {
+    constructor({ id, label, onClick, onPressStart, onPressEnd, style = {} }) {
       super({
         id,
         layoutStrategy: ButtonLayoutStrategy,
@@ -14,6 +14,8 @@ export class ButtonNode extends SceneNode {
   
       this.label = label;
       this.onClick = onClick;
+      this.onPressStart = onPressStart;
+      this.onPressEnd = onPressEnd;
   
       this.state = {
         hovered: false,
@@ -62,6 +64,7 @@ export class ButtonNode extends SceneNode {
       if (this.state.disabled) return;
       this.state.pressed = true;
       this.state.hovered = true;
+      this.onPressStart?.();
       this.invalidate();
     }
   
@@ -74,10 +77,18 @@ export class ButtonNode extends SceneNode {
       }
   
       this.state.pressed = false;
+      this.onPressEnd?.();
       if (!this.state.hovered) {
         this.invalidate();
         return;
       }
+      this.invalidate();
+    }
+
+    onPointerLeave() {
+      this.state.hovered = false;
+      this.state.pressed = false;
+      this.onPressEnd?.();
       this.invalidate();
     }
   }

@@ -7,6 +7,7 @@ export class KeyboardNode extends ContainerNode {
       this.isUppercase = false;
       this.mode = "alpha";
       this.hasClipboardBar = true;
+      this.shiftOnce = false;
       this.alphaLayout = [
         ['Paste'],
         ['1','2','3','4','5','6','7','8','9','0'],
