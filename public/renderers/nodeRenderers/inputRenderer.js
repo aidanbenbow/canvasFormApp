@@ -8,6 +8,11 @@ export const inputRenderer = {
         font,
         paddingX,
         paddingY,
+        wordCountEnabled,
+        wordCountFont,
+        wordCountColor,
+        wordCountSpacing,
+        wordCountMax,
         borderColor,
         focusBorderColor,
         textColor = "#111",
@@ -18,12 +23,31 @@ export const inputRenderer = {
 
       ctx.save();
   
+      const layout = node._layout || {};
+      const wcHeight = layout.wordCountHeight ?? 0;
+      const wcSpacing = layout.wordCountSpacing ?? 0;
+      const wcFontSize = layout.wordCountFontSize ?? (parseInt(wordCountFont || font, 10) || 0);
+      const boxY = y + (wcHeight > 0 ? wcHeight + wcSpacing : 0);
+      const boxHeight = height - (boxY - y);
+
+      // Word count (above input box)
+      if (wordCountEnabled) {
+        const rawText = (node.value || "").toString().trim();
+        const count = rawText ? rawText.split(/\s+/).length : 0;
+        const maxSuffix = typeof wordCountMax === "number" ? `/${wordCountMax}` : "";
+        ctx.font = wordCountFont || font;
+        ctx.fillStyle = wordCountColor || "#6b7280";
+        ctx.textBaseline = "top";
+        const wcY = y + Math.max(0, Math.floor((wcHeight - wcFontSize) / 2));
+        ctx.fillText(`Words: ${count}${maxSuffix}`, x + paddingX, wcY);
+      }
+
       // Border
       ctx.strokeStyle = focused ? focusBorderColor : borderColor;
       ctx.lineWidth = 1;
       ctx.fillStyle = "#fff"; // white background
-      ctx.fillRect(x, y, width, height);
-      ctx.strokeRect(x, y, width, height);
+      ctx.fillRect(x, boxY, width, boxHeight);
+      ctx.strokeRect(x, boxY, width, boxHeight);
   
       // Text
       ctx.font = font;
@@ -31,9 +55,9 @@ export const inputRenderer = {
       ctx.fillStyle = textColor;
   
       const textX = x + paddingX;
-      let textY = y + paddingY;
+      let textY = boxY + paddingY;
 
-     const { lines, lineHeight} = node._layout 
+         const { lines, lineHeight } = node._layout || { lines: [], lineHeight: 0 };
 
      for (const line of lines) {
       const isPlaceholder = !node.value && !focused;

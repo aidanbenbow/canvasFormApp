@@ -100,8 +100,10 @@ moveCaretToMousePosition(x, y, ctx) {
         const { lines, lineHeight } = node._layout;
         const { bounds, style } = node;
 
+        const textTop = getTextAreaTop(node);
+
         // Determine which line was clicked
-        let lineIndex = Math.floor((y - bounds.y - style.paddingY) / lineHeight);
+        let lineIndex = Math.floor((y - textTop - style.paddingY) / lineHeight);
         lineIndex = Math.max(0, Math.min(lineIndex, lines.length - 1));
 
         const line = lines[lineIndex];
@@ -186,7 +188,8 @@ moveCaretToMousePosition(x, y, ctx) {
         if (!node || !node._layout) return { x: 0, y: 0 };
 
         ctx.font = node.style.font;
-        const { x, y } = node.bounds;
+        const { x } = node.bounds;
+        const y = getTextAreaTop(node);
         const { lines, lineHeight } = node._layout;
 
         let caretLine = 0;
@@ -212,8 +215,9 @@ moveCaretToMousePosition(x, y, ctx) {
         const node = this.editor.activeNode;
         if (!node || !this.editor.blinkState) return;
         ctx.font = node.style.font;
-      
-        const { x, y } = node.bounds;
+
+        const { x } = node.bounds;
+        const y = getTextAreaTop(node);
         const { lines, lineHeight } = node._layout;
       
         let caretLine = 0;
@@ -245,7 +249,8 @@ moveCaretToMousePosition(x, y, ctx) {
         if (!node) return;
     
         ctx.font = node.style.font;
-        const { x, y } = node.bounds;
+        const { x } = node.bounds;
+        const y = getTextAreaTop(node);
         const { lines, lineHeight } = node._layout;
     
         if (this.selectionStart === this.selectionEnd) return;
@@ -281,6 +286,13 @@ moveCaretToMousePosition(x, y, ctx) {
    
 }
 
+function getTextAreaTop(node) {
+    const layout = node?._layout || {};
+    const wcHeight = layout.wordCountHeight ?? 0;
+    const wcSpacing = layout.wordCountSpacing ?? 0;
+    const offset = wcHeight > 0 ? wcHeight + wcSpacing : 0;
+    return (node?.bounds?.y ?? 0) + offset;
+}
 function isWhitespace(char) {
     return /\s/.test(char);
 }

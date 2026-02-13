@@ -22,6 +22,11 @@ export class InputNode extends SceneNode {
         font: "20px 'Segoe UI', Tahoma, sans-serif",
         paddingX: 8,
         paddingY: 6,
+        wordCountEnabled: true,
+        wordCountFont: "14px 'Segoe UI', Tahoma, sans-serif",
+        wordCountColor: "#6b7280",
+        wordCountSpacing: 6,
+        wordCountMax: null,
         borderColor: "#ccc",
         focusBorderColor: "#0078ff",
         textColor: "#1f2937",
@@ -36,6 +41,8 @@ export class InputNode extends SceneNode {
             font: "36px 'Segoe UI', Tahoma, sans-serif",
             paddingX: 20,
             paddingY: 18,
+            wordCountFont: "22px 'Segoe UI', Tahoma, sans-serif",
+            wordCountSpacing: 10,
             minHeight: 68,
             width: Math.min(820, Math.floor(window.innerWidth * 0.96))
           }
