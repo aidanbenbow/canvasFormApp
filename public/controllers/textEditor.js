@@ -25,6 +25,7 @@ export class TextEditorController {
        
         this.initCaretBlink();
         this.initClipboard();
+        this.initPastePrompt();
         this.initSelectionMenu();
       this.initPointerSelectionListeners();
        this.bindUIActions();
@@ -358,6 +359,78 @@ this.clipboardProxy.addEventListener("cut", (e) => {
       });
     }
 
+    initPastePrompt() {
+      this.pastePrompt = document.createElement("div");
+      Object.assign(this.pastePrompt.style, {
+        position: "fixed",
+        display: "none",
+        flexDirection: "column",
+        gap: "6px",
+        padding: "8px 10px",
+        background: "rgba(255, 255, 255, 0.95)",
+        border: "1px solid #d0d0d0",
+        borderRadius: "10px",
+        boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)",
+        zIndex: "10000",
+        left: "50%",
+        bottom: "240px",
+        transform: "translateX(-50%)",
+        fontFamily: "Segoe UI, Tahoma, sans-serif"
+      });
+
+      const label = document.createElement("div");
+      label.textContent = "Tap and hold to paste";
+      Object.assign(label.style, {
+        fontSize: "12px",
+        color: "#1f2937"
+      });
+
+      this.pastePromptInput = document.createElement("textarea");
+      Object.assign(this.pastePromptInput.style, {
+        width: "260px",
+        height: "44px",
+        resize: "none",
+        padding: "6px 8px",
+        borderRadius: "8px",
+        border: "1px solid #c7c7c7",
+        fontSize: "14px"
+      });
+
+      const commitPaste = () => {
+        if (!this.textModel) return;
+        const text = this.pastePromptInput.value;
+        if (!text) return;
+        this.textModel.replaceSelection(text);
+        this.pastePromptInput.value = "";
+        this.hidePastePrompt();
+        this.pipeline.invalidate();
+      };
+
+      this.pastePromptInput.addEventListener("paste", () => {
+        setTimeout(commitPaste, 0);
+      });
+
+      this.pastePromptInput.addEventListener("input", () => {
+        commitPaste();
+      });
+
+      this.pastePrompt.appendChild(label);
+      this.pastePrompt.appendChild(this.pastePromptInput);
+      document.body.appendChild(this.pastePrompt);
+    }
+
+    showPastePrompt() {
+      if (!this.pastePrompt || !this.pastePromptInput) return;
+      this.pastePrompt.style.display = "flex";
+      this.pastePromptInput.focus();
+    }
+
+    hidePastePrompt() {
+      if (!this.pastePrompt) return;
+      this.pastePrompt.style.display = "none";
+      this.pastePromptInput?.blur();
+    }
+
     initSelectionMenu() {
       this.selectionMenu = document.createElement("div");
       Object.assign(this.selectionMenu.style, {
@@ -497,6 +570,11 @@ this.clipboardProxy.addEventListener("cut", (e) => {
         } catch (err) {
           console.warn("Clipboard readText failed:", err);
         }
+      }
+
+      if (this.useVirtualKeyboard) {
+        this.showPastePrompt();
+        return;
       }
 
       if (!this.clipboardProxy) return;

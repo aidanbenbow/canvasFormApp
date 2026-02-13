@@ -12,8 +12,8 @@ export class SceneInputSystem {
       this._lastTouch = null;
       this._lastTouchMoveY = null;
       this.touchScrollMultiplier = 1.6;
-      this.touchScrollFriction = 0.92;
-      this.touchScrollMinVelocity = 0.02;
+      this.touchScrollFriction = 0.96;
+      this.touchScrollMinVelocity = 0.01;
       this._touchScrollTarget = null;
       this._touchVelocityY = 0;
       this._lastTouchMoveTime = 0;
