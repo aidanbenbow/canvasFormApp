@@ -220,6 +220,64 @@ async deleteFormData(id) {
 
     
       }
+
+      async updateProgressReport(reportId, updates = {}) {
+        if (!reportId) {
+          throw new Error("Missing reportId for progressreports update");
+        }
+
+        const cleaned = Object.entries(updates)
+          .filter(([, value]) => value !== null && value !== undefined)
+          .reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+          }, {});
+
+        if (Object.keys(cleaned).length === 0) {
+          throw new Error("No update fields provided for progressreports");
+        }
+
+        const lookup = await this.docClient.send(new QueryCommand({
+          TableName: 'progressreports',
+          KeyConditionExpression: '#id = :idVal',
+          ExpressionAttributeNames: {
+            '#id': 'id'
+          },
+          ExpressionAttributeValues: {
+            ':idVal': reportId
+          },
+          ScanIndexForward: false,
+          Limit: 1
+        }));
+
+        const item = lookup.Items?.[0];
+        if (!item) {
+          throw new Error(`No progressreports item found for id ${reportId}`);
+        }
+
+        const updateKeys = Object.keys(cleaned);
+        const updateExpr = updateKeys.map((key, index) => `#f${index} = :v${index}`).join(', ');
+        const names = updateKeys.reduce((acc, key, index) => {
+          acc[`#f${index}`] = key;
+          return acc;
+        }, {});
+        const values = updateKeys.reduce((acc, key, index) => {
+          acc[`:v${index}`] = cleaned[key];
+          return acc;
+        }, {});
+
+        const params = {
+          TableName: 'progressreports',
+          Key: { id: item.id, createdAt: item.createdAt },
+          UpdateExpression: `SET ${updateExpr}`,
+          ExpressionAttributeNames: names,
+          ExpressionAttributeValues: values,
+          ReturnValues: 'ALL_NEW'
+        };
+
+        const result = await this.docClient.send(new UpdateCommand(params));
+        return result.Attributes || result;
+      }
       
     async getAllFormResults(tableName = 'cscstudents') {
         try {

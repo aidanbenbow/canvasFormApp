@@ -23,6 +23,7 @@ this.context = context;
     this.menuNode = null; // reference to dropdown menu instance
 
     this.selectedIndex = -1;
+    this.selectedValue = null;
     this.onSelect = onSelect; // callback when selecting an option
 this.dropdownVisible = false;
     // default styling
@@ -59,6 +60,10 @@ this.dropdownVisible = false;
 
   }
   getValue() {
+    return this.selectedValue ?? (this.value || "");
+  }
+
+  getDisplayValue() {
     return this.value || "";
   }
   updateText(text, { openDropdown = true } = {}) {
@@ -148,7 +153,8 @@ this.dropdownVisible = false;
     const opt = this.filteredOptions[index];
     if (!opt) return;
 
-    this.value = opt.value;
+    this.value = opt.label ?? opt.value;
+    this.selectedValue = opt.value;
 
     this.emit("select", {
       value: opt.value,
@@ -200,7 +206,8 @@ this.dropdownVisible = false;
       context: this.context,
       options: this.filteredOptions,
       onSelect: (option, index) => {
-        this.value = option.value;
+        this.value = option.label ?? option.value;
+        this.selectedValue = option.value;
         this.selectedIndex = index;
         this.emit("select", {value:option.value,option, index, source: this});
         this.closeDropdown();

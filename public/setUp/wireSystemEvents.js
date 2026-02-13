@@ -11,6 +11,28 @@ import { ACTIONS } from "../events/actions.js";
 export function wireSystemEvents(system, context, store ={}, router, factories, commandRegistry) {
     const dispatcher = system.actionDispatcher;
     const bus = system.eventBusManager;
+    const toastLayer = context.uiServices?.toastLayer;
+
+    const showToast = (text) => {
+      if (!toastLayer) return;
+      const node = factories.basic.create({
+        type: 'text',
+        text,
+        id: `toast-${Date.now()}`,
+        style: {
+          font: "30px sans-serif",
+          color: "#ffffff",
+          backgroundColor: "#0b8f3a",
+          borderColor: "#06702c",
+          paddingX: 22,
+          paddingY: 14,
+          radius: 10,
+          align: "center",
+          shrinkToFit: true
+        }
+      });
+      toastLayer.showMessage(node, { timeoutMs: 2500 });
+    };
 
     dispatcher.on(ACTIONS.DASHBOARD.SHOW, (forms)=> {
        
@@ -85,7 +107,7 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
                 label: updatedForm.label,
                 user: updatedForm.user,
               });
-              context.overlayManager.showSuccess(`Form ${updatedForm.label} created successfully!`);
+              showToast(`Form ${updatedForm.label} created successfully!`);
         } });
       router.push(creator);
     }, 'wiring');
@@ -107,8 +129,8 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData}) => {
-            sendLog(`Form ${form.id} submitted with data: ${JSON.stringify(responseData)}`, responseData);
-        context.overlayManager.showSuccess(`Form ${form.label} submitted successfully!`);
+        sendLog(`Form ${form.id} submitted with data: ${JSON.stringify(responseData)}`, responseData);
+        showToast(`Form ${form.label} submitted successfully!`);
     }, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.DELETE, async (form) => {

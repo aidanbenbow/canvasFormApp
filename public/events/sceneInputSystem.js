@@ -10,6 +10,7 @@ export class SceneInputSystem {
 
       this._ignoreMouseUntil = 0;
       this._lastTouch = null;
+      this._lastTouchMoveY = null;
   
       this.hitTest = new SceneHitTestSystem();
       this.dispatcher = new SceneEventDispatcher();
@@ -49,6 +50,7 @@ export class SceneInputSystem {
       if (!touch) return;
 
       if (type === "mousedown") {
+        this._lastTouchMoveY = touch.clientY;
         const now = Date.now();
         const last = this._lastTouch;
         const dx = last ? Math.abs(touch.clientX - last.x) : 0;
@@ -60,6 +62,26 @@ export class SceneInputSystem {
         if (isDoubleTap) {
           this._handleFromClient("dblclick", touch.clientX, touch.clientY, e);
           return;
+        }
+      }
+
+      if (type === "mousemove") {
+        const deltaY = this._lastTouchMoveY !== null ? this._lastTouchMoveY - touch.clientY : 0;
+        this._lastTouchMoveY = touch.clientY;
+
+        if (Math.abs(deltaY) > 0) {
+          const scrollTarget = this._getScrollableTarget(touch.clientX, touch.clientY);
+          if (scrollTarget) {
+            const scrollEvent = new SceneEvent({
+              type: "wheel",
+              x: scrollTarget.x,
+              y: scrollTarget.y,
+              target: scrollTarget.target,
+              originalEvent: { deltaY }
+            });
+            this.dispatcher.dispatch(scrollEvent);
+            return;
+          }
         }
       }
 
@@ -88,6 +110,28 @@ export class SceneInputSystem {
       });
 
       this.dispatcher.dispatch(event);
+    }
+
+    _getScrollableTarget(clientX, clientY) {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+
+      const canvasX = (clientX - rect.left) * scaleX;
+      const canvasY = (clientY - rect.top) * scaleY;
+
+      const { x, y } = this.pipeline.toSceneCoords(canvasX, canvasY);
+      const root = this.pipeline.root;
+      let target = this.hitTest.hitTest(root, x, y, this.ctx);
+
+      while (target) {
+        if (target.scroll) {
+          return { target, x, y };
+        }
+        target = target.parent;
+      }
+
+      return null;
     }
     handlePointer(type, x, y) {
       const root = this.pipeline.root;

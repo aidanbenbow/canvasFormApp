@@ -72,10 +72,24 @@ io.on('connection', (socket) => {
     console.log('Received data:', data);
  
     try {
-      // Save to DB
-      const result = await db.saveMessage(
-        data.formId, data.user, data.responses
-      );
+      let result = null;
+      const tableName = data?.resultsTable;
+
+      if (tableName === 'progressreports') {
+        const fields = data?.fields || {};
+        const reportId = fields['input-name'] || fields.nameInput || fields.name;
+        const updates = {
+          message: fields.messageInput || fields.message || null,
+          report: fields.reportInput || fields.report || null
+        };
+
+        result = await db.updateProgressReport(reportId, updates);
+      } else {
+        const responses = data?.responses || data?.fields || {};
+        result = await db.saveMessage(
+          data.formId, data.user, responses
+        );
+      }
   
       socket.emit('messageResponse', { success: true, result });
 

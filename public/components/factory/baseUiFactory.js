@@ -107,7 +107,7 @@ export class BaseUIFactory {
 
   function collectInputValues(node, result = {}) {
     if (node instanceof InputNode) {
-      result[node.id] = node.value;
+      result[node.id] = typeof node.getValue === 'function' ? node.getValue() : node.value;
     }
   
     if (node.children) {

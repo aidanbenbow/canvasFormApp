@@ -57,7 +57,7 @@ export class InputNode extends SceneNode {
   
     onPointerDown(pointerX, pointerY) {
       console.log(`InputNode "${this.id}" focused`);
-      console.log(this.context)
+   
       this.context.focusManager.focus(this);
       const ctx = this.context.ctx;
       const editor = this.context.textEditorController;

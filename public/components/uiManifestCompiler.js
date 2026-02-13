@@ -63,6 +63,11 @@ function preprocessManifest(manifest, results) {
   walkDefs(clone, (def) => {
     if (def.type === "dropDown" && def.dataSource === "beneficiaries") {
       def.options = beneficiaries.map((b, index) => {
+        const idValue = firstNonEmpty(
+          pickField(b, ["id", "beneficiaryId", "messageId"]),
+          b?.id
+        );
+
         const label = firstNonEmpty(
           pickField(b, [
             "name",
@@ -81,7 +86,7 @@ function preprocessManifest(manifest, results) {
           b?.id,
           b?.value
         ) ?? `Option ${index + 1}`;
-        const value = firstNonEmpty(
+        const value = idValue ?? firstNonEmpty(
           pickField(b, ["name", "nameInput", "input-name", "input-nameInput"]),
           b?.name,
           b?.value,

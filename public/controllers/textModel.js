@@ -5,6 +5,9 @@ export class TextModel{
     getText() {
         const node = this.editor.activeNode;
         if (!node) return '';
+        if (typeof node.getDisplayValue === 'function') {
+          return node.getDisplayValue() || '';
+        }
         return node.getValue ? node.getValue() : node.value || '';
       }
     setText(newText){

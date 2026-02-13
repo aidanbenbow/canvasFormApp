@@ -52,8 +52,8 @@ export class TextEditorController {
     startEditing(box, field = 'text') {
         this.activeNode = box;
        
-       //Initialize the text model with the box’s current value
-  const initialValue = box.getValue?.() || '';
+       // Initialize the text model with the display value when available
+  const initialValue = box.getDisplayValue?.() ?? box.getValue?.() ?? '';
   this.textModel = new TextModel(this);     // re‑create or reset model
   this.textModel.setText(initialValue);     // ensure buffer is populated
 

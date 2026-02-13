@@ -95,6 +95,20 @@ const factories = {
 
 commandRegistry.register("form.submit", (payload) => {
   console.log("Form submitted with payload:", payload);
+  const activeForm = store.getActiveForm();
+  const responseData = {
+    formId: activeForm?.id,
+    user: activeForm?.user || "admin",
+    resultsTable: activeForm?.resultsTable || null,
+    fields: payload?.fields || {}
+  };
+
+  if (activeForm) {
+    system.actionDispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
+      form: activeForm,
+      responseData
+    });
+  }
  const submitNode = factories.basic.create({
   type: 'text',
   text: "Form submitted!",
@@ -161,17 +175,37 @@ for(const f of forms){
   const results = await fetchFormResults(f.id, tableName);
   console.log(`Fetched results for form ${f.id} from table ${tableName}:`, results);
 system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
-
-//context.overlayManager.showSuccess(`Loaded ${forms.length} forms from server.`);
 }
 system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
 
 }
 
 
+  const toastLayer = context.uiServices.toastLayer;
+  const showToast = (text, timeoutMs = 2500) => {
+    if (!toastLayer) return;
+    const node = factories.basic.create({
+      type: 'text',
+      text,
+      id: `toast-${Date.now()}`,
+      style: {
+        font: "30px sans-serif",
+        color: "#ffffff",
+        backgroundColor: "#0b8f3a",
+        borderColor: "#06702c",
+        paddingX: 22,
+        paddingY: 14,
+        radius: 10,
+        align: "center",
+        shrinkToFit: true
+      }
+    });
+    toastLayer.showMessage(node, { timeoutMs });
+  };
+
   system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);
-   context.overlayManager.showSuccess(text, position, duration);
+    showToast(text, duration);
   });
 
 

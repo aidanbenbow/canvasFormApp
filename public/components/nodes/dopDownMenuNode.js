@@ -67,8 +67,9 @@ export class DropdownMenuNode extends ContainerNode {
       selectOption(index) {
         const chosen = this.options[index];
         if (!chosen) return;
-    
-        this.anchor.value = chosen.value;
+
+        this.anchor.value = chosen.label ?? chosen.value;
+        this.anchor.selectedValue = chosen.value;
         this.onSelect?.(chosen, index);
     
         this.anchor.dropdownVisible = false;
