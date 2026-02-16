@@ -68,12 +68,16 @@ export class CreateForm extends BaseScreen {
     this.commandRegistry.register(this.addLabelCommand, () => this.addComponent('label'));
     this.commandRegistry.register(this.deleteFieldCommand, ({ fieldId } = {}) => this.deleteComponent(fieldId));
 
+    this.previewInsertionBeforeFieldId = null;
+    this.dragHandleNodes = new Map();
+
     this.reorderController = new FormReorderController({
       context: this.context,
       dragThreshold: 8,
       getRootNode: () => this.rootNode,
       resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
-      onReorder: (sourceFieldId, targetFieldId) => this.reorderField(sourceFieldId, targetFieldId)
+      onReorder: (sourceFieldId, targetFieldId) => this.reorderField(sourceFieldId, targetFieldId),
+      onPreviewTargetChange: (fieldId) => this.setPreviewInsertion(fieldId)
     });
   }
 
@@ -89,6 +93,8 @@ export class CreateForm extends BaseScreen {
     this.rootNode = rootNode;
     this.regions = regions;
     this.bindEditableNodes(this.regions?.formContainer);
+    this.cacheDragHandleNodes(this.regions?.formContainer);
+    this.applyPreviewToDragHandles();
     this.reorderController.attach();
 
     return rootNode;
@@ -138,9 +144,26 @@ export class CreateForm extends BaseScreen {
   }
 
   getDisplayFields() {
+    const smallScreen = isSmallScreen();
+
+    const deleteButtonStyle = smallScreen
+      ? {
+          font: '28px sans-serif',
+          minHeight: 52,
+          width: 52,
+          radius: 10
+        }
+      : {
+          font: '18px sans-serif',
+          minHeight: 24,
+          width: 24,
+          radius: 4
+        };
+
     const fields = this.form?.formStructure?.fields || [];
     return fields.flatMap((field) => {
       const def = structuredClone(field);
+      const nodes = [];
 
       if (def.type === 'text' && def.text == null) {
         def.text = def.label || 'Text';
@@ -152,25 +175,19 @@ export class CreateForm extends BaseScreen {
         delete def.command;
       }
 
+      if (this.mode === 'edit' && def.type === 'input') {
+        def.editable = false;
+      }
+
       if (def.type === 'text' || def.type === 'label') {
         def.editable = true;
       }
 
-      return [
+      nodes.push(
         {
           type: 'text',
           id: `drag-handle-${def.id}`,
-          text: '↕ Drag to reorder',
-          style: {
-            font: '18px sans-serif',
-            color: '#1f2937',
-            backgroundColor: '#e5e7eb',
-            borderColor: '#9ca3af',
-            align: 'center',
-            radius: 4,
-            paddingX: 10,
-            paddingY: 6
-          }
+          ...this.getDragHandlePresentation(def.id, { smallScreen })
         },
         def,
         {
@@ -180,24 +197,30 @@ export class CreateForm extends BaseScreen {
           action: this.deleteFieldCommand,
           payload: { fieldId: def.id },
           style: {
-            font: '18px sans-serif',
             textColor: '#ffffff',
             background: '#dc2626',
             hoverBackground: '#b91c1c',
             pressedBackground: '#991b1b',
             borderColor: '#7f1d1d',
             fillWidth: false,
-            minHeight: 24,
-            width: 24,
             paddingX: 0,
             paddingY: 0,
-            radius: 4
+            ...deleteButtonStyle
           },
           skipCollect: true,
           skipClear: true
         }
-      ];
+      );
+
+      return nodes;
     });
+  }
+
+  setPreviewInsertion(fieldId) {
+    const nextValue = fieldId ?? null;
+    if (this.previewInsertionBeforeFieldId === nextValue) return;
+    this.previewInsertionBeforeFieldId = nextValue;
+    this.applyPreviewToDragHandles();
   }
 
   refreshFormContainer() {
@@ -205,7 +228,82 @@ export class CreateForm extends BaseScreen {
     const nodes = this.getDisplayFields().map((def) => this.factories.basic.create(def));
     this.regions.formContainer.setChildren(nodes);
     this.bindEditableNodes(this.regions.formContainer);
+    this.cacheDragHandleNodes(this.regions.formContainer);
+    this.applyPreviewToDragHandles();
     this.rootNode.invalidate();
+  }
+
+  getDragHandlePresentation(fieldId, { smallScreen }) {
+    const isPreviewTarget = this.previewInsertionBeforeFieldId === fieldId;
+    if (isPreviewTarget) {
+      return {
+        text: '',
+        style: {
+          color: '#0078ff',
+          backgroundColor: '#0078ff',
+          borderColor: '#005fcc',
+          align: 'center',
+          font: smallScreen ? '14px sans-serif' : '8px sans-serif',
+          radius: smallScreen ? 10 : 6,
+          paddingX: 0,
+          paddingY: 0
+        }
+      };
+    }
+
+    return {
+      text: '↕ Drag to reorder',
+      style: {
+        color: '#1f2937',
+        backgroundColor: '#e5e7eb',
+        borderColor: '#9ca3af',
+        align: 'center',
+        ...(smallScreen
+          ? {
+              font: '30px sans-serif',
+              paddingX: 18,
+              paddingY: 14,
+              radius: 8
+            }
+          : {
+              font: '18px sans-serif',
+              paddingX: 10,
+              paddingY: 6,
+              radius: 4
+            })
+      }
+    };
+  }
+
+  cacheDragHandleNodes(container) {
+    this.dragHandleNodes = new Map();
+    if (!container) return;
+
+    const walk = (node) => {
+      if (!node) return;
+      if (typeof node.id === 'string' && node.id.startsWith('drag-handle-')) {
+        const fieldId = node.id.slice('drag-handle-'.length);
+        this.dragHandleNodes.set(fieldId, node);
+      }
+      if (Array.isArray(node.children)) {
+        node.children.forEach(walk);
+      }
+    };
+
+    walk(container);
+  }
+
+  applyPreviewToDragHandles() {
+    if (!this.dragHandleNodes?.size) return;
+    const smallScreen = isSmallScreen();
+
+    for (const [fieldId, node] of this.dragHandleNodes.entries()) {
+      const presentation = this.getDragHandlePresentation(fieldId, { smallScreen });
+      node.text = presentation.text;
+      node.style = { ...presentation.style };
+    }
+
+    this.rootNode?.invalidate();
   }
 
   resolveFieldIdFromNode(node, { allowDeleteNode = false, allowHandleNode = true } = {}) {
@@ -248,6 +346,7 @@ export class CreateForm extends BaseScreen {
     const [movedField] = fields.splice(sourceIndex, 1);
     fields.splice(targetIndex, 0, movedField);
     this.form.formStructure.fields = fields;
+    this.previewInsertionBeforeFieldId = null;
     this.refreshFormContainer();
   }
 
@@ -304,6 +403,11 @@ export class CreateForm extends BaseScreen {
   }
 
   onExit() {
+    this.previewInsertionBeforeFieldId = null;
     this.reorderController.detach();
   }
+}
+
+function isSmallScreen() {
+  return typeof window !== 'undefined' && window.innerWidth < 1024;
 }

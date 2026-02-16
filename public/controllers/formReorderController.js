@@ -1,11 +1,12 @@
 import { SceneHitTestSystem } from '../events/sceneHitTestSystem.js';
 
 export class FormReorderController {
-  constructor({ context, getRootNode, resolveFieldIdFromNode, onReorder, dragThreshold = 8 }) {
+  constructor({ context, getRootNode, resolveFieldIdFromNode, onReorder, onPreviewTargetChange, dragThreshold = 8 }) {
     this.context = context;
     this.getRootNode = getRootNode;
     this.resolveFieldIdFromNode = resolveFieldIdFromNode;
     this.onReorder = onReorder;
+    this.onPreviewTargetChange = onPreviewTargetChange;
     this.dragThreshold = dragThreshold;
 
     this.hitTestSystem = new SceneHitTestSystem();
@@ -105,6 +106,10 @@ export class FormReorderController {
     };
   }
 
+  updatePreviewTarget(fieldId) {
+    this.onPreviewTargetChange?.(fieldId ?? null);
+  }
+
   handlePointerDown(event) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
@@ -139,6 +144,8 @@ export class FormReorderController {
     }
 
     if (this.state.active) {
+      const previewFieldId = this.getFieldIdAtClientPosition(event.clientX, event.clientY);
+      this.updatePreviewTarget(previewFieldId);
       event.preventDefault();
     }
   }
@@ -159,12 +166,15 @@ export class FormReorderController {
       event.preventDefault();
     }
 
+    this.updatePreviewTarget(null);
+
     this.detachDragListeners();
     this.resetState();
   }
 
   handlePointerCancel(event) {
     if (this.state.pointerId !== null && event.pointerId !== this.state.pointerId) return;
+    this.updatePreviewTarget(null);
     this.detachDragListeners();
     this.resetState();
   }

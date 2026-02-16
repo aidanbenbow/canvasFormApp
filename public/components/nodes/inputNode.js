@@ -5,7 +5,7 @@ import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class InputNode extends SceneNode {
-    constructor({ id, value = "", placeholder = "", onChange, style = {} }) {
+    constructor({ id, value = "", placeholder = "", onChange, editable = true, style = {} }) {
       super({
         id,
         layoutStrategy: layoutRegistry["input"]() || new InputLayoutStrategy(),
@@ -16,6 +16,7 @@ export class InputNode extends SceneNode {
       this.value = value;
       this.placeholder = placeholder;
       this.onChange = onChange;
+      this.editable = editable;
       this.cursorPos = value.length
   
       const baseStyle = {
@@ -56,6 +57,7 @@ export class InputNode extends SceneNode {
     }
   
     onPointerDown(pointerX, pointerY) {
+      if (!this.editable) return;
       console.log(`InputNode "${this.id}" focused`);
    
       this.context.focusManager.focus(this);
@@ -70,11 +72,13 @@ export class InputNode extends SceneNode {
     }
 
     onPointerUp(pointerX, pointerY) {
+      if (!this.editable) return;
       const editor = this.context.textEditorController;
       editor?.endPointerSelection?.({ x: pointerX, y: pointerY });
     }
 
     onEvent(event) {
+      if (!this.editable) return false;
       if (event.type === "mousemove") {
         const editor = this.context.textEditorController;
         if (editor?.selectionDragActive && editor.activeNode === this) {
@@ -86,6 +90,7 @@ export class InputNode extends SceneNode {
     }
 
     onPointerDoubleClick(pointerX, pointerY) {
+      if (!this.editable) return;
       this.context.focusManager.focus(this);
       const ctx = this.context.ctx;
       this.context.textEditorController.caretController.selectWordAtMousePosition(pointerX, pointerY, ctx);
