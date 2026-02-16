@@ -173,7 +173,7 @@ else{
 for(const f of forms){
   const tableName = (f.resultsTable || 'faithandbelief').trim();
   const results = await fetchFormResults(f.id, tableName);
-  console.log(`Fetched results for form ${f.id} from table ${tableName}:`, results);
+  
 system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
 }
 system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');

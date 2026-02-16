@@ -34,11 +34,14 @@ export class VerticalLayoutStrategy {
 
     for (const child of container.children) {
       const { height } = child.measured;
+      const childMeasuredWidth = child.measured?.width ?? availableWidth;
+      const shouldFillWidth = child.style?.fillWidth !== false;
+      const childWidth = shouldFillWidth ? availableWidth : Math.min(childMeasuredWidth, availableWidth);
   
       child.layout({
         x: bounds.x + this.padding,
         y,
-        width: availableWidth,
+        width: childWidth,
         height
       }, ctx);
   

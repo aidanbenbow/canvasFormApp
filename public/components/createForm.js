@@ -1,4 +1,5 @@
 import { ACTIONS } from '../events/actions.js';
+import { FormReorderController } from '../controllers/formReorderController.js';
 import { normalizeForm } from '../plugins/formManifests.js';
 import { BaseScreen } from './baseScreen.js';
 import { compileUIManifest } from './uiManifestCompiler.js';
@@ -59,11 +60,21 @@ export class CreateForm extends BaseScreen {
     this.addTextCommand = `${this.id}.addText`;
     this.addInputCommand = `${this.id}.addInput`;
     this.addLabelCommand = `${this.id}.addLabel`;
+    this.deleteFieldCommand = `${this.id}.deleteField`;
 
     this.commandRegistry.register(this.saveCommand, () => this.handleSubmit());
     this.commandRegistry.register(this.addTextCommand, () => this.addComponent('text'));
     this.commandRegistry.register(this.addInputCommand, () => this.addComponent('input'));
     this.commandRegistry.register(this.addLabelCommand, () => this.addComponent('label'));
+    this.commandRegistry.register(this.deleteFieldCommand, ({ fieldId } = {}) => this.deleteComponent(fieldId));
+
+    this.reorderController = new FormReorderController({
+      context: this.context,
+      dragThreshold: 8,
+      getRootNode: () => this.rootNode,
+      resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
+      onReorder: (sourceFieldId, targetFieldId) => this.reorderField(sourceFieldId, targetFieldId)
+    });
   }
 
   createRoot() {
@@ -78,6 +89,7 @@ export class CreateForm extends BaseScreen {
     this.rootNode = rootNode;
     this.regions = regions;
     this.bindEditableNodes(this.regions?.formContainer);
+    this.reorderController.attach();
 
     return rootNode;
   }
@@ -127,7 +139,7 @@ export class CreateForm extends BaseScreen {
 
   getDisplayFields() {
     const fields = this.form?.formStructure?.fields || [];
-    return fields.map((field) => {
+    return fields.flatMap((field) => {
       const def = structuredClone(field);
 
       if (def.type === 'text' && def.text == null) {
@@ -144,7 +156,47 @@ export class CreateForm extends BaseScreen {
         def.editable = true;
       }
 
-      return def;
+      return [
+        {
+          type: 'text',
+          id: `drag-handle-${def.id}`,
+          text: '↕ Drag to reorder',
+          style: {
+            font: '18px sans-serif',
+            color: '#1f2937',
+            backgroundColor: '#e5e7eb',
+            borderColor: '#9ca3af',
+            align: 'center',
+            radius: 4,
+            paddingX: 10,
+            paddingY: 6
+          }
+        },
+        def,
+        {
+          type: 'button',
+          id: `delete-${def.id}`,
+          label: '✖',
+          action: this.deleteFieldCommand,
+          payload: { fieldId: def.id },
+          style: {
+            font: '18px sans-serif',
+            textColor: '#ffffff',
+            background: '#dc2626',
+            hoverBackground: '#b91c1c',
+            pressedBackground: '#991b1b',
+            borderColor: '#7f1d1d',
+            fillWidth: false,
+            minHeight: 24,
+            width: 24,
+            paddingX: 0,
+            paddingY: 0,
+            radius: 4
+          },
+          skipCollect: true,
+          skipClear: true
+        }
+      ];
     });
   }
 
@@ -154,6 +206,49 @@ export class CreateForm extends BaseScreen {
     this.regions.formContainer.setChildren(nodes);
     this.bindEditableNodes(this.regions.formContainer);
     this.rootNode.invalidate();
+  }
+
+  resolveFieldIdFromNode(node, { allowDeleteNode = false, allowHandleNode = true } = {}) {
+    const fieldIds = new Set((this.form?.formStructure?.fields || []).map((field) => field.id));
+    let current = node;
+
+    while (current) {
+      const id = current.id;
+      if (allowDeleteNode && typeof id === 'string' && id.startsWith('delete-')) {
+        const parsed = id.slice('delete-'.length);
+        if (fieldIds.has(parsed)) return parsed;
+      }
+
+      if (allowHandleNode && typeof id === 'string' && id.startsWith('drag-handle-')) {
+        const parsed = id.slice('drag-handle-'.length);
+        if (fieldIds.has(parsed)) return parsed;
+      }
+
+      if (fieldIds.has(id)) {
+        return id;
+      }
+
+      current = current.parent;
+    }
+
+    return null;
+  }
+
+  reorderField(sourceFieldId, targetFieldId) {
+    if (!sourceFieldId || !targetFieldId || sourceFieldId === targetFieldId) return;
+
+    const fields = Array.isArray(this.form?.formStructure?.fields)
+      ? [...this.form.formStructure.fields]
+      : [];
+
+    const sourceIndex = fields.findIndex((field) => field.id === sourceFieldId);
+    const targetIndex = fields.findIndex((field) => field.id === targetFieldId);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const [movedField] = fields.splice(sourceIndex, 1);
+    fields.splice(targetIndex, 0, movedField);
+    this.form.formStructure.fields = fields;
+    this.refreshFormContainer();
   }
 
   bindEditableNodes(container) {
@@ -194,6 +289,7 @@ export class CreateForm extends BaseScreen {
     this.refreshFormContainer();
   }
   deleteComponent(fieldId) {
+    if (!fieldId) return;
     this.form.formStructure.fields = this.form.formStructure.fields.filter(field => field.id !== fieldId);
     this.refreshFormContainer();
   }
@@ -205,5 +301,9 @@ export class CreateForm extends BaseScreen {
       ACTIONS.FORM.ADD,
       normalizedForm
     );
+  }
+
+  onExit() {
+    this.reorderController.detach();
   }
 }
