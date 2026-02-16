@@ -4,6 +4,7 @@ import { ContainerNode } from "../nodes/containerNode.js";
 import { DropdownInputNode } from "../nodes/dropDownNode.js";
 import { InputNode } from "../nodes/inputNode.js";
 import { LabelNode } from "../nodes/labelNode.js";
+import { PhotoNode } from "../nodes/photoNode.js";
 import { ScrollNode } from "../nodes/scrollNode.js";
 import { TextNode } from "../nodes/textNode.js";
 
@@ -80,6 +81,20 @@ export class BaseUIFactory {
     context.fieldRegistry.set(def.id, node);
     return node;
 
+    },
+    photo: (def) => {
+      const { context } = def;
+
+      if (def.src) {
+        return new PhotoNode(def);
+      }
+
+      const node = new InputNode({
+        ...def,
+        placeholder: def.placeholder || 'Enter photo URL...'
+      });
+      context.fieldRegistry.set(def.id, node);
+      return node;
     },
     container: (def) => new ScrollNode(def),
     fieldContainer: (def) => new ContainerNode(def),

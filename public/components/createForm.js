@@ -60,12 +60,14 @@ export class CreateForm extends BaseScreen {
     this.addTextCommand = `${this.id}.addText`;
     this.addInputCommand = `${this.id}.addInput`;
     this.addLabelCommand = `${this.id}.addLabel`;
+    this.addPhotoCommand = `${this.id}.addPhoto`;
     this.deleteFieldCommand = `${this.id}.deleteField`;
 
     this.commandRegistry.register(this.saveCommand, () => this.handleSubmit());
     this.commandRegistry.register(this.addTextCommand, () => this.addComponent('text'));
     this.commandRegistry.register(this.addInputCommand, () => this.addComponent('input'));
     this.commandRegistry.register(this.addLabelCommand, () => this.addComponent('label'));
+    this.commandRegistry.register(this.addPhotoCommand, () => this.addComponent('photo'));
     this.commandRegistry.register(this.deleteFieldCommand, ({ fieldId } = {}) => this.deleteComponent(fieldId));
 
     this.previewInsertionBeforeFieldId = null;
@@ -136,6 +138,14 @@ export class CreateForm extends BaseScreen {
         action: this.addInputCommand,
         skipCollect: true,
         skipClear: true
+      },
+      {
+        type: 'button',
+        id: 'addPhoto',
+        label: 'Add Photo',
+        action: this.addPhotoCommand,
+        skipCollect: true,
+        skipClear: true
       }
     ];
 
@@ -175,7 +185,7 @@ export class CreateForm extends BaseScreen {
         delete def.command;
       }
 
-      if (this.mode === 'edit' && def.type === 'input') {
+      if (this.mode === 'edit' && (def.type === 'input' || def.type === 'photo')) {
         def.editable = false;
       }
 
@@ -378,8 +388,17 @@ export class CreateForm extends BaseScreen {
     const newField = {
       id: `${type}-${Date.now()}`,
       type,
-      label: type === 'text' ? 'New Title' : type === 'label' ? 'New Label' : type === 'input' ? 'New Input' : 'submit',
-      placeholder: type === 'input' ? 'Enter text here...' : undefined,
+      label:
+        type === 'text'
+          ? 'New Title'
+          : type === 'label'
+            ? 'New Label'
+            : type === 'input'
+              ? 'New Input'
+              : type === 'photo'
+                ? 'Photo URL'
+                : 'submit',
+      placeholder: type === 'input' || type === 'photo' ? 'Enter text here...' : undefined,
     };
     if (type === 'label') {
       newField.text = newField.label;

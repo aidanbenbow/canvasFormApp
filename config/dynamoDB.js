@@ -106,7 +106,7 @@ async getFormDataById(id) {
       try {
         const normalizedFields = fields && typeof fields === 'object' ? fields : {};
         const inputDefs = Array.isArray(formFields)
-          ? formFields.filter((field) => field?.type === 'input')
+          ? formFields.filter((field) => field?.type === 'input' || field?.type === 'photo')
           : [];
 
         const firstInputValue = firstNonEmpty(
@@ -118,6 +118,7 @@ async getFormDataById(id) {
 
         const titledInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(title|headline|subject)/i);
         const articleInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(article|content|body|message|report|text)/i);
+        const photoInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(photo|image|img|picture|thumbnail)/i);
 
         const title = firstNonEmpty(
           normalizedFields.title,
@@ -159,12 +160,22 @@ async getFormDataById(id) {
 
         const slugBase = slugify(firstNonEmpty(title, formLabel, 'blog-article'));
         const userId = slugBase || `blog-article-${Date.now()}`;
+        const photo = firstNonEmpty(
+          normalizedFields.photo,
+          normalizedFields.image,
+          normalizedFields.imageUrl,
+          normalizedFields.photoUrl,
+          normalizedFields.photoSrc,
+          photoInputValue
+        );
+        const normalizedPhoto = normalizePhotoSource(photo);
 
         const item = {
           userId,
           title,
           article: articleText,
-          style: { color }
+          style: { color },
+          ...(normalizedPhoto ? { photo: normalizedPhoto } : {})
         };
 
         const params = {
@@ -413,6 +424,29 @@ function slugify(value) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 120);
+}
+
+function normalizePhotoSource(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  if (/^https?:\/\//i.test(raw)) {
+    return raw;
+  }
+
+  if (raw.toLowerCase().startsWith('s3://')) {
+    const withoutScheme = raw.slice(5);
+    const slashIndex = withoutScheme.indexOf('/');
+    if (slashIndex === -1) return '';
+
+    const bucket = withoutScheme.slice(0, slashIndex);
+    const key = withoutScheme.slice(slashIndex + 1);
+    if (!bucket || !key) return '';
+
+    return `https://${bucket}.s3.eu-north-1.amazonaws.com/${encodeURI(key)}`;
+  }
+
+  return raw;
 }
 
 export default new DynamoDB();

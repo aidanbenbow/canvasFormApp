@@ -35,14 +35,36 @@ export class articleViewScreen extends BaseScreen{
     }
     createManifest(){
         const runs = buildArticleRuns(this.article);
-        this.manifest.regions.formContainer.children = [
-            {
-              type: "text",
-              id: "article",
-              runs,
-              style: { color: this.article.style?.color }
-            },
-        ];
+                const children = [];
+
+                const photoSrc =
+                    this.article?.photo ||
+                    this.article?.image ||
+                    this.article?.imageUrl ||
+                    this.article?.photoUrl ||
+                    null;
+
+                if (photoSrc) {
+                    children.push({
+                        type: 'photo',
+                        id: 'article-photo',
+                        src: photoSrc,
+                        style: {
+                            width: isSmallScreen() ? 900 : 860,
+                            height: isSmallScreen() ? 420 : 320,
+                            radius: 10
+                        }
+                    });
+                }
+
+                children.push({
+                    type: "text",
+                    id: "article",
+                    runs,
+                    style: { color: this.article.style?.color }
+                });
+
+                this.manifest.regions.formContainer.children = children;
     }
     createRoot(){
          const { rootNode, regions } = compileUIManifest(
@@ -186,4 +208,8 @@ function parseMarkdownToRuns(text, { titleFont, headingFont, bodyFont, boldFont,
     });
 
     return runs;
+}
+
+function isSmallScreen() {
+    return typeof window !== 'undefined' && window.innerWidth < 1024;
 }
