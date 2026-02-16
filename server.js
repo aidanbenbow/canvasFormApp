@@ -74,16 +74,33 @@ io.on('connection', (socket) => {
     try {
       let result = null;
       const tableName = data?.resultsTable;
+      const isBlogSubmit =
+        (typeof tableName === 'string' && tableName.trim().toLowerCase() === 'dorcasusers') ||
+        (typeof data?.formLabel === 'string' && data.formLabel.trim().toLowerCase() === 'blog');
 
       if (tableName === 'progressreports') {
-        const fields = data?.fields || {};
+        const fields = { ...(data?.fields || {}) };
+        delete fields.done;
         const reportId = fields['input-name'] || fields.nameInput || fields.name;
+        const parsedMessageYear = Number(
+          data?.messageYear ?? fields.messageYear ?? fields.message_year ?? fields['message-year']
+        );
+        const messageYear = Number.isFinite(parsedMessageYear) ? parsedMessageYear : undefined;
         const updates = {
           message: fields.messageInput || fields.message || null,
-          report: fields.reportInput || fields.report || null
+          report: fields.reportInput || fields.report || null,
+          messageYear
         };
 
         result = await db.updateProgressReport(reportId, updates);
+      } else if (isBlogSubmit) {
+        result = await db.createDorcasArticle({
+          formId: data?.formId,
+          user: data?.user,
+          formLabel: data?.formLabel,
+          formFields: data?.formFields,
+          fields: data?.fields
+        });
       } else {
         const responses = data?.responses || data?.fields || {};
         result = await db.saveMessage(

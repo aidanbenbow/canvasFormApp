@@ -12,6 +12,8 @@ style: {
   regions: {
     formContainer: {
       type: "container",
+      scrollable: true,
+      viewport: 600,
       style: {
         background: "#f9f9f9",
       },
@@ -30,7 +32,8 @@ export class FormViewScreen extends BaseScreen {
     this.children = this.store.getActiveForm()?.formStructure || {};
     this.childArray = Object.values(this.children);
 
-    this.manifest = formViewUIManifest;
+    this.manifest = structuredClone(formViewUIManifest);
+    this.manifest.regions.formContainer.viewport = this.getResponsiveViewport();
     this.createManfest();
     this.factories = factories;
     this.commandRegistry = commandRegistry;
@@ -38,12 +41,25 @@ export class FormViewScreen extends BaseScreen {
     this.results = results ?? (this.formId ? this.store.getFormResults(this.formId) : []);
   }
   createManfest() {
-        for(let child of this.childArray){
-            this.manifest.regions.formContainer.children.push(...child);
+        const normalizedChildren = [];
+        for (const child of this.childArray) {
+          for (const field of child) {
+            if (field?.type === 'button' && !field.action && !field.command) {
+              normalizedChildren.push({
+                ...field,
+                action: 'form.submit'
+              });
+            } else {
+              normalizedChildren.push(field);
+            }
+          }
         }
+
+        this.manifest.regions.formContainer.children = normalizedChildren;
        
   }
   createRoot() {
+    this.manifest.regions.formContainer.viewport = this.getResponsiveViewport();
     const effectiveResults = this.results ?? (this.formId ? this.store.getFormResults(this.formId) : []);
     const { rootNode, regions } = compileUIManifest(
       this.manifest,
@@ -61,6 +77,21 @@ export class FormViewScreen extends BaseScreen {
     this.updateDeFacut()
 
     return rootNode;
+  }
+
+  getResponsiveViewport() {
+    if (typeof window === 'undefined') return 600;
+
+    const screenHeight = window.innerHeight || 800;
+    if (screenHeight < 700) {
+      return Math.max(360, Math.floor(screenHeight * 0.62));
+    }
+
+    if (screenHeight < 1000) {
+      return Math.max(460, Math.floor(screenHeight * 0.7));
+    }
+
+    return Math.max(560, Math.floor(screenHeight * 0.76));
   }
   updateDeFacut() {
     const remaining = (this.results || []).filter(r => r.done !== true).length;

@@ -116,7 +116,8 @@ moveCaretToMousePosition(x, y, ctx) {
         if (!line) {
             return 0;
         }
-        const clickX = x - bounds.x - paddingX;
+        const lineStartX = getLineStartX(node, line, ctx);
+        const clickX = x - lineStartX;
 
         // Determine which character in the line is closest to clickX
         let closestIndex = line.startIndex;
@@ -197,7 +198,6 @@ moveCaretToMousePosition(x, y, ctx) {
         if (!node || !node._layout) return { x: 0, y: 0 };
 
         ctx.font = node.style.font;
-        const { x } = node.bounds;
         const y = getTextAreaTop(node);
         const { lines, lineHeight } = node._layout;
 
@@ -213,8 +213,9 @@ moveCaretToMousePosition(x, y, ctx) {
             }
         }
 
-        const lineText = lines[caretLine].text.slice(0, caretOffset);
-        const caretX = x + node.style.paddingX + ctx.measureText(lineText).width;
+        const line = lines[caretLine] || { text: "" };
+        const lineText = line.text.slice(0, caretOffset);
+        const caretX = getLineStartX(node, line, ctx) + ctx.measureText(lineText).width;
         const caretY = y + node.style.paddingY + caretLine * lineHeight;
 
         return { x: caretX, y: caretY };
@@ -225,7 +226,6 @@ moveCaretToMousePosition(x, y, ctx) {
         if (!node || !this.editor.blinkState) return;
         ctx.font = node.style.font;
 
-        const { x } = node.bounds;
         const y = getTextAreaTop(node);
         const { lines, lineHeight } = node._layout;
       
@@ -241,9 +241,10 @@ moveCaretToMousePosition(x, y, ctx) {
           }
       }
       
-      const lineText = lines[caretLine].text.slice(0, caretOffset);
+            const line = lines[caretLine] || { text: "" };
+            const lineText = line.text.slice(0, caretOffset);
 
-        const caretX = x + node.style.paddingX + ctx.measureText(lineText).width;
+                const caretX = getLineStartX(node, line, ctx) + ctx.measureText(lineText).width;
         const caretY = y + node.style.paddingY + caretLine * lineHeight;
        
         ctx.strokeStyle = "#000";
@@ -258,7 +259,6 @@ moveCaretToMousePosition(x, y, ctx) {
         if (!node) return;
     
         ctx.font = node.style.font;
-        const { x } = node.bounds;
         const y = getTextAreaTop(node);
         const { lines, lineHeight } = node._layout;
     
@@ -278,7 +278,8 @@ moveCaretToMousePosition(x, y, ctx) {
                 const before = line.text.slice(0, relStart);
                 const selected = line.text.slice(relStart, relEnd);
     
-                const selX = x + node.style.paddingX + ctx.measureText(before).width;
+                const lineStartX = getLineStartX(node, line, ctx);
+                const selX = lineStartX + ctx.measureText(before).width;
                 const selY = y + node.style.paddingY + lineIndex * lineHeight;
                 const selWidth = ctx.measureText(selected).width;
     
@@ -300,8 +301,40 @@ function getTextAreaTop(node) {
     const wcHeight = layout.wordCountHeight ?? 0;
     const wcSpacing = layout.wordCountSpacing ?? 0;
     const offset = wcHeight > 0 ? wcHeight + wcSpacing : 0;
-    return (node?.bounds?.y ?? 0) + offset;
+        return getRenderedNodeY(node) + offset;
 }
+
+function getRenderedNodeY(node) {
+        let y = node?.bounds?.y ?? 0;
+        let current = node?.parent;
+        while (current) {
+            if (current.scroll) {
+                y -= current.scroll.offsetY || 0;
+            }
+            current = current.parent;
+        }
+        return y;
+}
+
+function getLineStartX(node, line, ctx) {
+        const boundsX = node?.bounds?.x ?? 0;
+        const boundsWidth = node?.bounds?.width ?? 0;
+        const paddingX = node?.style?.paddingX || 0;
+        const align = node?.style?.align || "left";
+        const lineText = typeof line?.text === "string" ? line.text : "";
+        const lineWidth = ctx.measureText(lineText).width;
+
+        if (align === "center") {
+            return boundsX + (boundsWidth - lineWidth) / 2;
+        }
+
+        if (align === "right") {
+            return boundsX + boundsWidth - paddingX - lineWidth;
+        }
+
+        return boundsX + paddingX;
+}
+
 function isWhitespace(char) {
     return /\s/.test(char);
 }

@@ -28,7 +28,7 @@ export class articleViewScreen extends BaseScreen{
         this.context = context;
         this.store = store;
         this.article = article;
-        this.manifest = articleManifest;
+        this.manifest = structuredClone(articleManifest);
         this.factories = factories;
         this.commandRegistry = commandRegistry;
         this.createManifest();
@@ -69,8 +69,15 @@ export class articleViewScreen extends BaseScreen{
 }
 
 function buildArticleRuns(article) {
-    if (Array.isArray(article?.runs) && article.runs.length > 0) {
-        return article.runs;
+    const defaultBodyColor = article?.style?.color || "#111827";
+    const defaultBodyFont = "24px 'Segoe UI'";
+    const normalizedRuns = normalizeArticleRuns(article?.runs, {
+        font: defaultBodyFont,
+        color: defaultBodyColor
+    });
+
+    if (normalizedRuns.length > 0) {
+        return normalizedRuns;
     }
 
     const title = article?.title ? `${article.title}\n` : "";
@@ -101,6 +108,27 @@ function buildArticleRuns(article) {
     }
 
     return runs;
+}
+
+function normalizeArticleRuns(runs, defaults) {
+    if (!Array.isArray(runs)) return [];
+
+    const normalized = runs
+        .map((run) => {
+            if (!run || run.text === undefined || run.text === null) return null;
+
+            const text = String(run.text);
+            if (!text.length) return null;
+
+            return {
+                text,
+                font: run.font || defaults.font,
+                color: run.color || defaults.color
+            };
+        })
+        .filter(Boolean);
+
+    return normalized;
 }
 
 function parseBoldMarkdownToRuns(text, { font, boldFont, color }) {

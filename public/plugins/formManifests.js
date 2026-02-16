@@ -12,7 +12,15 @@ export const pluginRegistry = {
   };
 
   export function normalizeForm(form) {
-    const fields = form.fields || form.formStructure?.fields || [];
+    const fields = (form.fields || form.formStructure?.fields || []).map((field) => {
+      if (field?.type === 'button' && !field.action && !field.command) {
+        return {
+          ...field,
+          action: 'form.submit'
+        };
+      }
+      return field;
+    });
     return {
       id: form.id || `form-${Date.now()}`,
       label: fields[0].label || 'Untitled Form',

@@ -39,6 +39,26 @@ export class KeyBoardInputController {
     handleKeyDown(event) {
         if (!this.editor.activeNode) return;
 
+        const isShortcutModifier = event.ctrlKey || event.metaKey;
+        if (isShortcutModifier) {
+            const shortcutKey = (event.key || '').toLowerCase();
+            if (shortcutKey === 'c') {
+                event.preventDefault();
+                this.editor.copySelection?.();
+                return;
+            }
+            if (shortcutKey === 'x') {
+                event.preventDefault();
+                this.editor.cutSelection?.();
+                return;
+            }
+            if (shortcutKey === 'v') {
+                event.preventDefault();
+                this.editor.pasteFromClipboard?.();
+                return;
+            }
+        }
+
         if (this.editor.activeNode?.onKeyDown) {
             const handled = this.editor.activeNode.onKeyDown(event.key);
             if (handled) {

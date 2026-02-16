@@ -96,11 +96,17 @@ const factories = {
 commandRegistry.register("form.submit", (payload) => {
   console.log("Form submitted with payload:", payload);
   const activeForm = store.getActiveForm();
+  const submittedFields = { ...(payload?.fields || {}) };
+  delete submittedFields.done;
+  submittedFields.messageYear = 26;
+
   const responseData = {
     formId: activeForm?.id,
+    formLabel: activeForm?.label || null,
     user: activeForm?.user || "admin",
     resultsTable: activeForm?.resultsTable || null,
-    fields: payload?.fields || {}
+    formFields: activeForm?.formStructure?.fields || [],
+    fields: submittedFields
   };
 
   if (activeForm) {

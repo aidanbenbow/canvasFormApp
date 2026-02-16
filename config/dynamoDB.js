@@ -102,6 +102,84 @@ async getFormDataById(id) {
         }
     }
 
+    async createDorcasArticle({ formId, user = 'admin', formLabel, formFields = [], fields = {} } = {}) {
+      try {
+        const normalizedFields = fields && typeof fields === 'object' ? fields : {};
+        const inputDefs = Array.isArray(formFields)
+          ? formFields.filter((field) => field?.type === 'input')
+          : [];
+
+        const firstInputValue = firstNonEmpty(
+          inputDefs[0]?.id ? normalizedFields[inputDefs[0].id] : ''
+        );
+        const secondInputValue = firstNonEmpty(
+          inputDefs[1]?.id ? normalizedFields[inputDefs[1].id] : ''
+        );
+
+        const titledInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(title|headline|subject)/i);
+        const articleInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(article|content|body|message|report|text)/i);
+
+        const title = firstNonEmpty(
+          normalizedFields.title,
+          normalizedFields.blogTitle,
+          normalizedFields['input-title'],
+          titledInputValue,
+          firstInputValue,
+          formLabel,
+          'Blog'
+        );
+
+        const articleText = firstNonEmpty(
+          normalizedFields.article,
+          normalizedFields.articleInput,
+          normalizedFields.message,
+          normalizedFields.messageInput,
+          normalizedFields.report,
+          normalizedFields.reportInput,
+          articleInputValue,
+          secondInputValue,
+          firstContentField(normalizedFields, {
+            excludeKeys: [
+              'done',
+              'messageYear',
+              'title',
+              'blogTitle',
+              'input-title',
+              inputDefs[0]?.id
+            ]
+          })
+        );
+
+        const color = firstNonEmpty(
+          normalizedFields.color,
+          normalizedFields.styleColor,
+          normalizedFields['style.color'],
+          '#792A58'
+        );
+
+        const slugBase = slugify(firstNonEmpty(title, formLabel, 'blog-article'));
+        const userId = slugBase || `blog-article-${Date.now()}`;
+
+        const item = {
+          userId,
+          title,
+          article: articleText,
+          style: { color }
+        };
+
+        const params = {
+          TableName: 'dorcasusers',
+          Item: item
+        };
+
+        const result = await this.docClient.send(new PutCommand(params));
+        return { ...result, item };
+      } catch (error) {
+        console.error('Error creating dorcasusers article:', error);
+        throw new Error('Could not create article');
+      }
+    }
+
 
 
     async updateFormData(id, formStructure, label = 'Untitled') {
@@ -293,6 +371,48 @@ async deleteFormData(id) {
         }
       }
     
+}
+
+function firstNonEmpty(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    const trimmed = String(value).trim();
+    if (trimmed) return trimmed;
+  }
+  return '';
+}
+
+function firstContentField(fields, { excludeKeys = [] } = {}) {
+  const excluded = new Set((excludeKeys || []).filter(Boolean));
+  const entries = Object.entries(fields || {});
+  for (const [key, value] of entries) {
+    if (excluded.has(key)) continue;
+    if (key === 'messageYear' || key === 'done') continue;
+    const normalized = firstNonEmpty(value);
+    if (normalized) return normalized;
+  }
+  return '';
+}
+
+function findInputValueByLabel(inputDefs, submittedFields, pattern) {
+  const defs = Array.isArray(inputDefs) ? inputDefs : [];
+  for (const field of defs) {
+    const label = firstNonEmpty(field?.label, field?.text, field?.id).toLowerCase();
+    if (!pattern.test(label)) continue;
+    const value = firstNonEmpty(submittedFields?.[field.id]);
+    if (value) return value;
+  }
+  return '';
+}
+
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120);
 }
 
 export default new DynamoDB();

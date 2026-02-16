@@ -16,9 +16,13 @@ export class SceneHitTestSystem {
 // Convert global → local
 const local = node.globalToLocal(point);
 
+    const childPoint = node.scroll
+      ? { x: point.x, y: point.y + (node.scroll.offsetY || 0) }
+      : point;
+
     // 1. Test children first — pass GLOBAL point down
     for (let i = node.children.length - 1; i >= 0; i--) {
-      const hit = this._hitNode(node.children[i], point, ctx);
+      const hit = this._hitNode(node.children[i], childPoint, ctx);
       if (hit) return hit;
     }
     // 2. Then test this node

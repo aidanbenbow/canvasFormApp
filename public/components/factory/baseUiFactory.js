@@ -40,13 +40,24 @@ export class BaseUIFactory {
         const shouldCollect = !def.skipCollect;
         const shouldClear = !def.skipClear;
 
-        const fields = shouldCollect ? collectInputValues(rootNode) : {};
+        const fields = shouldCollect
+          ? {
+              ...collectInputValues(rootNode),
+              messageYear: 26
+            }
+          : {};
         const finalPayload = {
           ...(def.payload || {}),
-          ...(shouldCollect ? { fields, done: true } : {})
+          ...(shouldCollect ? { fields } : {})
         };
-  
-        commandRegistry.execute(def.action, finalPayload);
+
+        const actionName = def.action || def.command;
+        if (!actionName) {
+          console.warn(`Button ${def.id} has no action/command; click ignored.`);
+          return;
+        }
+
+        commandRegistry.execute(actionName, finalPayload);
         if (shouldClear) {
           clearInputValues(rootNode);
         }
