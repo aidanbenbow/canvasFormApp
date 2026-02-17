@@ -81,6 +81,7 @@ export class CreateForm extends BaseScreen {
     this.dragHandleNodes = new Map();
     this.fieldNodes = new Map();
     this.fieldBaseStyles = new Map();
+    this.photoPreviewNodes = new Map();
 
     this.reorderController = new FormReorderController({
       context: this.context,
@@ -108,6 +109,7 @@ export class CreateForm extends BaseScreen {
     this.bindEditableNodes(this.regions?.formContainer);
     this.cacheDragHandleNodes(this.regions?.formContainer);
     this.cacheFieldNodes(this.regions?.formContainer);
+    this.cachePhotoPreviewNodes(this.regions?.formContainer);
     this.applyPreviewToDragHandles();
     this.applyPreviewToFields();
     this.reorderController.attach();
@@ -230,7 +232,27 @@ export class CreateForm extends BaseScreen {
         });
       }
 
-      nodes.push(def);
+      if (this.isPhotoLikeField(def)) {
+        const photoSource = this.getPhotoSource(def);
+        nodes.push({
+          ...def,
+          type: 'input',
+          value: photoSource,
+          placeholder: def.placeholder || 'Enter photo URL...'
+        });
+        nodes.push({
+          type: 'photo',
+          id: `photo-preview-${def.id}`,
+          src: photoSource,
+          style: {
+            fillWidth: true,
+            borderColor: '#93c5fd',
+            backgroundColor: '#eff6ff'
+          }
+        });
+      } else {
+        nodes.push(def);
+      }
 
       if (isSelected) {
         nodes.push({
@@ -276,9 +298,24 @@ export class CreateForm extends BaseScreen {
     this.bindEditableNodes(this.regions.formContainer);
     this.cacheDragHandleNodes(this.regions.formContainer);
     this.cacheFieldNodes(this.regions.formContainer);
+    this.cachePhotoPreviewNodes(this.regions.formContainer);
     this.applyPreviewToDragHandles();
     this.applyPreviewToFields();
     this.rootNode.invalidate();
+  }
+
+  getPhotoSource(field) {
+    return String(field?.src || field?.text || field?.value || '').trim();
+  }
+
+  isPhotoLikeField(field) {
+    if (!field) return false;
+    if (field.type === 'photo') return true;
+
+    const probe = `${field.id || ''} ${field.label || ''} ${field.placeholder || ''}`.toLowerCase();
+    const hasPhotoKeyword = /photo|image|picture|thumbnail/.test(probe);
+    const hasUrlKeyword = /url|link/.test(probe);
+    return field.type === 'input' && (hasPhotoKeyword || hasUrlKeyword);
   }
 
   stopActiveEditing() {
@@ -452,6 +489,24 @@ export class CreateForm extends BaseScreen {
     this.rootNode?.invalidate();
   }
 
+  cachePhotoPreviewNodes(container) {
+    this.photoPreviewNodes = new Map();
+    if (!container) return;
+
+    const walk = (node) => {
+      if (!node) return;
+      if (typeof node.id === 'string' && node.id.startsWith('photo-preview-')) {
+        const fieldId = node.id.slice('photo-preview-'.length);
+        this.photoPreviewNodes.set(fieldId, node);
+      }
+      if (Array.isArray(node.children)) {
+        node.children.forEach(walk);
+      }
+    };
+
+    walk(container);
+  }
+
   resolveFieldIdFromNode(node, { allowDeleteNode = false, allowHandleNode = true } = {}) {
     const fieldIds = new Set((this.form?.formStructure?.fields || []).map((field) => field.id));
     let current = node;
@@ -465,6 +520,11 @@ export class CreateForm extends BaseScreen {
 
       if (allowHandleNode && typeof id === 'string' && id.startsWith('drag-handle-')) {
         const parsed = id.slice('drag-handle-'.length);
+        if (fieldIds.has(parsed)) return parsed;
+      }
+
+      if (typeof id === 'string' && id.startsWith('photo-preview-')) {
+        const parsed = id.slice('photo-preview-'.length);
         if (fieldIds.has(parsed)) return parsed;
       }
 
@@ -508,6 +568,22 @@ export class CreateForm extends BaseScreen {
       if (field && node.editable) {
         node.onChange = (value) => {
           field.text = value;
+          if (this.isPhotoLikeField(field)) {
+            field.src = value;
+            field.value = value;
+
+            const previewNode = this.photoPreviewNodes.get(field.id);
+            if (previewNode) {
+              const nextSource = this.getPhotoSource(field);
+              if (typeof previewNode.setSource === 'function') {
+                previewNode.setSource(nextSource);
+              } else {
+                previewNode.src = nextSource;
+                previewNode.loadImage?.();
+              }
+              previewNode.invalidate?.();
+            }
+          }
           if (field.label !== undefined) {
             field.label = value;
           }

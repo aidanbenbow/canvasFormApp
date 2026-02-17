@@ -100,6 +100,7 @@ export class InputNode extends SceneNode {
     updateText(newValue) {
       this.value = newValue;
       this.cursorPos = newValue.length;
+      this.onChange?.(newValue);
 
       this.invalidate();
     }

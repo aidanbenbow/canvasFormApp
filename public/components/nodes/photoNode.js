@@ -27,9 +27,19 @@ export class PhotoNode extends SceneNode {
     this.loadImage();
   }
 
+  setSource(nextSource) {
+    this.src = normalizePhotoSource(nextSource);
+    this.loadImage();
+    this.invalidate();
+  }
+
   loadImage() {
+    const normalizedSource = normalizePhotoSource(this.src);
+    this.src = normalizedSource;
+
     if (!this.src) {
       this.image = null;
+      this.invalidate();
       return;
     }
 

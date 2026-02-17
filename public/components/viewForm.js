@@ -81,6 +81,30 @@ export class FormViewScreen extends BaseScreen {
         const normalizedChildren = [];
         for (const child of this.childArray) {
           for (const field of child) {
+            if (this.isPhotoLikeField(field)) {
+              const source = this.getPhotoSource(field);
+              const previewId = `photo-preview-${field.id}`;
+
+              normalizedChildren.push({
+                ...field,
+                type: 'input',
+                value: source,
+                placeholder: field.placeholder || 'Enter photo URL...'
+              });
+
+              normalizedChildren.push({
+                type: 'photo',
+                id: previewId,
+                src: source,
+                style: {
+                  fillWidth: true,
+                  borderColor: '#93c5fd',
+                  backgroundColor: '#eff6ff'
+                }
+              });
+              continue;
+            }
+
             if (this.shouldAddCopyButton(field)) {
               const copyCommand = this.ensureCopyCommand(field.id);
               normalizedChildren.push(field);
@@ -121,6 +145,20 @@ export class FormViewScreen extends BaseScreen {
 
         this.manifest.regions.formContainer.children = normalizedChildren;
        
+  }
+
+  getPhotoSource(field) {
+    return String(field?.src || field?.text || field?.value || '').trim();
+  }
+
+  isPhotoLikeField(field) {
+    if (!field) return false;
+    if (field.type === 'photo') return true;
+
+    const probe = `${field.id || ''} ${field.label || ''} ${field.placeholder || ''}`.toLowerCase();
+    const hasPhotoKeyword = /photo|image|picture|thumbnail/.test(probe);
+    const hasUrlKeyword = /url|link/.test(probe);
+    return field.type === 'input' && (hasPhotoKeyword || hasUrlKeyword);
   }
 
   shouldAddCopyButton(field) {
@@ -181,6 +219,8 @@ export class FormViewScreen extends BaseScreen {
 
     this.results = effectiveResults;
 
+    this.bindPhotoPreviewHandlers();
+
     this.updateDeFacut()
 
     return rootNode;
@@ -216,6 +256,37 @@ export class FormViewScreen extends BaseScreen {
 
   onExit() {
     // If you later bind store subscriptions here, clean them up.
+  }
+
+  bindPhotoPreviewHandlers() {
+    const entries = [];
+    for (const child of this.childArray) {
+      for (const field of child) {
+        if (!this.isPhotoLikeField(field)) continue;
+        entries.push(field);
+      }
+    }
+
+    for (const field of entries) {
+      const inputNode = this.context?.fieldRegistry?.get(field.id);
+      const previewNode = this.context?.fieldRegistry?.get(`photo-preview-${field.id}`);
+      if (!inputNode || !previewNode) continue;
+
+      inputNode.onChange = (value) => {
+        if (typeof previewNode.setSource === 'function') {
+          previewNode.setSource(value);
+        } else {
+          previewNode.src = String(value || '').trim();
+          previewNode.loadImage?.();
+          previewNode.invalidate?.();
+        }
+      };
+
+      const initialValue = inputNode.getValue?.() ?? inputNode.value ?? this.getPhotoSource(field);
+      if (typeof previewNode.setSource === 'function') {
+        previewNode.setSource(initialValue);
+      }
+    }
   }
 }
 

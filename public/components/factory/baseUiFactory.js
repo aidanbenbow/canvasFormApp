@@ -84,9 +84,12 @@ export class BaseUIFactory {
     },
     photo: (def) => {
       const { context } = def;
+      const isPreviewNode = typeof def.id === 'string' && def.id.startsWith('photo-preview-');
 
-      if (def.src) {
-        return new PhotoNode(def);
+      if (def.src || isPreviewNode) {
+        const node = new PhotoNode(def);
+        context.fieldRegistry.set(def.id, node);
+        return node;
       }
 
       const node = new InputNode({
