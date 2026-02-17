@@ -25,6 +25,7 @@ import { UIEngine } from "./setUp/uiEngine.js";
 import { wireSystemEvents } from "./setUp/wireSystemEvents.js";
 import { engineRootLayoutStrategy } from "./strategies/engineRootLayout.js";
 import {  utilsRegister } from "./utils/register.js";
+import { normalizeFields } from "./utils/normalizeFields.js";
 
 
 const canvas = new CanvasManager(canvasConfig)
@@ -105,7 +106,7 @@ commandRegistry.register("form.submit", (payload) => {
     formLabel: activeForm?.label || null,
     user: activeForm?.user || "admin",
     resultsTable: activeForm?.resultsTable || null,
-    formFields: activeForm?.formStructure?.fields || [],
+    formFields: normalizeFields(activeForm?.formStructure),
     fields: submittedFields
   };
 

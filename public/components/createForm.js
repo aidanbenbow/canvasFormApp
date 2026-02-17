@@ -1,33 +1,16 @@
 import { ACTIONS } from '../events/actions.js';
 import { FormReorderController } from '../controllers/formReorderController.js';
+import { PhotoPreviewController } from '../controllers/photoPreviewController.js';
+import { getPhotoSource, isPhotoLikeField } from '../utils/fieldGuards.js';
+import { normalizeFields } from '../utils/normalizeFields.js';
+import {
+  buildCreateDisplayFields,
+  buildCreateFormManifest
+} from './manifests/createFormManifest.js';
+import { isSmallScreen } from './manifests/screenManifestUtils.js';
 import { normalizeForm } from '../plugins/formManifests.js';
 import { BaseScreen } from './baseScreen.js';
 import { compileUIManifest } from './uiManifestCompiler.js';
-
-const createFormUIManifest = {
-  layout: 'vertical',
-  id: 'create-form-root',
-  style: {
-    background: '#ffffff'
-  },
-  regions: {
-    toolbar: {
-      type: 'container',
-      layout: 'horizontal',
-      style: {
-        background: '#f3f4f6',
-        border: { color: '#d1d5db', width: 1 }
-      },
-      children: []
-    },
-    formContainer: {
-      type: 'container',
-      scrollable: true,
-      viewport: 600,
-      children: []
-    }
-  }
-};
 
 export class CreateForm extends BaseScreen {
   constructor({ id='createForm', context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit, form }) {
@@ -81,7 +64,7 @@ export class CreateForm extends BaseScreen {
     this.dragHandleNodes = new Map();
     this.fieldNodes = new Map();
     this.fieldBaseStyles = new Map();
-    this.photoPreviewNodes = new Map();
+    this.photoPreviewController = new PhotoPreviewController({ context: this.context });
 
     this.reorderController = new FormReorderController({
       context: this.context,
@@ -109,7 +92,6 @@ export class CreateForm extends BaseScreen {
     this.bindEditableNodes(this.regions?.formContainer);
     this.cacheDragHandleNodes(this.regions?.formContainer);
     this.cacheFieldNodes(this.regions?.formContainer);
-    this.cachePhotoPreviewNodes(this.regions?.formContainer);
     this.applyPreviewToDragHandles();
     this.applyPreviewToFields();
     this.reorderController.attach();
@@ -118,166 +100,27 @@ export class CreateForm extends BaseScreen {
   }
 
   buildScreenManifest() {
-    const manifest = structuredClone(createFormUIManifest);
-    manifest.id = this.mode === 'edit' ? 'edit-form-root' : 'create-form-root';
-    const compactButtonStyle = isSmallScreen()
-      ? { fillWidth: false, font: '24px sans-serif', paddingX: 16, paddingY: 10 }
-      : { fillWidth: false, font: '18px sans-serif', paddingX: 12, paddingY: 7 };
-
-    manifest.regions.toolbar.children = [
-      {
-        type: 'button',
-        id: 'save',
-        label: this.mode === 'edit' ? 'Update Form' : 'Save Form',
-        action: this.saveCommand,
-        style: compactButtonStyle,
-        skipCollect: true,
-        skipClear: true
-      },
-      {
-        type: 'button',
-        id: 'addText',
-        label: 'Add Text',
-        action: this.addTextCommand,
-        style: compactButtonStyle,
-        skipCollect: true,
-        skipClear: true
-      },
-      {
-        type: 'button',
-        id: 'addLabel',
-        label: 'Add Label',
-        action: this.addLabelCommand,
-        style: compactButtonStyle,
-        skipCollect: true,
-        skipClear: true
-      },
-      {
-        type: 'button',
-        id: 'addInput',
-        label: 'Add Input',
-        action: this.addInputCommand,
-        style: compactButtonStyle,
-        skipCollect: true,
-        skipClear: true
-      },
-      {
-        type: 'button',
-        id: 'addPhoto',
-        label: 'Add Photo',
-        action: this.addPhotoCommand,
-        style: compactButtonStyle,
-        skipCollect: true,
-        skipClear: true
-      }
-    ];
-
-    manifest.regions.formContainer.children = this.getDisplayFields();
-    return manifest;
+    return buildCreateFormManifest({
+      mode: this.mode,
+      saveCommand: this.saveCommand,
+      addTextCommand: this.addTextCommand,
+      addLabelCommand: this.addLabelCommand,
+      addInputCommand: this.addInputCommand,
+      addPhotoCommand: this.addPhotoCommand,
+      displayFields: this.getDisplayFields()
+    });
   }
 
   getDisplayFields() {
-    const smallScreen = isSmallScreen();
-
-    const deleteButtonStyle = smallScreen
-      ? {
-          font: '28px sans-serif',
-          minHeight: 52,
-          width: 52,
-          radius: 10
-        }
-      : {
-          font: '18px sans-serif',
-          minHeight: 24,
-          width: 24,
-          radius: 4
-        };
-
-    const fields = this.form?.formStructure?.fields || [];
-    return fields.flatMap((field) => {
-      const def = structuredClone(field);
-      const nodes = [];
-      const isSelected = this.selectedFieldId === def.id;
-
-      if (def.type === 'text' && def.text == null) {
-        def.text = def.label || 'Text';
-      }
-
-      if (def.type === 'button') {
-        def.label = def.label || 'Submit';
-        delete def.action;
-        delete def.command;
-      }
-
-      if (this.mode === 'edit' && (def.type === 'input' || def.type === 'photo')) {
-        def.editable = false;
-      }
-
-      if ((def.type === 'text' || def.type === 'label') && isSelected) {
-        def.editable = true;
-      }
-
-      def.style = {
-        ...(def.style || {}),
-        borderColor: isSelected ? '#0078ff' : (def.style?.borderColor || '#ccc'),
-        backgroundColor: this.draggingFieldId === def.id ? '#e0f2fe' : def.style?.backgroundColor,
-        opacity: this.draggingFieldId === def.id ? 0.8 : (def.style?.opacity ?? 1)
-      };
-
-      if (isSelected) {
-        nodes.push({
-          type: 'text',
-          id: `drag-handle-${def.id}`,
-          ...this.getDragHandlePresentation(def.id, { smallScreen })
-        });
-      }
-
-      if (this.isPhotoLikeField(def)) {
-        const photoSource = this.getPhotoSource(def);
-        nodes.push({
-          ...def,
-          type: 'input',
-          value: photoSource,
-          placeholder: def.placeholder || 'Enter photo URL...'
-        });
-        nodes.push({
-          type: 'photo',
-          id: `photo-preview-${def.id}`,
-          src: photoSource,
-          style: {
-            fillWidth: true,
-            borderColor: '#93c5fd',
-            backgroundColor: '#eff6ff'
-          }
-        });
-      } else {
-        nodes.push(def);
-      }
-
-      if (isSelected) {
-        nodes.push({
-          type: 'button',
-          id: `delete-${def.id}`,
-          label: '✖',
-          action: this.deleteFieldCommand,
-          payload: { fieldId: def.id },
-          style: {
-            textColor: '#ffffff',
-            background: '#dc2626',
-            hoverBackground: '#b91c1c',
-            pressedBackground: '#991b1b',
-            borderColor: '#7f1d1d',
-            fillWidth: false,
-            paddingX: 0,
-            paddingY: 0,
-            ...deleteButtonStyle
-          },
-          skipCollect: true,
-          skipClear: true
-        });
-      }
-
-      return nodes;
+    return buildCreateDisplayFields({
+      fields: this.getNormalizedFields(),
+      mode: this.mode,
+      selectedFieldId: this.selectedFieldId,
+      draggingFieldId: this.draggingFieldId,
+      deleteFieldCommand: this.deleteFieldCommand,
+      getDragHandlePresentation: (fieldId, options) => this.getDragHandlePresentation(fieldId, options),
+      isPhotoLikeField: (field) => this.isPhotoLikeField(field),
+      getPhotoSource: (field) => this.getPhotoSource(field)
     });
   }
 
@@ -298,24 +141,28 @@ export class CreateForm extends BaseScreen {
     this.bindEditableNodes(this.regions.formContainer);
     this.cacheDragHandleNodes(this.regions.formContainer);
     this.cacheFieldNodes(this.regions.formContainer);
-    this.cachePhotoPreviewNodes(this.regions.formContainer);
     this.applyPreviewToDragHandles();
     this.applyPreviewToFields();
     this.rootNode.invalidate();
   }
 
   getPhotoSource(field) {
-    return String(field?.src || field?.text || field?.value || '').trim();
+    return getPhotoSource(field);
   }
 
   isPhotoLikeField(field) {
-    if (!field) return false;
-    if (field.type === 'photo') return true;
+    return isPhotoLikeField(field);
+  }
 
-    const probe = `${field.id || ''} ${field.label || ''} ${field.placeholder || ''}`.toLowerCase();
-    const hasPhotoKeyword = /photo|image|picture|thumbnail/.test(probe);
-    const hasUrlKeyword = /url|link/.test(probe);
-    return field.type === 'input' && (hasPhotoKeyword || hasUrlKeyword);
+  getNormalizedFields() {
+    return normalizeFields(this.form?.formStructure);
+  }
+
+  setNormalizedFields(fields) {
+    if (!this.form.formStructure || typeof this.form.formStructure !== 'object') {
+      this.form.formStructure = { fields: [] };
+    }
+    this.form.formStructure.fields = Array.isArray(fields) ? fields : [];
   }
 
   stopActiveEditing() {
@@ -446,7 +293,7 @@ export class CreateForm extends BaseScreen {
     this.fieldBaseStyles = new Map();
     if (!container) return;
 
-    const fieldIds = new Set((this.form?.formStructure?.fields || []).map((field) => field.id));
+    const fieldIds = new Set(this.getNormalizedFields().map((field) => field.id));
     const walk = (node) => {
       if (!node) return;
       if (fieldIds.has(node.id)) {
@@ -489,26 +336,8 @@ export class CreateForm extends BaseScreen {
     this.rootNode?.invalidate();
   }
 
-  cachePhotoPreviewNodes(container) {
-    this.photoPreviewNodes = new Map();
-    if (!container) return;
-
-    const walk = (node) => {
-      if (!node) return;
-      if (typeof node.id === 'string' && node.id.startsWith('photo-preview-')) {
-        const fieldId = node.id.slice('photo-preview-'.length);
-        this.photoPreviewNodes.set(fieldId, node);
-      }
-      if (Array.isArray(node.children)) {
-        node.children.forEach(walk);
-      }
-    };
-
-    walk(container);
-  }
-
   resolveFieldIdFromNode(node, { allowDeleteNode = false, allowHandleNode = true } = {}) {
-    const fieldIds = new Set((this.form?.formStructure?.fields || []).map((field) => field.id));
+    const fieldIds = new Set(this.getNormalizedFields().map((field) => field.id));
     let current = node;
 
     while (current) {
@@ -541,9 +370,7 @@ export class CreateForm extends BaseScreen {
   reorderField(sourceFieldId, targetFieldId) {
     if (!sourceFieldId || !targetFieldId || sourceFieldId === targetFieldId) return;
 
-    const fields = Array.isArray(this.form?.formStructure?.fields)
-      ? [...this.form.formStructure.fields]
-      : [];
+    const fields = [...this.getNormalizedFields()];
 
     const sourceIndex = fields.findIndex((field) => field.id === sourceFieldId);
     const targetIndex = fields.findIndex((field) => field.id === targetFieldId);
@@ -551,7 +378,7 @@ export class CreateForm extends BaseScreen {
 
     const [movedField] = fields.splice(sourceIndex, 1);
     fields.splice(targetIndex, 0, movedField);
-    this.form.formStructure.fields = fields;
+    this.setNormalizedFields(fields);
     this.previewInsertionBeforeFieldId = null;
     this.draggingFieldId = null;
     this.refreshFormContainer();
@@ -559,7 +386,7 @@ export class CreateForm extends BaseScreen {
 
   bindEditableNodes(container) {
     if (!container) return;
-    const fields = this.form?.formStructure?.fields || [];
+    const fields = this.getNormalizedFields();
     const fieldMap = new Map(fields.map((field) => [field.id, field]));
 
     const walk = (node) => {
@@ -571,18 +398,7 @@ export class CreateForm extends BaseScreen {
           if (this.isPhotoLikeField(field)) {
             field.src = value;
             field.value = value;
-
-            const previewNode = this.photoPreviewNodes.get(field.id);
-            if (previewNode) {
-              const nextSource = this.getPhotoSource(field);
-              if (typeof previewNode.setSource === 'function') {
-                previewNode.setSource(nextSource);
-              } else {
-                previewNode.src = nextSource;
-                previewNode.loadImage?.();
-              }
-              previewNode.invalidate?.();
-            }
+            this.photoPreviewController.updatePreviewForField(field.id, this.getPhotoSource(field));
           }
           if (field.label !== undefined) {
             field.label = value;
@@ -616,15 +432,17 @@ export class CreateForm extends BaseScreen {
     if (type === 'label') {
       newField.text = newField.label;
     }
-    this.form.formStructure.fields.push(newField);
+    const fields = [...this.getNormalizedFields(), newField];
+    this.setNormalizedFields(fields);
     this.selectedFieldId = newField.id;
     this.refreshFormContainer();
   }
   deleteComponent(fieldId) {
     if (!fieldId) return;
-    this.form.formStructure.fields = this.form.formStructure.fields.filter(field => field.id !== fieldId);
+    const fields = this.getNormalizedFields().filter(field => field.id !== fieldId);
+    this.setNormalizedFields(fields);
     if (this.selectedFieldId === fieldId) {
-      this.selectedFieldId = this.form.formStructure.fields[0]?.id ?? null;
+      this.selectedFieldId = fields[0]?.id ?? null;
       this.previewInsertionBeforeFieldId = null;
     }
     this.refreshFormContainer();
@@ -646,8 +464,4 @@ export class CreateForm extends BaseScreen {
     this.draggingFieldId = null;
     this.reorderController.detach();
   }
-}
-
-function isSmallScreen() {
-  return typeof window !== 'undefined' && window.innerWidth < 1024;
 }

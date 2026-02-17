@@ -56,10 +56,17 @@ export const inputRenderer = {
   
       const textX = x + paddingX;
       let textY = boxY + paddingY;
+      const textBottom = boxY + boxHeight - paddingY;
 
          const { lines, lineHeight } = node._layout || { lines: [], lineHeight: 0 };
 
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + 1, boxY + 1, Math.max(0, width - 2), Math.max(0, boxHeight - 2));
+      ctx.clip();
+
      for (const line of lines) {
+      if (textY + lineHeight > textBottom) break;
       const isPlaceholder = !node.value && !focused;
       ctx.fillStyle = isPlaceholder ? placeholderColor : textColor;
       if (!focused || node.value) {
@@ -67,6 +74,8 @@ export const inputRenderer = {
       }
       textY += lineHeight;
     }
+
+      ctx.restore();
   
       ctx.restore();
     }

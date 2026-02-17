@@ -34,13 +34,13 @@ export const photoRenderer = {
       let offsetY = y;
 
       if (imageRatio > boxRatio) {
-        drawHeight = height;
-        drawWidth = drawHeight * imageRatio;
-        offsetX = x - (drawWidth - width) / 2;
-      } else {
         drawWidth = width;
         drawHeight = drawWidth / imageRatio;
-        offsetY = y - (drawHeight - height) / 2;
+        offsetY = y + (height - drawHeight) / 2;
+      } else {
+        drawHeight = height;
+        drawWidth = drawHeight * imageRatio;
+        offsetX = x + (width - drawWidth) / 2;
       }
 
       ctx.drawImage(node.image, offsetX, offsetY, drawWidth, drawHeight);

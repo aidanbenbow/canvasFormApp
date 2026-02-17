@@ -1,5 +1,6 @@
 
 import { FormLayoutHelper } from "./formLayoutHelper.js";
+import { normalizeFields } from "../utils/normalizeFields.js";
 
 export const pluginRegistry = {
     fieldTypes: {},
@@ -12,7 +13,12 @@ export const pluginRegistry = {
   };
 
   export function normalizeForm(form) {
-    const fields = (form.fields || form.formStructure?.fields || []).map((field) => {
+    const source = Array.isArray(form?.fields)
+      ? { fields: form.fields }
+      : form?.formStructure;
+    const sourceFields = normalizeFields(source);
+
+    const fields = sourceFields.map((field) => {
       if (field?.type === 'button' && !field.action && !field.command) {
         return {
           ...field,
