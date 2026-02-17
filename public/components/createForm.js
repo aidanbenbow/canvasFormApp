@@ -79,6 +79,8 @@ export class CreateForm extends BaseScreen {
     this.selectedFieldId = null;
     this.draggingFieldId = null;
     this.dragHandleNodes = new Map();
+    this.fieldNodes = new Map();
+    this.fieldBaseStyles = new Map();
 
     this.reorderController = new FormReorderController({
       context: this.context,
@@ -105,7 +107,9 @@ export class CreateForm extends BaseScreen {
     this.bindSelectionHandlers(this.regions?.formContainer);
     this.bindEditableNodes(this.regions?.formContainer);
     this.cacheDragHandleNodes(this.regions?.formContainer);
+    this.cacheFieldNodes(this.regions?.formContainer);
     this.applyPreviewToDragHandles();
+    this.applyPreviewToFields();
     this.reorderController.attach();
 
     return rootNode;
@@ -260,6 +264,7 @@ export class CreateForm extends BaseScreen {
     if (this.previewInsertionBeforeFieldId === nextValue) return;
     this.previewInsertionBeforeFieldId = nextValue;
     this.applyPreviewToDragHandles();
+    this.applyPreviewToFields();
   }
 
   refreshFormContainer() {
@@ -270,7 +275,9 @@ export class CreateForm extends BaseScreen {
     this.bindSelectionHandlers(this.regions.formContainer);
     this.bindEditableNodes(this.regions.formContainer);
     this.cacheDragHandleNodes(this.regions.formContainer);
+    this.cacheFieldNodes(this.regions.formContainer);
     this.applyPreviewToDragHandles();
+    this.applyPreviewToFields();
     this.rootNode.invalidate();
   }
 
@@ -392,6 +399,54 @@ export class CreateForm extends BaseScreen {
       const presentation = this.getDragHandlePresentation(fieldId, { smallScreen });
       node.text = presentation.text;
       node.style = { ...presentation.style };
+    }
+
+    this.rootNode?.invalidate();
+  }
+
+  cacheFieldNodes(container) {
+    this.fieldNodes = new Map();
+    this.fieldBaseStyles = new Map();
+    if (!container) return;
+
+    const fieldIds = new Set((this.form?.formStructure?.fields || []).map((field) => field.id));
+    const walk = (node) => {
+      if (!node) return;
+      if (fieldIds.has(node.id)) {
+        this.fieldNodes.set(node.id, node);
+        this.fieldBaseStyles.set(node.id, { ...(node.style || {}) });
+      }
+      if (Array.isArray(node.children)) {
+        node.children.forEach(walk);
+      }
+    };
+
+    walk(container);
+  }
+
+  applyPreviewToFields() {
+    if (!this.fieldNodes?.size) return;
+
+    const hasPreview = Boolean(this.draggingFieldId && this.previewInsertionBeforeFieldId);
+    for (const [fieldId, node] of this.fieldNodes.entries()) {
+      const baseStyle = this.fieldBaseStyles.get(fieldId) || {};
+      const isPreviewTarget = hasPreview && fieldId === this.previewInsertionBeforeFieldId;
+
+      if (isPreviewTarget) {
+        node.style = {
+          ...baseStyle,
+          borderColor: '#2563eb',
+          focusBorderColor: '#2563eb',
+          backgroundColor: '#dbeafe',
+          radius: Math.max(6, Number(baseStyle.radius || 0))
+        };
+      } else {
+        node.style = { ...baseStyle };
+      }
+
+      if (typeof node.setUIState === 'function') {
+        node.setUIState({ selected: Boolean(isPreviewTarget) });
+      }
     }
 
     this.rootNode?.invalidate();

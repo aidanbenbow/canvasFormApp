@@ -28,8 +28,12 @@ export const KeyboardModule = {
 
       let backspaceRepeatTimer = null;
       let backspaceRepeatTimeout = null;
+      let suggestionUpdateTimer = null;
+      let capsLockEnabled = false;
+      let lastShiftTapAt = 0;
       let userOverrodeMode = false;
       let lastContextKey = null;
+      const SHIFT_DOUBLE_TAP_MS = 320;
 
       const stopBackspaceRepeat = () => {
         if (backspaceRepeatTimeout) {
@@ -42,18 +46,63 @@ export const KeyboardModule = {
         }
       };
 
+      const scheduleSuggestionUpdate = (delayMs = 70) => {
+        if (suggestionUpdateTimer) {
+          clearTimeout(suggestionUpdateTimer);
+          suggestionUpdateTimer = null;
+        }
+        suggestionUpdateTimer = setTimeout(() => {
+          suggestionUpdateTimer = null;
+          updateSuggestions();
+        }, delayMs);
+      };
+
       const dispatchKeyPress = (key) => {
         playKeySound();
         dispatcher.dispatch(ACTIONS.KEYBOARD.PRESS, { key });
       };
 
+      const setUppercase = (enabled) => {
+        if (keyboard.isUppercase === Boolean(enabled)) return;
+        keyboard.toggleCase();
+      };
+
       const refreshKeyLabels = () => {
+        const suggestionFont = isSmallScreen() ? "20px sans-serif" : "14px sans-serif";
+        const defaultFont = isSmallScreen() ? "28px sans-serif" : "16px sans-serif";
         const flat = keyboard.getFlatLayout();
         keyboard.keyButtons.forEach((entry, index) => {
           entry.baseKey = flat[index] ?? entry.baseKey;
           entry.button.label = keyboard.getKeyLabel(entry.baseKey);
+
+          entry.button.style.background = "#1f2937";
+          entry.button.style.hoverBackground = "#334155";
+          entry.button.style.pressedBackground = "#475569";
+          entry.button.style.borderColor = "#64748b";
+          entry.button.style.textColor = "#f8fafc";
+
           if (keyboard.isSuggestionToken(entry.baseKey)) {
-            entry.button.style.font = isSmallScreen() ? "20px sans-serif" : "14px sans-serif";
+            entry.button.style.font = suggestionFont;
+          } else {
+            entry.button.style.font = defaultFont;
+          }
+
+          if (entry.baseKey === '⇧') {
+            if (capsLockEnabled) {
+              entry.button.label = '⇪';
+              entry.button.style.background = '#0f766e';
+              entry.button.style.hoverBackground = '#115e59';
+              entry.button.style.pressedBackground = '#134e4a';
+              entry.button.style.borderColor = '#2dd4bf';
+              entry.button.style.textColor = '#ecfeff';
+            } else if (keyboard.shiftOnce) {
+              entry.button.label = '⇧';
+              entry.button.style.background = '#1d4ed8';
+              entry.button.style.hoverBackground = '#1e40af';
+              entry.button.style.pressedBackground = '#1e3a8a';
+              entry.button.style.borderColor = '#60a5fa';
+              entry.button.style.textColor = '#eff6ff';
+            }
           }
         });
         keyboard.invalidate();
@@ -239,14 +288,7 @@ export const KeyboardModule = {
           caret.selectionAnchor = nextCaret;
         }
         editor.pipeline.invalidate();
-        updateSuggestions();
-      };
-
-      const isSymbolKey = (key) => {
-        if (!key || key.length !== 1) return false;
-        if (keyboard.isLetter(key)) return false;
-        if (/\d/.test(key)) return false;
-        return true;
+        scheduleSuggestionUpdate(30);
       };
 
       const handleKeyAction = (entry) => {
@@ -259,7 +301,7 @@ export const KeyboardModule = {
 
         if (currentKey === 'Paste') {
           context.textEditorController?.pasteFromClipboard?.();
-          setTimeout(updateSuggestions, 0);
+          scheduleSuggestionUpdate(40);
           return;
         }
 
@@ -274,8 +316,31 @@ export const KeyboardModule = {
 
         if (currentKey === '⇧') {
           userOverrodeMode = true;
-          keyboard.toggleCase();
-          keyboard.shiftOnce = keyboard.isUppercase;
+          const now = Date.now();
+          const isDoubleTap = now - lastShiftTapAt <= SHIFT_DOUBLE_TAP_MS;
+
+          if (capsLockEnabled) {
+            capsLockEnabled = false;
+            keyboard.shiftOnce = false;
+            setUppercase(false);
+            lastShiftTapAt = 0;
+            refreshKeyLabels();
+            return;
+          }
+
+          if (isDoubleTap) {
+            capsLockEnabled = true;
+            keyboard.shiftOnce = false;
+            setUppercase(true);
+            lastShiftTapAt = 0;
+            refreshKeyLabels();
+            return;
+          }
+
+          capsLockEnabled = false;
+          keyboard.shiftOnce = true;
+          setUppercase(true);
+          lastShiftTapAt = now;
           refreshKeyLabels();
           return;
         }
@@ -289,19 +354,19 @@ export const KeyboardModule = {
 
         const key = keyboard.getKeyLabel(currentKey);
         dispatchKeyPress(key);
-        setTimeout(updateSuggestions, 0);
+        scheduleSuggestionUpdate(70);
 
-        if (keyboard.shiftOnce && keyboard.isLetter(currentKey)) {
-          keyboard.shiftOnce = false;
-          keyboard.toggleCase();
+        if (currentKey === '.') {
+          if (!capsLockEnabled) {
+            keyboard.shiftOnce = true;
+            setUppercase(true);
+          }
           refreshKeyLabels();
         }
 
-        if (isSymbolKey(currentKey)) {
-          keyboard.shiftOnce = true;
-          if (!keyboard.isUppercase) {
-            keyboard.toggleCase();
-          }
+        if (keyboard.shiftOnce && keyboard.isLetter(currentKey) && !capsLockEnabled) {
+          keyboard.shiftOnce = false;
+          setUppercase(false);
           refreshKeyLabels();
         }
       };
@@ -338,6 +403,10 @@ keyboard.hitTestable = false;
 dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => {
   userOverrodeMode = false;
   lastContextKey = null;
+  capsLockEnabled = false;
+  lastShiftTapAt = 0;
+  keyboard.shiftOnce = false;
+  setUppercase(false);
   applySmartFieldMode({ force: true });
   keyboard.visible = true;
   updateSuggestions();
@@ -345,6 +414,10 @@ dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => {
 });
 
 dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
+  if (suggestionUpdateTimer) {
+    clearTimeout(suggestionUpdateTimer);
+    suggestionUpdateTimer = null;
+  }
   keyboard.visible = false;
   keyboard.invalidate();
 });
