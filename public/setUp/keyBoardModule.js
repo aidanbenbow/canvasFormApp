@@ -28,6 +28,8 @@ export const KeyboardModule = {
 
       let backspaceRepeatTimer = null;
       let backspaceRepeatTimeout = null;
+      let userOverrodeMode = false;
+      let lastContextKey = null;
 
       const stopBackspaceRepeat = () => {
         if (backspaceRepeatTimeout) {
@@ -62,6 +64,69 @@ export const KeyboardModule = {
         "message", "report", "beneficiary", "support", "thank", "thanks", "hello", "dear"
       ];
 
+      const getActiveFieldContext = () => {
+        const node = context?.textEditorController?.activeNode;
+        if (!node) {
+          return {
+            nodeId: null,
+            text: '',
+            profile: {
+              type: 'general',
+              preferredMode: 'alpha',
+              chips: ["hello", "thanks", "support"]
+            }
+          };
+        }
+
+        const contextText = [
+          node.id,
+          node.placeholder,
+          node.label,
+          node.value
+        ]
+          .filter((item) => item !== undefined && item !== null)
+          .map((item) => String(item).toLowerCase())
+          .join(' ');
+
+        const withProfile = (type, preferredMode, chips) => ({
+          type,
+          preferredMode,
+          chips
+        });
+
+        let profile = withProfile('general', 'alpha', ["hello", "thanks", "support"]);
+        if (/email|e-mail|mail/.test(contextText)) {
+          profile = withProfile('email', 'punct', ["@gmail.com", "@yahoo.com", ".com"]);
+        } else if (/phone|mobile|tel|contact/.test(contextText)) {
+          profile = withProfile('phone', 'punct', ["+", "07", "254"]);
+        } else if (/year|date/.test(contextText)) {
+          profile = withProfile('year', 'alpha', ["2026", "2025", "2024"]);
+        } else if (/name/.test(contextText)) {
+          profile = withProfile('name', 'alpha', ["Dear", "Hello", "Thanks"]);
+        } else if (/photo|image|url|link/.test(contextText)) {
+          profile = withProfile('url', 'punct', ["https://", ".com", ".jpg"]);
+        } else if (/amount|price|total|number|qty|quantity|count|age/.test(contextText)) {
+          profile = withProfile('number', 'alpha', ["100", "500", "1000"]);
+        } else if (/message|report|comment|feedback|article/.test(contextText)) {
+          profile = withProfile('message', 'alpha', ["thank", "support", "beneficiary"]);
+        }
+
+        return {
+          nodeId: node.id || null,
+          text: contextText,
+          profile
+        };
+      };
+
+      const applySmartFieldMode = ({ force = false } = {}) => {
+        const { profile } = getActiveFieldContext();
+        if (!profile?.preferredMode) return false;
+        if (!force && userOverrodeMode) return false;
+        if (keyboard.mode === profile.preferredMode) return false;
+        keyboard.setMode(profile.preferredMode);
+        return true;
+      };
+
       const getEditorState = () => {
         const editor = context.textEditorController;
         if (!editor?.activeNode || !editor?.textModel) {
@@ -84,19 +149,32 @@ export const KeyboardModule = {
         const { text, caretIndex } = getEditorState();
         const prefix = getCurrentWordPrefix(text, caretIndex);
         const lowerPrefix = prefix.toLowerCase();
+        const { nodeId, profile } = getActiveFieldContext();
+        const contextKey = `${nodeId || 'none'}:${profile.type}`;
+
+        if (contextKey !== lastContextKey) {
+          const modeChanged = applySmartFieldMode();
+          if (modeChanged) {
+            refreshKeyLabels();
+          }
+          lastContextKey = contextKey;
+        }
 
         const dynamicWords = Array.from(new Set((text.match(/[A-Za-z]{3,}/g) || []).map((word) => word.toLowerCase())));
-        const candidatePool = Array.from(new Set([...dynamicWords, ...suggestionDictionary]));
+        const contextualChips = Array.from(new Set((profile?.chips || []).map((word) => String(word).trim()).filter(Boolean)));
+        const candidatePool = Array.from(new Set([...contextualChips, ...dynamicWords, ...suggestionDictionary]));
 
         let nextSuggestions = [];
         if (lowerPrefix) {
           nextSuggestions = candidatePool
-            .filter((word) => word.startsWith(lowerPrefix) && word !== lowerPrefix)
+            .filter((word) => String(word).toLowerCase().startsWith(lowerPrefix) && String(word).toLowerCase() !== lowerPrefix)
             .slice(0, 3);
+        } else {
+          nextSuggestions = contextualChips.slice(0, 3);
         }
 
         if (nextSuggestions.length < 3) {
-          const fallback = suggestionDictionary.filter((word) => !nextSuggestions.includes(word));
+          const fallback = candidatePool.filter((word) => !nextSuggestions.includes(word));
           nextSuggestions = [...nextSuggestions, ...fallback].slice(0, 3);
         }
 
@@ -164,6 +242,7 @@ export const KeyboardModule = {
         }
 
         if (currentKey === '⇧') {
+          userOverrodeMode = true;
           keyboard.toggleCase();
           keyboard.shiftOnce = keyboard.isUppercase;
           refreshKeyLabels();
@@ -171,6 +250,7 @@ export const KeyboardModule = {
         }
 
         if (currentKey === 'SYM' || currentKey === 'ABC') {
+          userOverrodeMode = true;
           keyboard.toggleMode();
           refreshKeyLabels();
           return;
@@ -225,6 +305,9 @@ keyboard.hitTestable = false;
           keyboard.keyButtons = [];
 
 dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => {
+  userOverrodeMode = false;
+  lastContextKey = null;
+  applySmartFieldMode({ force: true });
   keyboard.visible = true;
   updateSuggestions();
   keyboard.invalidate();

@@ -14,14 +14,16 @@ export class KeyboardNode extends ContainerNode {
         ['1','2','3','4','5','6','7','8','9','0'],
         ['q','w','e','r','t','y','u','i','o','p'],
         ['a','s','d','f','g','h','j','k','l','⇧'],
-        ['SYM','z','x','c','v','b','n','m','←','↵','Space']
+        ['z','x','c','v','b','n','m','←','↵'],
+        ['SYM','Space','.']
       ];
       this.punctLayout = [
         ['Paste', '__SUGG_1__', '__SUGG_2__', '__SUGG_3__'],
         ['1','2','3','4','5','6','7','8','9','0'],
         ['!','@','#','$','%','^','&','*','(',')'],
         ['-','_','/',';',':','"','\'','?','.',','],
-        ['ABC','[',']','{','}','+','=','|','←','↵','Space']
+        ['[',']','{','}','+','=','|','←','↵'],
+        ['ABC','Space','.']
       ];
       this.keyLayout = this.getDisplayLayout();
       this.hitTestable = false; // Keyboard itself doesn't receive events, but its children can
@@ -76,6 +78,12 @@ export class KeyboardNode extends ContainerNode {
 
     toggleMode() {
       this.mode = this.mode === "punct" ? "alpha" : "punct";
+      this.keyLayout = this.getDisplayLayout();
+    }
+
+    setMode(nextMode) {
+      if (nextMode !== "alpha" && nextMode !== "punct") return;
+      this.mode = nextMode;
       this.keyLayout = this.getDisplayLayout();
     }
 
