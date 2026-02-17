@@ -50,8 +50,87 @@ export const KeyboardModule = {
         keyboard.keyButtons.forEach((entry, index) => {
           entry.baseKey = flat[index] ?? entry.baseKey;
           entry.button.label = keyboard.getKeyLabel(entry.baseKey);
+          if (keyboard.isSuggestionToken(entry.baseKey)) {
+            entry.button.style.font = isSmallScreen() ? "20px sans-serif" : "14px sans-serif";
+          }
         });
         keyboard.invalidate();
+      };
+
+      const suggestionDictionary = [
+        "the", "and", "to", "for", "with", "that", "this", "from", "you", "your",
+        "message", "report", "beneficiary", "support", "thank", "thanks", "hello", "dear"
+      ];
+
+      const getEditorState = () => {
+        const editor = context.textEditorController;
+        if (!editor?.activeNode || !editor?.textModel) {
+          return { text: "", caretIndex: 0 };
+        }
+        return {
+          text: editor.textModel.getText?.() ?? "",
+          caretIndex: editor.caretController?.caretIndex ?? 0
+        };
+      };
+
+      const getCurrentWordPrefix = (text, caretIndex) => {
+        const safeCaret = Math.max(0, Math.min(caretIndex, text.length));
+        const left = text.slice(0, safeCaret);
+        const match = left.match(/[A-Za-z]+$/);
+        return match ? match[0] : "";
+      };
+
+      const updateSuggestions = () => {
+        const { text, caretIndex } = getEditorState();
+        const prefix = getCurrentWordPrefix(text, caretIndex);
+        const lowerPrefix = prefix.toLowerCase();
+
+        const dynamicWords = Array.from(new Set((text.match(/[A-Za-z]{3,}/g) || []).map((word) => word.toLowerCase())));
+        const candidatePool = Array.from(new Set([...dynamicWords, ...suggestionDictionary]));
+
+        let nextSuggestions = [];
+        if (lowerPrefix) {
+          nextSuggestions = candidatePool
+            .filter((word) => word.startsWith(lowerPrefix) && word !== lowerPrefix)
+            .slice(0, 3);
+        }
+
+        if (nextSuggestions.length < 3) {
+          const fallback = suggestionDictionary.filter((word) => !nextSuggestions.includes(word));
+          nextSuggestions = [...nextSuggestions, ...fallback].slice(0, 3);
+        }
+
+        keyboard.setSuggestions(nextSuggestions);
+        refreshKeyLabels();
+      };
+
+      const applySuggestion = (suggestion) => {
+        const editor = context.textEditorController;
+        if (!editor?.activeNode || !editor?.textModel) return;
+
+        const text = editor.textModel.getText?.() ?? "";
+        const caret = editor.caretController;
+        const caretIndex = caret?.caretIndex ?? 0;
+        const safeCaret = Math.max(0, Math.min(caretIndex, text.length));
+        const left = text.slice(0, safeCaret);
+        const right = text.slice(safeCaret);
+        const prefixMatch = left.match(/[A-Za-z]+$/);
+        const prefixLength = prefixMatch ? prefixMatch[0].length : 0;
+
+        const beforePrefix = left.slice(0, left.length - prefixLength);
+        const insertion = `${suggestion} `;
+        const newText = beforePrefix + insertion + right;
+
+        editor.textModel.setText(newText);
+        const nextCaret = beforePrefix.length + insertion.length;
+        if (caret) {
+          caret.caretIndex = nextCaret;
+          caret.selectionStart = nextCaret;
+          caret.selectionEnd = nextCaret;
+          caret.selectionAnchor = nextCaret;
+        }
+        editor.pipeline.invalidate();
+        updateSuggestions();
       };
 
       const isSymbolKey = (key) => {
@@ -71,6 +150,16 @@ export const KeyboardModule = {
 
         if (currentKey === 'Paste') {
           context.textEditorController?.pasteFromClipboard?.();
+          setTimeout(updateSuggestions, 0);
+          return;
+        }
+
+        if (keyboard.isSuggestionToken(currentKey)) {
+          const index = keyboard.getSuggestionIndex(currentKey);
+          const suggestion = keyboard.suggestions[index];
+          if (suggestion && suggestion !== '...') {
+            applySuggestion(suggestion);
+          }
           return;
         }
 
@@ -89,6 +178,7 @@ export const KeyboardModule = {
 
         const key = keyboard.getKeyLabel(currentKey);
         dispatchKeyPress(key);
+        setTimeout(updateSuggestions, 0);
 
         if (keyboard.shiftOnce && keyboard.isLetter(currentKey)) {
           keyboard.shiftOnce = false;
@@ -136,6 +226,7 @@ keyboard.hitTestable = false;
 
 dispatcher.on(ACTIONS.KEYBOARD.SHOW, () => {
   keyboard.visible = true;
+  updateSuggestions();
   keyboard.invalidate();
 });
 
@@ -187,3 +278,7 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
       return keyboard;
     }
   };
+
+function isSmallScreen() {
+  return typeof window !== 'undefined' && window.innerWidth < 1024;
+}

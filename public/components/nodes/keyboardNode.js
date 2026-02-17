@@ -8,15 +8,16 @@ export class KeyboardNode extends ContainerNode {
       this.mode = "alpha";
       this.hasClipboardBar = true;
       this.shiftOnce = false;
+      this.suggestions = ["the", "and", "to"];
       this.alphaLayout = [
-        ['Paste'],
+        ['Paste', '__SUGG_1__', '__SUGG_2__', '__SUGG_3__'],
         ['1','2','3','4','5','6','7','8','9','0'],
         ['q','w','e','r','t','y','u','i','o','p'],
         ['a','s','d','f','g','h','j','k','l','⇧'],
         ['SYM','z','x','c','v','b','n','m','←','↵','Space']
       ];
       this.punctLayout = [
-        ['Paste'],
+        ['Paste', '__SUGG_1__', '__SUGG_2__', '__SUGG_3__'],
         ['1','2','3','4','5','6','7','8','9','0'],
         ['!','@','#','$','%','^','&','*','(',')'],
         ['-','_','/',';',':','"','\'','?','.',','],
@@ -41,8 +42,31 @@ export class KeyboardNode extends ContainerNode {
     }
 
     getKeyLabel(key) {
+      if (this.isSuggestionToken(key)) {
+        const index = this.getSuggestionIndex(key);
+        return this.suggestions[index] || "...";
+      }
       if (!this.isLetter(key)) return key;
       return this.isUppercase ? key.toUpperCase() : key.toLowerCase();
+    }
+
+    isSuggestionToken(key) {
+      return /^__SUGG_[1-3]__$/.test(key);
+    }
+
+    getSuggestionIndex(key) {
+      if (!this.isSuggestionToken(key)) return -1;
+      const match = key.match(/^__SUGG_([1-3])__$/);
+      return match ? Number(match[1]) - 1 : -1;
+    }
+
+    setSuggestions(nextSuggestions = []) {
+      const sanitized = (nextSuggestions || []).map((item) => String(item || '').trim()).filter(Boolean);
+      while (sanitized.length < 3) {
+        sanitized.push('...');
+      }
+      this.suggestions = sanitized.slice(0, 3);
+      this.keyLayout = this.getDisplayLayout();
     }
 
     toggleCase() {
@@ -61,6 +85,7 @@ export class KeyboardNode extends ContainerNode {
 
     getKeyWeight(key) {
       if (key === "Paste") return 6;
+      if (this.isSuggestionToken(key)) return 5;
       if (key === "Space") return 2.5;
       if (key === "↵") return 1.8;
       if (key === "SYM" || key === "ABC") return 1.4;
