@@ -61,6 +61,50 @@ export const KeyboardModule = {
         return true;
       };
 
+      const handleKeyAction = (entry) => {
+        const currentKey = entry.baseKey;
+
+        if (currentKey === '←') {
+          startBackspaceRepeat();
+          return;
+        }
+
+        if (currentKey === 'Paste') {
+          context.textEditorController?.pasteFromClipboard?.();
+          return;
+        }
+
+        if (currentKey === '⇧') {
+          keyboard.toggleCase();
+          keyboard.shiftOnce = keyboard.isUppercase;
+          refreshKeyLabels();
+          return;
+        }
+
+        if (currentKey === 'SYM' || currentKey === 'ABC') {
+          keyboard.toggleMode();
+          refreshKeyLabels();
+          return;
+        }
+
+        const key = keyboard.getKeyLabel(currentKey);
+        dispatchKeyPress(key);
+
+        if (keyboard.shiftOnce && keyboard.isLetter(currentKey)) {
+          keyboard.shiftOnce = false;
+          keyboard.toggleCase();
+          refreshKeyLabels();
+        }
+
+        if (isSymbolKey(currentKey)) {
+          keyboard.shiftOnce = true;
+          if (!keyboard.isUppercase) {
+            keyboard.toggleCase();
+          }
+          refreshKeyLabels();
+        }
+      };
+
       const startBackspaceRepeat = () => {
         stopBackspaceRepeat();
         dispatchKeyPress('←');
@@ -79,7 +123,9 @@ export const KeyboardModule = {
           position: 'absolute',
           bottom: '0',
           width: '100%',
-          backgroundColor: '#ccc'
+          background: '#0f172a',
+          border: { color: '#1f2937', width: 1 },
+          radius: 0
         }
       });
 
@@ -101,23 +147,22 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
   
       keyboard.keyLayout.forEach((row, rowIndex) => {
         row.forEach((baseKey, keyIndex) => {
-          const entry = { button: null, baseKey };
+          const entry = { button: null, baseKey, handledOnPressStart: false };
           const button = new ButtonNode({
             id: `key-${rowIndex}-${keyIndex}`,
             label: keyboard.getKeyLabel(baseKey),
             style: {
               radius: 10,
-              background: "rgba(209, 213, 219, 0.95)",
-              hoverBackground: "rgba(191, 219, 254, 0.95)",
-              pressedBackground: "rgba(147, 197, 253, 0.98)",
-              borderColor: "#94a3b8",
-              textColor: "#0f172a",
+              background: "#1f2937",
+              hoverBackground: "#334155",
+              pressedBackground: "#475569",
+              borderColor: "#64748b",
+              textColor: "#f8fafc",
               fontWeight: 600
             },
             onPressStart: () => {
-              if (entry.baseKey === '←') {
-                startBackspaceRepeat();
-              }
+              entry.handledOnPressStart = true;
+              handleKeyAction(entry);
             },
             onPressEnd: () => {
               if (entry.baseKey === '←') {
@@ -125,46 +170,11 @@ dispatcher.on(ACTIONS.KEYBOARD.HIDE, () => {
               }
             },
             onClick: () => {
-              const currentKey = entry.baseKey;
-
-              if (currentKey === '←') {
+              if (entry.handledOnPressStart) {
+                entry.handledOnPressStart = false;
                 return;
               }
-
-              if (currentKey === 'Paste') {
-                context.textEditorController?.pasteFromClipboard?.();
-                return;
-              }
-
-              if (currentKey === '⇧') {
-                keyboard.toggleCase();
-                keyboard.shiftOnce = keyboard.isUppercase;
-                refreshKeyLabels();
-                return;
-              }
-
-              if (currentKey === 'SYM' || currentKey === 'ABC') {
-                keyboard.toggleMode();
-                refreshKeyLabels();
-                return;
-              }
-
-              const key = keyboard.getKeyLabel(currentKey);
-              dispatchKeyPress(key);
-
-              if (keyboard.shiftOnce && keyboard.isLetter(currentKey)) {
-                keyboard.shiftOnce = false;
-                keyboard.toggleCase();
-                refreshKeyLabels();
-              }
-
-              if (isSymbolKey(currentKey)) {
-                keyboard.shiftOnce = true;
-                if (!keyboard.isUppercase) {
-                  keyboard.toggleCase();
-                }
-                refreshKeyLabels();
-              }
+              handleKeyAction(entry);
             }
           });
 

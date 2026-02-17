@@ -91,6 +91,8 @@ this.dropdownVisible = false;
   onPointerDown(pointerX, pointerY) {
     const wasFocused = this.uiState?.focused || false;
     this.context.focusManager.focus(this);
+    const editor = this.context?.textEditorController;
+    const ctx = this.context?.ctx;
 
     if (!wasFocused) {
       this.openDropdown();
@@ -98,9 +100,10 @@ this.dropdownVisible = false;
       this.selectedIndex = -1; // reset selection
     }
 
-    if (this.context?.textEditorController?.caretController) {
-      const ctx = this.context.ctx;
-      this.context.textEditorController.caretController.moveCaretToMousePosition(pointerX, pointerY, ctx);
+    if (editor?.beginPointerSelection) {
+      editor.beginPointerSelection(this, pointerX, pointerY, ctx);
+    } else if (editor?.caretController) {
+      editor.caretController.moveCaretToMousePosition(pointerX, pointerY, ctx);
     }
 
     this.invalidate();

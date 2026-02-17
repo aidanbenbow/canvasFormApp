@@ -80,6 +80,13 @@ export class SceneInputSystem {
       }
 
       if (type === "mousemove") {
+        const editor = this.pipeline?.editor;
+        const isSelectingText = Boolean(editor?.selectionDragActive && editor?.activeNode);
+        if (isSelectingText) {
+          this._handleFromClient(type, touch.clientX, touch.clientY, e);
+          return;
+        }
+
         const now = performance.now();
         const deltaY = this._lastTouchMoveY !== null ? (this._lastTouchMoveY - touch.clientY) * this.touchScrollMultiplier : 0;
         const dt = Math.max(1, now - this._lastTouchMoveTime);

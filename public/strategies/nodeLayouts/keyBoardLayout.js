@@ -3,6 +3,9 @@ export class KeyboardLayoutStrategy {
     const maxWidth = constraints.maxWidth;
     const maxHeight = constraints.maxHeight;
     const spacing = isSmallScreen() ? 10 : 12;
+    const horizontalPadding = isSmallScreen() ? 16 : 22;
+    const verticalPadding = isSmallScreen() ? 12 : 14;
+    const contentWidth = Math.max(0, maxWidth - horizontalPadding * 2);
     const rowCount = node.keyLayout.length;
     const maxCols = Math.max(...node.keyLayout.map((row) => row.length));
 
@@ -10,12 +13,12 @@ export class KeyboardLayoutStrategy {
       ? Math.max(220, Math.floor(maxHeight * 0.36))
       : Math.min(300, maxHeight);
 
-    const keyHeight = Math.max(40, Math.floor((targetHeight - (rowCount - 1) * spacing) / rowCount));
+    const keyHeight = Math.max(40, Math.floor((targetHeight - (rowCount - 1) * spacing - verticalPadding * 2) / rowCount));
 
     let childIndex = 0;
     node.keyLayout.forEach((row) => {
       const rowUnits = row.reduce((sum, key) => sum + node.getKeyWeight(key), 0);
-      const unitWidth = (maxWidth - (row.length - 1) * spacing) / rowUnits;
+      const unitWidth = (contentWidth - (row.length - 1) * spacing) / rowUnits;
 
       row.forEach((key) => {
         const child = node.children[childIndex++];
@@ -33,16 +36,19 @@ export class KeyboardLayoutStrategy {
     node.bounds = bounds;
 
     const spacing = isSmallScreen() ? 10 : 12;
-    const keyHeight = Math.max(40, Math.floor((bounds.height - (node.keyLayout.length - 1) * spacing) / node.keyLayout.length));
+    const horizontalPadding = isSmallScreen() ? 16 : 22;
+    const verticalPadding = isSmallScreen() ? 12 : 14;
+    const contentWidth = Math.max(0, bounds.width - horizontalPadding * 2);
+    const keyHeight = Math.max(40, Math.floor((bounds.height - (node.keyLayout.length - 1) * spacing - verticalPadding * 2) / node.keyLayout.length));
 
-    let y = bounds.y + spacing;
+    let y = bounds.y + verticalPadding;
     let childIndex = 0;
 
     node.keyLayout.forEach(row => {
       const rowUnits = row.reduce((sum, key) => sum + node.getKeyWeight(key), 0);
-      const unitWidth = (bounds.width - (row.length - 1) * spacing) / rowUnits;
+      const unitWidth = (contentWidth - (row.length - 1) * spacing) / rowUnits;
       const rowWidth = row.reduce((sum, key) => sum + unitWidth * node.getKeyWeight(key), 0) + (row.length - 1) * spacing;
-      let x = bounds.x + Math.max(0, (bounds.width - rowWidth) / 2);
+      let x = bounds.x + horizontalPadding + Math.max(0, (contentWidth - rowWidth) / 2);
 
       row.forEach((key) => {
         const child = node.children[childIndex++];

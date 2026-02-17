@@ -31,23 +31,87 @@ export class FormViewScreen extends BaseScreen {
     this.formId = formId ?? this.store.getActiveForm()?.id ?? null;
     this.children = this.store.getActiveForm()?.formStructure || {};
     this.childArray = Object.values(this.children);
+    this.commandRegistry = commandRegistry;
+    this.copyFieldCommands = new Set();
 
     this.manifest = structuredClone(formViewUIManifest);
     this.manifest.regions.formContainer.viewport = this.getResponsiveViewport();
     this.createManfest();
     this.factories = factories;
-    this.commandRegistry = commandRegistry;
     this.onSubmit = onSubmit;
     this.results = results ?? (this.formId ? this.store.getFormResults(this.formId) : []);
   }
   createManfest() {
+        const compactSubmitStyle = isSmallScreen()
+          ? {
+              fillWidth: false,
+              font: '28px sans-serif',
+              paddingX: 26,
+              paddingY: 14,
+              minHeight: 64,
+              radius: 8
+            }
+          : {
+              fillWidth: false,
+              font: '18px sans-serif',
+              paddingX: 16,
+              paddingY: 8,
+              minHeight: 38,
+              radius: 6
+            };
+
+        const copyButtonStyle = isSmallScreen()
+          ? {
+              fillWidth: false,
+              font: '24px sans-serif',
+              paddingX: 18,
+              paddingY: 10,
+              minHeight: 54,
+              radius: 8
+            }
+          : {
+              fillWidth: false,
+              font: '16px sans-serif',
+              paddingX: 12,
+              paddingY: 6,
+              minHeight: 34,
+              radius: 6
+            };
+
         const normalizedChildren = [];
         for (const child of this.childArray) {
           for (const field of child) {
+            if (this.shouldAddCopyButton(field)) {
+              const copyCommand = this.ensureCopyCommand(field.id);
+              normalizedChildren.push(field);
+              normalizedChildren.push({
+                type: 'button',
+                id: `copy-${field.id}`,
+                label: 'Copy',
+                action: copyCommand,
+                skipCollect: true,
+                skipClear: true,
+                style: copyButtonStyle
+              });
+              continue;
+            }
+
             if (field?.type === 'button' && !field.action && !field.command) {
               normalizedChildren.push({
                 ...field,
-                action: 'form.submit'
+                action: 'form.submit',
+                style: {
+                  ...(field.style || {}),
+                  ...compactSubmitStyle
+                }
+              });
+            } else if (field?.type === 'button') {
+              normalizedChildren.push({
+                ...field,
+                style: {
+                  ...(field.style || {}),
+                  ...compactSubmitStyle
+                }
               });
             } else {
               normalizedChildren.push(field);
@@ -58,6 +122,49 @@ export class FormViewScreen extends BaseScreen {
         this.manifest.regions.formContainer.children = normalizedChildren;
        
   }
+
+  shouldAddCopyButton(field) {
+    if (!field || field.type !== 'input') return false;
+    const idText = String(field.id || '').toLowerCase();
+    const labelText = String(field.label || field.text || '').toLowerCase();
+    return /message/.test(idText) || /message/.test(labelText);
+  }
+
+  ensureCopyCommand(fieldId) {
+    const commandName = `${this.id}.copy.${fieldId}`;
+    if (this.copyFieldCommands.has(commandName)) {
+      return commandName;
+    }
+
+    this.commandRegistry.register(commandName, async () => {
+      const node = this.context?.fieldRegistry?.get(fieldId);
+      const value = node?.getValue?.() ?? node?.value ?? '';
+      const text = String(value || '');
+      if (!text) return;
+
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return;
+        } catch (_) {
+        }
+      }
+
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    });
+
+    this.copyFieldCommands.add(commandName);
+    return commandName;
+  }
+
   createRoot() {
     this.manifest.regions.formContainer.viewport = this.getResponsiveViewport();
     const effectiveResults = this.results ?? (this.formId ? this.store.getFormResults(this.formId) : []);
@@ -123,3 +230,7 @@ const manifest = {
     }
   }
 };
+
+function isSmallScreen() {
+  return typeof window !== 'undefined' && window.innerWidth < 1024;
+}
