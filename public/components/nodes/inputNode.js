@@ -5,7 +5,7 @@ import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class InputNode extends SceneNode {
-    constructor({ id, value = "", placeholder = "", onChange, editable = true, style = {} }) {
+  constructor({ id, value = "", placeholder = "", label = "", onChange, editable = true, style = {} }) {
       super({
         id,
         layoutStrategy: layoutRegistry["input"]() || new InputLayoutStrategy(),
@@ -15,6 +15,7 @@ export class InputNode extends SceneNode {
   
       this.value = value;
       this.placeholder = placeholder;
+      this.label = label;
       this.onChange = onChange;
       this.editable = editable;
       this.cursorPos = value.length

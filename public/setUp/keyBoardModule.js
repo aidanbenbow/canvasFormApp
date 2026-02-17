@@ -64,6 +64,37 @@ export const KeyboardModule = {
         "message", "report", "beneficiary", "support", "thank", "thanks", "hello", "dear"
       ];
 
+      const labelSuggestionProfiles = [
+        {
+          match: /message\s*year|year|anul\s*mesajului|an/,
+          profile: { type: 'year', preferredMode: 'alpha', chips: ["2026", "2025", "2024"] }
+        },
+        {
+          match: /email|e-mail|mail/,
+          profile: { type: 'email', preferredMode: 'punct', chips: ["@gmail.com", "@yahoo.com", ".com"] }
+        },
+        {
+          match: /phone|mobile|tel|contact|telefon/,
+          profile: { type: 'phone', preferredMode: 'punct', chips: ["+", "07", "254"] }
+        },
+        {
+          match: /name|nume|numele|input-name/,
+          profile: { type: 'name', preferredMode: 'alpha', chips: ["Dear", "Hello", "Thanks"] }
+        },
+        {
+          match: /photo|image|url|link/,
+          profile: { type: 'url', preferredMode: 'punct', chips: ["https://", ".com", ".jpg"] }
+        },
+        {
+          match: /amount|price|total|number|qty|quantity|count|age/,
+          profile: { type: 'number', preferredMode: 'alpha', chips: ["100", "500", "1000"] }
+        },
+        {
+          match: /message|messageinput|mesaj|mesajul|report|raport|comment|feedback|article/,
+          profile: { type: 'message', preferredMode: 'alpha', chips: ["thank", "support", "beneficiary"] }
+        }
+      ];
+
       const getActiveFieldContext = () => {
         const node = context?.textEditorController?.activeNode;
         if (!node) {
@@ -78,15 +109,12 @@ export const KeyboardModule = {
           };
         }
 
-        const contextText = [
-          node.id,
-          node.placeholder,
-          node.label,
-          node.value
-        ]
-          .filter((item) => item !== undefined && item !== null)
-          .map((item) => String(item).toLowerCase())
-          .join(' ');
+        const labelText = String(node.label || '').toLowerCase();
+        const idText = String(node.id || '').toLowerCase();
+        const placeholderText = String(node.placeholder || '').toLowerCase();
+        const valueText = String(node.value || '').toLowerCase();
+
+        const contextText = `${labelText} ${idText} ${placeholderText} ${valueText}`.trim();
 
         const withProfile = (type, preferredMode, chips) => ({
           type,
@@ -94,21 +122,21 @@ export const KeyboardModule = {
           chips
         });
 
+        const resolveMappedProfile = (lookupText) => {
+          const mapped = labelSuggestionProfiles.find((entry) => entry.match.test(lookupText));
+          return mapped ? mapped.profile : null;
+        };
+
+        const labelDriven = `${labelText} ${idText}`;
+        const broadContext = `${labelText} ${idText} ${placeholderText}`;
+
         let profile = withProfile('general', 'alpha', ["hello", "thanks", "support"]);
-        if (/email|e-mail|mail/.test(contextText)) {
-          profile = withProfile('email', 'punct', ["@gmail.com", "@yahoo.com", ".com"]);
-        } else if (/phone|mobile|tel|contact/.test(contextText)) {
-          profile = withProfile('phone', 'punct', ["+", "07", "254"]);
-        } else if (/year|date/.test(contextText)) {
-          profile = withProfile('year', 'alpha', ["2026", "2025", "2024"]);
-        } else if (/name/.test(contextText)) {
-          profile = withProfile('name', 'alpha', ["Dear", "Hello", "Thanks"]);
-        } else if (/photo|image|url|link/.test(contextText)) {
-          profile = withProfile('url', 'punct', ["https://", ".com", ".jpg"]);
-        } else if (/amount|price|total|number|qty|quantity|count|age/.test(contextText)) {
-          profile = withProfile('number', 'alpha', ["100", "500", "1000"]);
-        } else if (/message|report|comment|feedback|article/.test(contextText)) {
-          profile = withProfile('message', 'alpha', ["thank", "support", "beneficiary"]);
+        const mappedByLabel = resolveMappedProfile(labelDriven);
+        const mappedByContext = resolveMappedProfile(broadContext);
+        if (mappedByLabel) {
+          profile = withProfile(mappedByLabel.type, mappedByLabel.preferredMode, mappedByLabel.chips);
+        } else if (mappedByContext) {
+          profile = withProfile(mappedByContext.type, mappedByContext.preferredMode, mappedByContext.chips);
         }
 
         return {
@@ -162,7 +190,10 @@ export const KeyboardModule = {
 
         const dynamicWords = Array.from(new Set((text.match(/[A-Za-z]{3,}/g) || []).map((word) => word.toLowerCase())));
         const contextualChips = Array.from(new Set((profile?.chips || []).map((word) => String(word).trim()).filter(Boolean)));
-        const candidatePool = Array.from(new Set([...contextualChips, ...dynamicWords, ...suggestionDictionary]));
+        const safeDictionary = (profile?.type === 'message' || profile?.type === 'general')
+          ? suggestionDictionary.filter((word) => !/^\d+$/.test(String(word)))
+          : suggestionDictionary;
+        const candidatePool = Array.from(new Set([...contextualChips, ...dynamicWords, ...safeDictionary]));
 
         let nextSuggestions = [];
         if (lowerPrefix) {
