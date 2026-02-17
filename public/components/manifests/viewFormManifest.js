@@ -3,6 +3,8 @@ import {
   getCopyButtonStyle,
   getResponsiveViewport
 } from './screenManifestUtils.js';
+import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
+import { runFieldPlugins } from '../fieldPlugins/runFieldPlugins.js';
 
 export const formViewUIManifest = {
   layout: 'centre',
@@ -35,69 +37,17 @@ export function buildViewFormManifest({
 
   const compactSubmitStyle = getCompactSubmitStyle();
   const copyButtonStyle = getCopyButtonStyle();
+  const plugins = getFieldPlugins('view', {
+    isPhotoLikeField,
+    getPhotoSource,
+    shouldAddCopyButton,
+    ensureCopyCommand,
+    copyButtonStyle,
+    submitStyle: compactSubmitStyle,
+    submitAction: 'form.submit'
+  });
 
-  const normalizedChildren = [];
-  for (const field of fields || []) {
-    if (isPhotoLikeField(field)) {
-      const source = getPhotoSource(field);
-      const previewId = `photo-preview-${field.id}`;
-
-      normalizedChildren.push({
-        ...field,
-        type: 'input',
-        value: source,
-        placeholder: field.placeholder || 'Enter photo URL...'
-      });
-
-      normalizedChildren.push({
-        type: 'photo',
-        id: previewId,
-        src: source,
-        style: {
-          fillWidth: true,
-          borderColor: '#93c5fd',
-          backgroundColor: '#eff6ff'
-        }
-      });
-      continue;
-    }
-
-    if (shouldAddCopyButton(field)) {
-      const copyCommand = ensureCopyCommand(field.id);
-      normalizedChildren.push(field);
-      normalizedChildren.push({
-        type: 'button',
-        id: `copy-${field.id}`,
-        label: 'Copy',
-        action: copyCommand,
-        skipCollect: true,
-        skipClear: true,
-        style: copyButtonStyle
-      });
-      continue;
-    }
-
-    if (field?.type === 'button' && !field.action && !field.command) {
-      normalizedChildren.push({
-        ...field,
-        action: 'form.submit',
-        style: {
-          ...(field.style || {}),
-          ...compactSubmitStyle
-        }
-      });
-    } else if (field?.type === 'button') {
-      normalizedChildren.push({
-        ...field,
-        style: {
-          ...(field.style || {}),
-          ...compactSubmitStyle
-        }
-      });
-    } else {
-      normalizedChildren.push(field);
-    }
-  }
+  const normalizedChildren = runFieldPlugins(fields || [], plugins);
 
   manifest.regions.formContainer.children = normalizedChildren;
   return manifest;

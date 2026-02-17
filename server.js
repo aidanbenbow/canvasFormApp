@@ -102,7 +102,17 @@ io.on('connection', (socket) => {
           fields: data?.fields
         });
       } else {
-        const responses = data?.responses || data?.fields || {};
+        const rawResponses = data?.responses || data?.fields || {};
+        const knownIds = new Set(
+          Array.isArray(data?.formFields)
+            ? data.formFields.map((field) => field?.id).filter(Boolean)
+            : []
+        );
+        const responses = knownIds.size > 0
+          ? Object.fromEntries(
+              Object.entries(rawResponses).filter(([key]) => knownIds.has(key))
+            )
+          : rawResponses;
         result = await db.saveMessage(
           data.formId, data.user, responses
         );

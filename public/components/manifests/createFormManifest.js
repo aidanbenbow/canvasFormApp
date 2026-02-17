@@ -3,6 +3,8 @@ import {
   getDeleteButtonStyle,
   isSmallScreen
 } from './screenManifestUtils.js';
+import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
+import { runFieldPlugins } from '../fieldPlugins/runFieldPlugins.js';
 
 export const createFormUIManifest = {
   layout: 'vertical',
@@ -106,6 +108,10 @@ export function buildCreateDisplayFields({
 }) {
   const smallScreen = isSmallScreen();
   const deleteButtonStyle = getDeleteButtonStyle();
+  const fieldPlugins = getFieldPlugins(mode, {
+    isPhotoLikeField,
+    getPhotoSource
+  });
 
   return (fields || []).flatMap((field) => {
     const def = structuredClone(field);
@@ -145,27 +151,8 @@ export function buildCreateDisplayFields({
       });
     }
 
-    if (isPhotoLikeField(def)) {
-      const photoSource = getPhotoSource(def);
-      nodes.push({
-        ...def,
-        type: 'input',
-        value: photoSource,
-        placeholder: def.placeholder || 'Enter photo URL...'
-      });
-      nodes.push({
-        type: 'photo',
-        id: `photo-preview-${def.id}`,
-        src: photoSource,
-        style: {
-          fillWidth: true,
-          borderColor: '#93c5fd',
-          backgroundColor: '#eff6ff'
-        }
-      });
-    } else {
-      nodes.push(def);
-    }
+    const normalizedFieldNodes = runFieldPlugins([def], fieldPlugins);
+    nodes.push(...normalizedFieldNodes);
 
     if (isSelected) {
       nodes.push({

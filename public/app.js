@@ -101,13 +101,19 @@ commandRegistry.register("form.submit", (payload) => {
   delete submittedFields.done;
   submittedFields.messageYear = 26;
 
+  const normalizedFormFields = normalizeFields(activeForm?.formStructure);
+  const allowedFieldIds = new Set(normalizedFormFields.map((field) => field?.id).filter(Boolean));
+  const idOnlyFields = Object.fromEntries(
+    Object.entries(submittedFields).filter(([key]) => key === 'messageYear' || allowedFieldIds.has(key))
+  );
+
   const responseData = {
     formId: activeForm?.id,
     formLabel: activeForm?.label || null,
     user: activeForm?.user || "admin",
     resultsTable: activeForm?.resultsTable || null,
-    formFields: normalizeFields(activeForm?.formStructure),
-    fields: submittedFields
+    formFields: normalizedFormFields,
+    fields: idOnlyFields
   };
 
   if (activeForm) {
