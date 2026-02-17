@@ -1,4 +1,6 @@
 import { ACTIONS } from '../events/actions.js';
+import { FormBuilderFieldBindingController } from '../controllers/formBuilderFieldBindingController.js';
+import { FormBuilderInteractionController } from '../controllers/formBuilderInteractionController.js';
 import { FormReorderController } from '../controllers/formReorderController.js';
 import { PhotoPreviewController } from '../controllers/photoPreviewController.js';
 import { getPhotoSource, isPhotoLikeField } from '../utils/fieldGuards.js';
@@ -7,7 +9,6 @@ import {
   buildCreateDisplayFields,
   buildCreateFormManifest
 } from './manifests/createFormManifest.js';
-import { isSmallScreen } from './manifests/screenManifestUtils.js';
 import { normalizeForm } from '../plugins/formManifests.js';
 import { BaseScreen } from './baseScreen.js';
 import { compileUIManifest } from './uiManifestCompiler.js';
@@ -58,13 +59,24 @@ export class CreateForm extends BaseScreen {
     this.commandRegistry.register(this.addPhotoCommand, () => this.addComponent('photo'));
     this.commandRegistry.register(this.deleteFieldCommand, ({ fieldId } = {}) => this.deleteComponent(fieldId));
 
-    this.previewInsertionBeforeFieldId = null;
-    this.selectedFieldId = null;
-    this.draggingFieldId = null;
-    this.dragHandleNodes = new Map();
-    this.fieldNodes = new Map();
-    this.fieldBaseStyles = new Map();
     this.photoPreviewController = new PhotoPreviewController({ context: this.context });
+    this.fieldBindingController = new FormBuilderFieldBindingController({
+      getFields: () => this.getNormalizedFields(),
+      isPhotoLikeField: (field) => this.isPhotoLikeField(field),
+      getPhotoSource: (field) => this.getPhotoSource(field),
+      updatePhotoPreview: (fieldId, source) => this.photoPreviewController.updatePreviewForField(fieldId, source)
+    });
+
+    this.interactionController = new FormBuilderInteractionController({
+      context: this.context,
+      getRootNode: () => this.rootNode,
+      getFieldIds: () => this.getNormalizedFields().map((field) => field.id),
+      resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
+      getDragHandlePresentation: (fieldId, options) => this.getDragHandlePresentation(fieldId, options),
+      isSmallScreen: () => typeof window !== 'undefined' && window.innerWidth < 1024,
+      stopActiveEditing: () => this.stopActiveEditing(),
+      refreshFormContainer: () => this.refreshFormContainer()
+    });
 
     this.reorderController = new FormReorderController({
       context: this.context,
@@ -72,8 +84,8 @@ export class CreateForm extends BaseScreen {
       getRootNode: () => this.rootNode,
       resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
       onReorder: (sourceFieldId, targetFieldId) => this.reorderField(sourceFieldId, targetFieldId),
-      onPreviewTargetChange: (fieldId) => this.setPreviewInsertion(fieldId),
-      onDragStateChange: ({ active, sourceFieldId }) => this.setDraggingState(active, sourceFieldId)
+      onPreviewTargetChange: (fieldId) => this.interactionController.setPreviewInsertion(fieldId),
+      onDragStateChange: ({ active, sourceFieldId }) => this.interactionController.setDraggingState(active, sourceFieldId)
     });
   }
 
@@ -88,12 +100,10 @@ export class CreateForm extends BaseScreen {
 
     this.rootNode = rootNode;
     this.regions = regions;
-    this.bindSelectionHandlers(this.regions?.formContainer);
-    this.bindEditableNodes(this.regions?.formContainer);
-    this.cacheDragHandleNodes(this.regions?.formContainer);
-    this.cacheFieldNodes(this.regions?.formContainer);
-    this.applyPreviewToDragHandles();
-    this.applyPreviewToFields();
+    this.interactionController.bindSelectionHandlers(this.regions?.formContainer);
+    this.fieldBindingController.bindEditableNodes(this.regions?.formContainer);
+    this.interactionController.cacheNodes(this.regions?.formContainer);
+    this.interactionController.applyPreviewVisuals();
     this.reorderController.attach();
 
     return rootNode;
@@ -115,8 +125,8 @@ export class CreateForm extends BaseScreen {
     return buildCreateDisplayFields({
       fields: this.getNormalizedFields(),
       mode: this.mode,
-      selectedFieldId: this.selectedFieldId,
-      draggingFieldId: this.draggingFieldId,
+      selectedFieldId: this.interactionController.getSelectedFieldId(),
+      draggingFieldId: this.interactionController.getDraggingFieldId(),
       deleteFieldCommand: this.deleteFieldCommand,
       getDragHandlePresentation: (fieldId, options) => this.getDragHandlePresentation(fieldId, options),
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
@@ -124,25 +134,15 @@ export class CreateForm extends BaseScreen {
     });
   }
 
-  setPreviewInsertion(fieldId) {
-    const nextValue = fieldId ?? null;
-    if (this.previewInsertionBeforeFieldId === nextValue) return;
-    this.previewInsertionBeforeFieldId = nextValue;
-    this.applyPreviewToDragHandles();
-    this.applyPreviewToFields();
-  }
-
   refreshFormContainer() {
     if (!this.regions?.formContainer) return;
     this.stopActiveEditing();
     const nodes = this.getDisplayFields().map((def) => this.factories.basic.create(def));
     this.regions.formContainer.setChildren(nodes);
-    this.bindSelectionHandlers(this.regions.formContainer);
-    this.bindEditableNodes(this.regions.formContainer);
-    this.cacheDragHandleNodes(this.regions.formContainer);
-    this.cacheFieldNodes(this.regions.formContainer);
-    this.applyPreviewToDragHandles();
-    this.applyPreviewToFields();
+    this.interactionController.bindSelectionHandlers(this.regions.formContainer);
+    this.fieldBindingController.bindEditableNodes(this.regions.formContainer);
+    this.interactionController.cacheNodes(this.regions.formContainer);
+    this.interactionController.applyPreviewVisuals();
     this.rootNode.invalidate();
   }
 
@@ -171,52 +171,8 @@ export class CreateForm extends BaseScreen {
     editor.stopEditing();
   }
 
-  setDraggingState(isActive, sourceFieldId) {
-    const nextDraggingFieldId = isActive ? (sourceFieldId ?? null) : null;
-    if (this.draggingFieldId === nextDraggingFieldId) return;
-
-    if (isActive) {
-      this.stopActiveEditing();
-    }
-
-    this.draggingFieldId = nextDraggingFieldId;
-    this.refreshFormContainer();
-  }
-
-  bindSelectionHandlers(container) {
-    if (!container) return;
-
-    const previousCapture = container.onEventCapture?.bind(container);
-    container.onEventCapture = (event) => {
-      const handledByPrevious = previousCapture?.(event);
-      if (handledByPrevious) return true;
-
-      if (event.type !== 'mousedown' && event.type !== 'click') {
-        return false;
-      }
-
-      const fieldId = this.resolveFieldIdFromNode(event.target, {
-        allowDeleteNode: true,
-        allowHandleNode: true
-      });
-      if (!fieldId) return false;
-
-      this.setSelectedField(fieldId);
-      return false;
-    };
-  }
-
-  setSelectedField(fieldId) {
-    const nextFieldId = fieldId ?? null;
-    if (this.selectedFieldId === nextFieldId) return;
-    this.stopActiveEditing();
-    this.selectedFieldId = nextFieldId;
-    this.previewInsertionBeforeFieldId = null;
-    this.refreshFormContainer();
-  }
-
   getDragHandlePresentation(fieldId, { smallScreen }) {
-    const isPreviewTarget = this.previewInsertionBeforeFieldId === fieldId;
+    const isPreviewTarget = this.interactionController.getPreviewInsertionBeforeFieldId() === fieldId;
     if (isPreviewTarget) {
       return {
         text: '',
@@ -255,85 +211,6 @@ export class CreateForm extends BaseScreen {
             })
       }
     };
-  }
-
-  cacheDragHandleNodes(container) {
-    this.dragHandleNodes = new Map();
-    if (!container) return;
-
-    const walk = (node) => {
-      if (!node) return;
-      if (typeof node.id === 'string' && node.id.startsWith('drag-handle-')) {
-        const fieldId = node.id.slice('drag-handle-'.length);
-        this.dragHandleNodes.set(fieldId, node);
-      }
-      if (Array.isArray(node.children)) {
-        node.children.forEach(walk);
-      }
-    };
-
-    walk(container);
-  }
-
-  applyPreviewToDragHandles() {
-    if (!this.dragHandleNodes?.size) return;
-    const smallScreen = isSmallScreen();
-
-    for (const [fieldId, node] of this.dragHandleNodes.entries()) {
-      const presentation = this.getDragHandlePresentation(fieldId, { smallScreen });
-      node.text = presentation.text;
-      node.style = { ...presentation.style };
-    }
-
-    this.rootNode?.invalidate();
-  }
-
-  cacheFieldNodes(container) {
-    this.fieldNodes = new Map();
-    this.fieldBaseStyles = new Map();
-    if (!container) return;
-
-    const fieldIds = new Set(this.getNormalizedFields().map((field) => field.id));
-    const walk = (node) => {
-      if (!node) return;
-      if (fieldIds.has(node.id)) {
-        this.fieldNodes.set(node.id, node);
-        this.fieldBaseStyles.set(node.id, { ...(node.style || {}) });
-      }
-      if (Array.isArray(node.children)) {
-        node.children.forEach(walk);
-      }
-    };
-
-    walk(container);
-  }
-
-  applyPreviewToFields() {
-    if (!this.fieldNodes?.size) return;
-
-    const hasPreview = Boolean(this.draggingFieldId && this.previewInsertionBeforeFieldId);
-    for (const [fieldId, node] of this.fieldNodes.entries()) {
-      const baseStyle = this.fieldBaseStyles.get(fieldId) || {};
-      const isPreviewTarget = hasPreview && fieldId === this.previewInsertionBeforeFieldId;
-
-      if (isPreviewTarget) {
-        node.style = {
-          ...baseStyle,
-          borderColor: '#2563eb',
-          focusBorderColor: '#2563eb',
-          backgroundColor: '#dbeafe',
-          radius: Math.max(6, Number(baseStyle.radius || 0))
-        };
-      } else {
-        node.style = { ...baseStyle };
-      }
-
-      if (typeof node.setUIState === 'function') {
-        node.setUIState({ selected: Boolean(isPreviewTarget) });
-      }
-    }
-
-    this.rootNode?.invalidate();
   }
 
   resolveFieldIdFromNode(node, { allowDeleteNode = false, allowHandleNode = true } = {}) {
@@ -379,38 +256,8 @@ export class CreateForm extends BaseScreen {
     const [movedField] = fields.splice(sourceIndex, 1);
     fields.splice(targetIndex, 0, movedField);
     this.setNormalizedFields(fields);
-    this.previewInsertionBeforeFieldId = null;
-    this.draggingFieldId = null;
+    this.interactionController.clearDragPreviewState();
     this.refreshFormContainer();
-  }
-
-  bindEditableNodes(container) {
-    if (!container) return;
-    const fields = this.getNormalizedFields();
-    const fieldMap = new Map(fields.map((field) => [field.id, field]));
-
-    const walk = (node) => {
-      if (!node) return;
-      const field = fieldMap.get(node.id);
-      if (field && node.editable) {
-        node.onChange = (value) => {
-          field.text = value;
-          if (this.isPhotoLikeField(field)) {
-            field.src = value;
-            field.value = value;
-            this.photoPreviewController.updatePreviewForField(field.id, this.getPhotoSource(field));
-          }
-          if (field.label !== undefined) {
-            field.label = value;
-          }
-        };
-      }
-      if (node.children) {
-        node.children.forEach(walk);
-      }
-    };
-
-    walk(container);
   }
 
   addComponent(type) {
@@ -434,16 +281,15 @@ export class CreateForm extends BaseScreen {
     }
     const fields = [...this.getNormalizedFields(), newField];
     this.setNormalizedFields(fields);
-    this.selectedFieldId = newField.id;
-    this.refreshFormContainer();
+    this.interactionController.setSelectedField(newField.id);
   }
   deleteComponent(fieldId) {
     if (!fieldId) return;
     const fields = this.getNormalizedFields().filter(field => field.id !== fieldId);
     this.setNormalizedFields(fields);
-    if (this.selectedFieldId === fieldId) {
-      this.selectedFieldId = fields[0]?.id ?? null;
-      this.previewInsertionBeforeFieldId = null;
+    if (this.interactionController.getSelectedFieldId() === fieldId) {
+      this.interactionController.setSelectedField(fields[0]?.id ?? null);
+      return;
     }
     this.refreshFormContainer();
   }
@@ -459,9 +305,7 @@ export class CreateForm extends BaseScreen {
 
   onExit() {
     this.stopActiveEditing();
-    this.previewInsertionBeforeFieldId = null;
-    this.selectedFieldId = null;
-    this.draggingFieldId = null;
+    this.interactionController.resetAllState();
     this.reorderController.detach();
   }
 }
