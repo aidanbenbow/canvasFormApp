@@ -13,6 +13,11 @@ const createFormUIManifest = {
   regions: {
     toolbar: {
       type: 'container',
+      layout: 'horizontal',
+      style: {
+        background: '#f3f4f6',
+        border: { color: '#d1d5db', width: 1 }
+      },
       children: []
     },
     formContainer: {
@@ -71,6 +76,8 @@ export class CreateForm extends BaseScreen {
     this.commandRegistry.register(this.deleteFieldCommand, ({ fieldId } = {}) => this.deleteComponent(fieldId));
 
     this.previewInsertionBeforeFieldId = null;
+    this.selectedFieldId = null;
+    this.draggingFieldId = null;
     this.dragHandleNodes = new Map();
 
     this.reorderController = new FormReorderController({
@@ -79,7 +86,8 @@ export class CreateForm extends BaseScreen {
       getRootNode: () => this.rootNode,
       resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
       onReorder: (sourceFieldId, targetFieldId) => this.reorderField(sourceFieldId, targetFieldId),
-      onPreviewTargetChange: (fieldId) => this.setPreviewInsertion(fieldId)
+      onPreviewTargetChange: (fieldId) => this.setPreviewInsertion(fieldId),
+      onDragStateChange: ({ active, sourceFieldId }) => this.setDraggingState(active, sourceFieldId)
     });
   }
 
@@ -94,6 +102,7 @@ export class CreateForm extends BaseScreen {
 
     this.rootNode = rootNode;
     this.regions = regions;
+    this.bindSelectionHandlers(this.regions?.formContainer);
     this.bindEditableNodes(this.regions?.formContainer);
     this.cacheDragHandleNodes(this.regions?.formContainer);
     this.applyPreviewToDragHandles();
@@ -105,6 +114,9 @@ export class CreateForm extends BaseScreen {
   buildScreenManifest() {
     const manifest = structuredClone(createFormUIManifest);
     manifest.id = this.mode === 'edit' ? 'edit-form-root' : 'create-form-root';
+    const compactButtonStyle = isSmallScreen()
+      ? { fillWidth: false, font: '24px sans-serif', paddingX: 16, paddingY: 10 }
+      : { fillWidth: false, font: '18px sans-serif', paddingX: 12, paddingY: 7 };
 
     manifest.regions.toolbar.children = [
       {
@@ -112,6 +124,7 @@ export class CreateForm extends BaseScreen {
         id: 'save',
         label: this.mode === 'edit' ? 'Update Form' : 'Save Form',
         action: this.saveCommand,
+        style: compactButtonStyle,
         skipCollect: true,
         skipClear: true
       },
@@ -120,6 +133,7 @@ export class CreateForm extends BaseScreen {
         id: 'addText',
         label: 'Add Text',
         action: this.addTextCommand,
+        style: compactButtonStyle,
         skipCollect: true,
         skipClear: true
       },
@@ -128,6 +142,7 @@ export class CreateForm extends BaseScreen {
         id: 'addLabel',
         label: 'Add Label',
         action: this.addLabelCommand,
+        style: compactButtonStyle,
         skipCollect: true,
         skipClear: true
       },
@@ -136,6 +151,7 @@ export class CreateForm extends BaseScreen {
         id: 'addInput',
         label: 'Add Input',
         action: this.addInputCommand,
+        style: compactButtonStyle,
         skipCollect: true,
         skipClear: true
       },
@@ -144,6 +160,7 @@ export class CreateForm extends BaseScreen {
         id: 'addPhoto',
         label: 'Add Photo',
         action: this.addPhotoCommand,
+        style: compactButtonStyle,
         skipCollect: true,
         skipClear: true
       }
@@ -174,6 +191,7 @@ export class CreateForm extends BaseScreen {
     return fields.flatMap((field) => {
       const def = structuredClone(field);
       const nodes = [];
+      const isSelected = this.selectedFieldId === def.id;
 
       if (def.type === 'text' && def.text == null) {
         def.text = def.label || 'Text';
@@ -189,18 +207,29 @@ export class CreateForm extends BaseScreen {
         def.editable = false;
       }
 
-      if (def.type === 'text' || def.type === 'label') {
+      if ((def.type === 'text' || def.type === 'label') && isSelected) {
         def.editable = true;
       }
 
-      nodes.push(
-        {
+      def.style = {
+        ...(def.style || {}),
+        borderColor: isSelected ? '#0078ff' : (def.style?.borderColor || '#ccc'),
+        backgroundColor: this.draggingFieldId === def.id ? '#e0f2fe' : def.style?.backgroundColor,
+        opacity: this.draggingFieldId === def.id ? 0.8 : (def.style?.opacity ?? 1)
+      };
+
+      if (isSelected) {
+        nodes.push({
           type: 'text',
           id: `drag-handle-${def.id}`,
           ...this.getDragHandlePresentation(def.id, { smallScreen })
-        },
-        def,
-        {
+        });
+      }
+
+      nodes.push(def);
+
+      if (isSelected) {
+        nodes.push({
           type: 'button',
           id: `delete-${def.id}`,
           label: '✖',
@@ -219,8 +248,8 @@ export class CreateForm extends BaseScreen {
           },
           skipCollect: true,
           skipClear: true
-        }
-      );
+        });
+      }
 
       return nodes;
     });
@@ -235,12 +264,64 @@ export class CreateForm extends BaseScreen {
 
   refreshFormContainer() {
     if (!this.regions?.formContainer) return;
+    this.stopActiveEditing();
     const nodes = this.getDisplayFields().map((def) => this.factories.basic.create(def));
     this.regions.formContainer.setChildren(nodes);
+    this.bindSelectionHandlers(this.regions.formContainer);
     this.bindEditableNodes(this.regions.formContainer);
     this.cacheDragHandleNodes(this.regions.formContainer);
     this.applyPreviewToDragHandles();
     this.rootNode.invalidate();
+  }
+
+  stopActiveEditing() {
+    const editor = this.context?.textEditorController;
+    if (!editor?.activeNode) return;
+    editor.stopEditing();
+  }
+
+  setDraggingState(isActive, sourceFieldId) {
+    const nextDraggingFieldId = isActive ? (sourceFieldId ?? null) : null;
+    if (this.draggingFieldId === nextDraggingFieldId) return;
+
+    if (isActive) {
+      this.stopActiveEditing();
+    }
+
+    this.draggingFieldId = nextDraggingFieldId;
+    this.refreshFormContainer();
+  }
+
+  bindSelectionHandlers(container) {
+    if (!container) return;
+
+    const previousCapture = container.onEventCapture?.bind(container);
+    container.onEventCapture = (event) => {
+      const handledByPrevious = previousCapture?.(event);
+      if (handledByPrevious) return true;
+
+      if (event.type !== 'mousedown' && event.type !== 'click') {
+        return false;
+      }
+
+      const fieldId = this.resolveFieldIdFromNode(event.target, {
+        allowDeleteNode: true,
+        allowHandleNode: true
+      });
+      if (!fieldId) return false;
+
+      this.setSelectedField(fieldId);
+      return false;
+    };
+  }
+
+  setSelectedField(fieldId) {
+    const nextFieldId = fieldId ?? null;
+    if (this.selectedFieldId === nextFieldId) return;
+    this.stopActiveEditing();
+    this.selectedFieldId = nextFieldId;
+    this.previewInsertionBeforeFieldId = null;
+    this.refreshFormContainer();
   }
 
   getDragHandlePresentation(fieldId, { smallScreen }) {
@@ -357,6 +438,7 @@ export class CreateForm extends BaseScreen {
     fields.splice(targetIndex, 0, movedField);
     this.form.formStructure.fields = fields;
     this.previewInsertionBeforeFieldId = null;
+    this.draggingFieldId = null;
     this.refreshFormContainer();
   }
 
@@ -404,11 +486,16 @@ export class CreateForm extends BaseScreen {
       newField.text = newField.label;
     }
     this.form.formStructure.fields.push(newField);
+    this.selectedFieldId = newField.id;
     this.refreshFormContainer();
   }
   deleteComponent(fieldId) {
     if (!fieldId) return;
     this.form.formStructure.fields = this.form.formStructure.fields.filter(field => field.id !== fieldId);
+    if (this.selectedFieldId === fieldId) {
+      this.selectedFieldId = this.form.formStructure.fields[0]?.id ?? null;
+      this.previewInsertionBeforeFieldId = null;
+    }
     this.refreshFormContainer();
   }
   handleSubmit() {
@@ -422,7 +509,10 @@ export class CreateForm extends BaseScreen {
   }
 
   onExit() {
+    this.stopActiveEditing();
     this.previewInsertionBeforeFieldId = null;
+    this.selectedFieldId = null;
+    this.draggingFieldId = null;
     this.reorderController.detach();
   }
 }

@@ -11,9 +11,11 @@ import { TextLayoutStrategy } from "../strategies/nodeLayouts/textLayout.js";
 import { ToastLayoutStrategy } from "../strategies/nodeLayouts/toastLayout.js";
 import { overlayLayoutStrategy } from "../strategies/overlayLayout.js";
 import { VerticalLayoutStrategy } from "../strategies/vertical.js";
+import { HorizontalLayoutStrategy } from "../strategies/horizontal.js";
 
 export const layoutRegistry = {
     vertical: ()=> new VerticalLayoutStrategy(),
+    horizontal: ()=> new HorizontalLayoutStrategy(),
     root: ()=> new RootLayoutStrategy(),
     popup: ()=> new PopupLayoutStrategy(),
     keyboard: ()=> new KeyboardLayoutStrategy(),

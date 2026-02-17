@@ -521,6 +521,7 @@ this.clipboardProxy.addEventListener("cut", (e) => {
       if (navigator.clipboard?.writeText) {
         try {
           await navigator.clipboard.writeText(text);
+          this.hideSelectionMenu();
           return;
         } catch (err) {
           console.warn("Clipboard writeText failed, falling back:", err);
@@ -534,6 +535,7 @@ this.clipboardProxy.addEventListener("cut", (e) => {
       document.execCommand("copy");
       this.clipboardProxy.value = "";
       this.clipboardProxy.blur();
+      this.hideSelectionMenu();
     }
 
     async cutSelection() {
@@ -556,6 +558,7 @@ this.clipboardProxy.addEventListener("cut", (e) => {
       }
 
       this.textModel.replaceSelection("");
+      this.hideSelectionMenu();
       this.pipeline.invalidate();
     }
 
@@ -567,6 +570,7 @@ this.clipboardProxy.addEventListener("cut", (e) => {
           const text = await navigator.clipboard.readText();
           if (!text) return;
           this.textModel.replaceSelection(text);
+          this.hideSelectionMenu();
           this.pipeline.invalidate();
           return;
         } catch (err) {
@@ -575,6 +579,7 @@ this.clipboardProxy.addEventListener("cut", (e) => {
       }
 
       if (this.useVirtualKeyboard) {
+        this.hideSelectionMenu();
         this.showPastePrompt();
         return;
       }

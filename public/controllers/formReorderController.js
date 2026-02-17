@@ -1,12 +1,13 @@
 import { SceneHitTestSystem } from '../events/sceneHitTestSystem.js';
 
 export class FormReorderController {
-  constructor({ context, getRootNode, resolveFieldIdFromNode, onReorder, onPreviewTargetChange, dragThreshold = 8 }) {
+  constructor({ context, getRootNode, resolveFieldIdFromNode, onReorder, onPreviewTargetChange, onDragStateChange, dragThreshold = 8 }) {
     this.context = context;
     this.getRootNode = getRootNode;
     this.resolveFieldIdFromNode = resolveFieldIdFromNode;
     this.onReorder = onReorder;
     this.onPreviewTargetChange = onPreviewTargetChange;
+    this.onDragStateChange = onDragStateChange;
     this.dragThreshold = dragThreshold;
 
     this.hitTestSystem = new SceneHitTestSystem();
@@ -110,6 +111,10 @@ export class FormReorderController {
     this.onPreviewTargetChange?.(fieldId ?? null);
   }
 
+  notifyDragState(partialState) {
+    this.onDragStateChange?.({ ...partialState });
+  }
+
   handlePointerDown(event) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
@@ -127,6 +132,8 @@ export class FormReorderController {
       pointerId: event.pointerId
     };
 
+    this.notifyDragState({ active: false, sourceFieldId, pointerId: event.pointerId });
+
     this.attachDragListeners(event.pointerId);
     event.preventDefault();
   }
@@ -141,11 +148,14 @@ export class FormReorderController {
     const deltaY = Math.abs(scenePoint.y - this.state.startY);
     if (!this.state.active && deltaY >= this.dragThreshold) {
       this.state.active = true;
+      this.notifyDragState({ active: true, sourceFieldId: this.state.sourceFieldId, pointerId: this.state.pointerId });
     }
 
     if (this.state.active) {
       const previewFieldId = this.getFieldIdAtClientPosition(event.clientX, event.clientY);
-      this.updatePreviewTarget(previewFieldId);
+      if (previewFieldId) {
+        this.updatePreviewTarget(previewFieldId);
+      }
       event.preventDefault();
     }
   }
@@ -167,6 +177,7 @@ export class FormReorderController {
     }
 
     this.updatePreviewTarget(null);
+    this.notifyDragState({ active: false, sourceFieldId: null, pointerId: null });
 
     this.detachDragListeners();
     this.resetState();
@@ -175,6 +186,7 @@ export class FormReorderController {
   handlePointerCancel(event) {
     if (this.state.pointerId !== null && event.pointerId !== this.state.pointerId) return;
     this.updatePreviewTarget(null);
+    this.notifyDragState({ active: false, sourceFieldId: null, pointerId: null });
     this.detachDragListeners();
     this.resetState();
   }

@@ -37,12 +37,17 @@ const dashboardUIManifest = {
   regions: {
     toolbar: {
       type: 'container',
+      layout: 'horizontal',
+      style: {
+        background: '#f3f4f6',
+        border: { color: '#d1d5db', width: 1 }
+      },
       children: [
-        { type: 'button', id: 'view', label: 'View', command: 'FORM_VIEW' },
-        { type: 'button', id: 'results', label: 'Results', command: 'FORM_RESULTS' },
-        { type: 'button', id: 'create', label: 'Create', command: 'FORM_CREATE' },
-        { type: 'button', id: 'edit', label: 'Edit', command: 'FORM_EDIT' },
-        { type: 'button', id: 'delete', label: 'Delete', command: 'FORM_DELETE' }
+        { type: 'button', id: 'view', label: 'View', command: 'FORM_VIEW', style: { fillWidth: false, font: '20px sans-serif', paddingX: 14, paddingY: 8 } },
+        { type: 'button', id: 'results', label: 'Results', command: 'FORM_RESULTS', style: { fillWidth: false, font: '20px sans-serif', paddingX: 14, paddingY: 8 } },
+        { type: 'button', id: 'create', label: 'Create', command: 'FORM_CREATE', style: { fillWidth: false, font: '20px sans-serif', paddingX: 14, paddingY: 8 } },
+        { type: 'button', id: 'edit', label: 'Edit', command: 'FORM_EDIT', style: { fillWidth: false, font: '20px sans-serif', paddingX: 14, paddingY: 8 } },
+        { type: 'button', id: 'delete', label: 'Delete', command: 'FORM_DELETE', style: { fillWidth: false, font: '20px sans-serif', paddingX: 14, paddingY: 8 } }
       ]
     },
     forms: {

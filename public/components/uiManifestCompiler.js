@@ -25,6 +25,7 @@ console.log('Preprocessed Manifest:', preprocessedManifest);
     const regionNode = new ContainerNode({
       id: key,
       context,
+      layout: def.layout,
       style: def.style || {},
       children: [],
       scrollable: def.scrollable || false,
