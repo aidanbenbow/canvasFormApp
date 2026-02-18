@@ -1,6 +1,10 @@
+import { TextNode } from '../components/nodes/textNode.js';
+import { ACTIONS } from '../events/actions.js';
+
 export class PhotoPreviewController {
-  constructor({ context }) {
+  constructor({ context, onBrightnessCommitted } = {}) {
     this.context = context;
+    this.onBrightnessCommitted = onBrightnessCommitted;
     this.photoFieldRefs = new Map();
     this.pendingBrightnessByFieldId = new Map();
     this.visibleBrightnessControls = new Set();
@@ -64,6 +68,42 @@ export class PhotoPreviewController {
     if (!Number.isFinite(pendingBrightness)) return;
 
     field.brightness = pendingBrightness;
+    const saveButtonNode = this.getBrightnessSaveButtonNode(fieldId);
+    if (saveButtonNode) {
+      saveButtonNode.label = 'Saved ✓';
+      saveButtonNode.invalidate?.();
+    }
+
+    this.context?.pipeline?.invalidate?.();
+    this.showBrightnessSavedToast();
+    this.onBrightnessCommitted?.(fieldId, field, pendingBrightness);
+  }
+
+  showBrightnessSavedToast() {
+    const toastLayer = this.context?.uiServices?.toastLayer;
+
+    const node = new TextNode({
+      id: `toast-brightness-${Date.now()}`,
+      text: 'Brightness saved',
+      style: {
+        font: '30px sans-serif',
+        color: '#ffffff',
+        backgroundColor: '#0b8f3a',
+        borderColor: '#06702c',
+        paddingX: 22,
+        paddingY: 14,
+        radius: 10,
+        align: 'center',
+        shrinkToFit: true
+      }
+    });
+
+    if (toastLayer) {
+      toastLayer.showMessage(node, { timeoutMs: 1800 });
+      return;
+    }
+
+    this.context?.dispatcher?.dispatch?.(ACTIONS.TOAST.SHOW, node);
   }
 
   bindPhotoFields(fields, { isPhotoLikeField, getPhotoSource } = {}) {
@@ -112,6 +152,10 @@ export class PhotoPreviewController {
         const shouldShowControls = this.visibleBrightnessControls.has(field.id);
         saveButtonNode.visible = shouldShowControls;
         saveButtonNode.hitTestable = shouldShowControls;
+        saveButtonNode.label = 'Save Brightness';
+        saveButtonNode.onClick = () => {
+          this.commitBrightness(field.id);
+        };
       }
     }
   }

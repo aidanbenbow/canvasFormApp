@@ -25,6 +25,7 @@ export class ButtonNode extends SceneNode {
         pressed: false,
         disabled: false
       };
+      this.lastActivationTs = 0;
   
       const baseStyle = {
         font: '16px sans-serif',
@@ -76,6 +77,7 @@ export class ButtonNode extends SceneNode {
   
       if (this.state.pressed) {
         console.log("Button clicked:", this.id);
+        this.lastActivationTs = Date.now();
         this.onClick?.();
       }
   
@@ -86,6 +88,21 @@ export class ButtonNode extends SceneNode {
         return;
       }
       this.invalidate();
+    }
+
+    onEvent(event) {
+      if (this.state.disabled) return false;
+      if (event?.type !== 'click') return false;
+
+      const now = Date.now();
+      if (now - this.lastActivationTs < 120) {
+        return true;
+      }
+
+      this.lastActivationTs = now;
+      this.onClick?.();
+      this.invalidate();
+      return true;
     }
 
     onPointerLeave() {

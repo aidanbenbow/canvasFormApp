@@ -1,4 +1,5 @@
 import { ACTIONS } from '../events/actions.js';
+import { saveFormStructure } from '../controllers/socketController.js';
 import { FormBuilderFieldBindingController } from '../controllers/formBuilderFieldBindingController.js';
 import { FormBuilderInteractionController } from '../controllers/formBuilderInteractionController.js';
 import { FormReorderController } from '../controllers/formReorderController.js';
@@ -57,7 +58,10 @@ export class CreateForm extends BaseScreen {
       }
     });
 
-    this.photoPreviewController = new PhotoPreviewController({ context: this.context });
+    this.photoPreviewController = new PhotoPreviewController({
+      context: this.context,
+      onBrightnessCommitted: () => this.persistBrightnessMetadata()
+    });
     this.fieldBindingController = new FormBuilderFieldBindingController({
       getFields: () => this.getNormalizedFields(),
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
@@ -237,6 +241,18 @@ export class CreateForm extends BaseScreen {
       ACTIONS.FORM.ADD,
       normalizedForm
     );
+  }
+
+  persistBrightnessMetadata() {
+    const normalizedForm = this.formModel.normalize();
+
+    this.dispatcher.dispatch(ACTIONS.FORM.UPDATE, normalizedForm);
+    saveFormStructure({
+      id: normalizedForm.id,
+      formStructure: normalizedForm.formStructure,
+      label: normalizedForm.label,
+      user: normalizedForm.user
+    });
   }
 
   onExit() {
