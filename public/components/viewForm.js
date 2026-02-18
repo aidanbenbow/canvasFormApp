@@ -21,13 +21,18 @@ export class FormViewScreen extends BaseScreen {
     this.commandRegistry = commandRegistry;
     this.copyFieldController = new CopyFieldController({ context: this.context, commandRegistry: this.commandRegistry });
     this.photoPreviewController = new PhotoPreviewController({ context: this.context });
+    this.saveBrightnessCommand = `${this.id}.saveBrightness`;
+    this.commandRegistry.register(this.saveBrightnessCommand, ({ fieldId } = {}) => {
+      this.photoPreviewController.commitBrightness(fieldId);
+    });
 
     this.manifest = buildViewFormManifest({
       fields: this.fields,
       shouldAddCopyButton: (field) => this.shouldAddCopyButton(field),
       ensureCopyCommand: (fieldId) => this.ensureCopyCommand(fieldId),
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
-      getPhotoSource: (field) => this.getPhotoSource(field)
+      getPhotoSource: (field) => this.getPhotoSource(field),
+      saveBrightnessAction: this.saveBrightnessCommand
     });
     this.factories = factories;
     this.onSubmit = onSubmit;

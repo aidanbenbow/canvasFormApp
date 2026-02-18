@@ -4,13 +4,16 @@ import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class ButtonNode extends SceneNode {
-    constructor({ id, label, onClick, onPressStart, onPressEnd, style = {} }) {
+    constructor({ id, label, onClick, onPressStart, onPressEnd, visible = true, hitTestable = true, style = {} }) {
       super({
         id,
+        visible,
         layoutStrategy: ButtonLayoutStrategy,
         renderStrategy: buttonRenderer,
         hitTestStrategy: rectHitTestStrategy
       });
+
+      this.hitTestable = Boolean(hitTestable);
   
       this.label = label;
       this.onClick = onClick;

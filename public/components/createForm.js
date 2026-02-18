@@ -39,6 +39,7 @@ export class CreateForm extends BaseScreen {
 
     const commands = buildCreateFormCommandNames(this.id);
     this.saveCommand = commands.saveCommand;
+    this.saveBrightnessCommand = commands.saveBrightnessCommand;
     this.addTextCommand = commands.addTextCommand;
     this.addInputCommand = commands.addInputCommand;
     this.addLabelCommand = commands.addLabelCommand;
@@ -50,6 +51,7 @@ export class CreateForm extends BaseScreen {
       commands,
       handlers: {
         onSave: () => this.handleSubmit(),
+        onSaveBrightness: (fieldId) => this.photoPreviewController.commitBrightness(fieldId),
         onAddComponent: (type) => this.addComponent(type),
         onDeleteField: (fieldId) => this.deleteComponent(fieldId)
       }
@@ -142,7 +144,8 @@ export class CreateForm extends BaseScreen {
           previewInsertionBeforeFieldId: this.interactionController.getPreviewInsertionBeforeFieldId()
         }),
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
-      getPhotoSource: (field) => this.getPhotoSource(field)
+      getPhotoSource: (field) => this.getPhotoSource(field),
+      saveBrightnessAction: this.saveBrightnessCommand
     });
   }
 

@@ -20,10 +20,15 @@ export function getFieldPlugins(mode, context = {}) {
     ensureCopyCommand,
     copyButtonStyle,
     submitStyle,
-    submitAction = 'form.submit'
+    submitAction = 'form.submit',
+    saveBrightnessAction = 'photo.preview.saveBrightness'
   } = context;
 
-  const photoPreview = injectPhotoPreviewPlugin({ isPhotoLikeField, getPhotoSource });
+  const photoPreview = injectPhotoPreviewPlugin({
+    isPhotoLikeField,
+    getPhotoSource,
+    saveBrightnessAction
+  });
 
   const pluginFactories = {
     photoPreview: () => photoPreview,

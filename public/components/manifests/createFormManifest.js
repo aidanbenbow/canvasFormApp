@@ -104,13 +104,15 @@ export function buildCreateDisplayFields({
   deleteFieldCommand,
   getDragHandlePresentation,
   isPhotoLikeField,
-  getPhotoSource
+  getPhotoSource,
+  saveBrightnessAction
 }) {
   const smallScreen = isSmallScreen();
   const deleteButtonStyle = getDeleteButtonStyle();
   const fieldPlugins = getFieldPlugins(mode, {
     isPhotoLikeField,
-    getPhotoSource
+    getPhotoSource,
+    saveBrightnessAction
   });
 
   return (fields || []).flatMap((field) => {

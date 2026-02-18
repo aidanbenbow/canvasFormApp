@@ -34,8 +34,8 @@ export class BaseUIFactory {
     button: (def) => {
       const { context } = def;
       const { commandRegistry, pipeline } = context;
-    
-    return new ButtonNode({
+
+      const node = new ButtonNode({
       ...def,
       onClick: () => {
         const rootNode = pipeline.root;
@@ -66,6 +66,12 @@ export class BaseUIFactory {
       }
   
       });
+
+      if (def?.id) {
+        context.fieldRegistry.set(def.id, node);
+      }
+
+      return node;
     }
     
     ,

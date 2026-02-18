@@ -1,6 +1,7 @@
 export function buildCreateFormCommandNames(screenId) {
   return {
     saveCommand: `${screenId}.save`,
+    saveBrightnessCommand: `${screenId}.saveBrightness`,
     addTextCommand: `${screenId}.addText`,
     addInputCommand: `${screenId}.addInput`,
     addLabelCommand: `${screenId}.addLabel`,
@@ -13,6 +14,10 @@ export function registerCreateFormCommands({ commandRegistry, commands, handlers
   if (!commandRegistry || !commands || !handlers) return;
 
   commandRegistry.register(commands.saveCommand, () => handlers.onSave?.());
+  commandRegistry.register(
+    commands.saveBrightnessCommand,
+    ({ fieldId } = {}) => handlers.onSaveBrightness?.(fieldId)
+  );
   commandRegistry.register(commands.addTextCommand, () => handlers.onAddComponent?.('text'));
   commandRegistry.register(commands.addInputCommand, () => handlers.onAddComponent?.('input'));
   commandRegistry.register(commands.addLabelCommand, () => handlers.onAddComponent?.('label'));

@@ -1,6 +1,9 @@
 export class PhotoPreviewController {
   constructor({ context }) {
     this.context = context;
+    this.photoFieldRefs = new Map();
+    this.pendingBrightnessByFieldId = new Map();
+    this.visibleBrightnessControls = new Set();
   }
 
   getPreviewNode(fieldId) {
@@ -11,6 +14,11 @@ export class PhotoPreviewController {
   getBrightnessNode(fieldId) {
     if (!fieldId) return null;
     return this.context?.fieldRegistry?.get(`photo-brightness-${fieldId}`) ?? null;
+  }
+
+  getBrightnessSaveButtonNode(fieldId) {
+    if (!fieldId) return null;
+    return this.context?.fieldRegistry?.get(`photo-brightness-save-${fieldId}`) ?? null;
   }
 
   updatePreviewForField(fieldId, source) {
@@ -28,23 +36,51 @@ export class PhotoPreviewController {
   }
 
   showBrightnessControl(fieldId) {
+    if (!fieldId) return;
+    this.visibleBrightnessControls.add(fieldId);
+
     const sliderNode = this.getBrightnessNode(fieldId);
+    const saveButtonNode = this.getBrightnessSaveButtonNode(fieldId);
     if (!sliderNode) return;
 
     sliderNode.visible = true;
     sliderNode.hitTestable = true;
     sliderNode.invalidate?.();
+
+    if (saveButtonNode) {
+      saveButtonNode.visible = true;
+      saveButtonNode.hitTestable = true;
+      saveButtonNode.invalidate?.();
+    }
+  }
+
+  commitBrightness(fieldId) {
+    if (!fieldId) return;
+
+    const field = this.photoFieldRefs.get(fieldId);
+    if (!field) return;
+
+    const pendingBrightness = Number(this.pendingBrightnessByFieldId.get(fieldId));
+    if (!Number.isFinite(pendingBrightness)) return;
+
+    field.brightness = pendingBrightness;
   }
 
   bindPhotoFields(fields, { isPhotoLikeField, getPhotoSource } = {}) {
     if (!Array.isArray(fields)) return;
 
+    this.photoFieldRefs = new Map();
+    this.pendingBrightnessByFieldId = new Map();
+
     for (const field of fields) {
       if (!field || !isPhotoLikeField?.(field)) continue;
+
+      this.photoFieldRefs.set(field.id, field);
 
       const inputNode = this.context?.fieldRegistry?.get(field.id);
       const previewNode = this.getPreviewNode(field.id);
       const brightnessNode = this.getBrightnessNode(field.id);
+      const saveButtonNode = this.getBrightnessSaveButtonNode(field.id);
       if (!inputNode || !previewNode) continue;
 
       const previousOnChange = inputNode.onChange;
@@ -58,14 +94,24 @@ export class PhotoPreviewController {
 
       const initialBrightness = Number(field?.brightness ?? previewNode?.brightness ?? 100);
       previewNode.setBrightness?.(initialBrightness);
+      this.pendingBrightnessByFieldId.set(field.id, initialBrightness);
 
       if (brightnessNode) {
+        const shouldShowControls = this.visibleBrightnessControls.has(field.id);
+        brightnessNode.visible = shouldShowControls;
+        brightnessNode.hitTestable = shouldShowControls;
         brightnessNode.setValue?.(initialBrightness, { silent: true });
         brightnessNode.onChange = (nextBrightness) => {
           const normalizedBrightness = Number(nextBrightness);
-          field.brightness = normalizedBrightness;
+          this.pendingBrightnessByFieldId.set(field.id, normalizedBrightness);
           previewNode.setBrightness?.(normalizedBrightness);
         };
+      }
+
+      if (saveButtonNode) {
+        const shouldShowControls = this.visibleBrightnessControls.has(field.id);
+        saveButtonNode.visible = shouldShowControls;
+        saveButtonNode.hitTestable = shouldShowControls;
       }
     }
   }

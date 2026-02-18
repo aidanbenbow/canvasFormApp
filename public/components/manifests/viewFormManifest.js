@@ -30,7 +30,8 @@ export function buildViewFormManifest({
   shouldAddCopyButton,
   ensureCopyCommand,
   isPhotoLikeField,
-  getPhotoSource
+  getPhotoSource,
+  saveBrightnessAction
 }) {
   const manifest = structuredClone(formViewUIManifest);
   manifest.regions.formContainer.viewport = getResponsiveViewport();
@@ -40,6 +41,7 @@ export function buildViewFormManifest({
   const plugins = getFieldPlugins('view', {
     isPhotoLikeField,
     getPhotoSource,
+    saveBrightnessAction,
     shouldAddCopyButton,
     ensureCopyCommand,
     copyButtonStyle,

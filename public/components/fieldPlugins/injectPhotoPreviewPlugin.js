@@ -1,6 +1,7 @@
 export function injectPhotoPreviewPlugin({
   isPhotoLikeField,
   getPhotoSource,
+  saveBrightnessAction = 'photo.preview.saveBrightness',
   previewStyle = {},
   placeholder = 'Enter photo URL...'
 } = {}) {
@@ -47,6 +48,18 @@ export function injectPhotoPreviewPlugin({
         style: {
           fillWidth: true
         }
+      });
+
+      next.push({
+        type: 'button',
+        id: `photo-brightness-save-${field.id}`,
+        label: 'Save Brightness',
+        action: saveBrightnessAction,
+        payload: { fieldId: field.id },
+        visible: false,
+        hitTestable: false,
+        skipCollect: true,
+        skipClear: true
       });
     }
 
