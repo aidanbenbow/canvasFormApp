@@ -30,12 +30,16 @@ export function buildArticleViewManifest(article) {
     article?.imageUrl ||
     article?.photoUrl ||
     null;
+  const articleBrightness = normalizeArticleBrightness(
+    article?.photoBrightness ?? article?.brightness ?? article?.style?.brightness
+  );
 
   if (photoSrc) {
     children.push({
       type: 'photo',
       id: 'article-photo',
       src: photoSrc,
+      brightness: articleBrightness,
       style: {
         width: isSmallScreen() ? 900 : 860,
         height: isSmallScreen() ? 420 : 320,
@@ -171,4 +175,10 @@ function parseMarkdownToRuns(text, { titleFont, headingFont, bodyFont, boldFont,
   });
 
   return runs;
+}
+
+function normalizeArticleBrightness(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 100;
+  return Math.max(0, Math.min(300, parsed));
 }

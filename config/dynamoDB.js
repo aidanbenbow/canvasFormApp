@@ -169,12 +169,23 @@ async getFormDataById(id) {
           photoInputValue
         );
         const normalizedPhoto = normalizePhotoSource(photo);
+        const photoFieldDef = inputDefs.find((field) => {
+          if (!field) return false;
+          if (field.type === 'photo') return true;
+
+          const probe = `${field.id || ''} ${field.label || ''} ${field.placeholder || ''}`.toLowerCase();
+          const hasPhotoKeyword = /photo|image|img|picture|thumbnail/.test(probe);
+          const hasUrlKeyword = /url|link/.test(probe);
+          return field.type === 'input' && (hasPhotoKeyword || hasUrlKeyword);
+        });
+        const photoBrightness = normalizeBrightnessValue(photoFieldDef?.brightness);
 
         const item = {
           userId,
           title,
           article: articleText,
           style: { color },
+          ...(Number.isFinite(photoBrightness) ? { photoBrightness } : {}),
           ...(normalizedPhoto ? { photo: normalizedPhoto } : {})
         };
 
@@ -447,6 +458,12 @@ function normalizePhotoSource(value) {
   }
 
   return raw;
+}
+
+function normalizeBrightnessValue(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return undefined;
+  return Math.max(0, Math.min(300, parsed));
 }
 
 export default new DynamoDB();
