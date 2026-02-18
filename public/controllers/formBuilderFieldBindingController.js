@@ -3,12 +3,14 @@ export class FormBuilderFieldBindingController {
     getFields,
     isPhotoLikeField,
     getPhotoSource,
-    updatePhotoPreview
+    updatePhotoPreview,
+    onPhotoPreviewCreated
   }) {
     this.getFields = getFields;
     this.isPhotoLikeField = isPhotoLikeField;
     this.getPhotoSource = getPhotoSource;
     this.updatePhotoPreview = updatePhotoPreview;
+    this.onPhotoPreviewCreated = onPhotoPreviewCreated;
   }
 
   bindEditableNodes(container) {
@@ -22,11 +24,16 @@ export class FormBuilderFieldBindingController {
       const field = fieldMap.get(node.id);
       if (field && node.editable) {
         node.onChange = (value) => {
+          const previousSource = String(this.getPhotoSource?.(field) ?? '').trim();
           field.text = value;
           if (this.isPhotoLikeField?.(field)) {
             field.src = value;
             field.value = value;
-            this.updatePhotoPreview?.(field.id, this.getPhotoSource?.(field) ?? value);
+            const nextSource = String(this.getPhotoSource?.(field) ?? value ?? '').trim();
+            this.updatePhotoPreview?.(field.id, nextSource);
+            if (!previousSource && nextSource) {
+              this.onPhotoPreviewCreated?.(field.id);
+            }
           }
           if (field.label !== undefined) {
             field.label = value;

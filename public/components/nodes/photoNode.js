@@ -3,7 +3,7 @@ import { photoRenderer } from '../../renderers/nodeRenderers/photoRenderer.js';
 import { SceneNode } from './sceneNode.js';
 
 export class PhotoNode extends SceneNode {
-  constructor({ id, src = '', style = {} }) {
+  constructor({ id, src = '', brightness = 100, style = {} }) {
     super({
       id,
       layoutStrategy: null,
@@ -12,6 +12,7 @@ export class PhotoNode extends SceneNode {
     });
 
     this.src = normalizePhotoSource(src);
+    this.brightness = normalizeBrightness(brightness);
     this.image = null;
     this.style = {
       width: 800,
@@ -30,6 +31,11 @@ export class PhotoNode extends SceneNode {
   setSource(nextSource) {
     this.src = normalizePhotoSource(nextSource);
     this.loadImage();
+    this.invalidate();
+  }
+
+  setBrightness(nextBrightness) {
+    this.brightness = normalizeBrightness(nextBrightness);
     this.invalidate();
   }
 
@@ -67,6 +73,12 @@ export class PhotoNode extends SceneNode {
   layout(bounds) {
     this.bounds = bounds;
   }
+}
+
+function normalizeBrightness(value) {
+  const raw = Number(value);
+  if (!Number.isFinite(raw)) return 100;
+  return Math.max(0, Math.min(300, raw));
 }
 
 function normalizePhotoSource(value) {

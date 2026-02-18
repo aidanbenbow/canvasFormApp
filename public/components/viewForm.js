@@ -66,6 +66,7 @@ export class FormViewScreen extends BaseScreen {
 
     this.results = effectiveResults;
 
+    this.bindPhotoPreviewSelectionHandlers();
     this.bindPhotoPreviewHandlers();
 
     this.updateDeFacut()
@@ -98,5 +99,63 @@ export class FormViewScreen extends BaseScreen {
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
       getPhotoSource: (field) => this.getPhotoSource(field)
     });
+  }
+
+  bindPhotoPreviewSelectionHandlers() {
+    const container = this.regions?.formContainer;
+    if (!container) return;
+
+    const previousCapture = container.onEventCapture?.bind(container);
+    container.onEventCapture = (event) => {
+      const handledByPrevious = previousCapture?.(event);
+      if (handledByPrevious) return true;
+
+      if (event.type !== 'mousedown' && event.type !== 'click') {
+        return false;
+      }
+
+      const fieldId = this.resolvePhotoFieldIdFromNode(event.target);
+      if (!fieldId) return false;
+
+      this.photoPreviewController.showBrightnessControl(fieldId);
+      this.focusFieldInputForEditing(fieldId);
+      return false;
+    };
+  }
+
+  resolvePhotoFieldIdFromNode(node) {
+    const fieldIds = new Set((this.fields || []).map((field) => field.id));
+    let current = node;
+
+    while (current) {
+      const id = current.id;
+      if (typeof id === 'string' && id.startsWith('photo-preview-')) {
+        const parsed = id.slice('photo-preview-'.length);
+        if (fieldIds.has(parsed)) return parsed;
+      }
+      current = current.parent;
+    }
+
+    return null;
+  }
+
+  focusFieldInputForEditing(fieldId) {
+    if (!fieldId) return;
+
+    const activate = () => {
+      const node = this.context?.fieldRegistry?.get(fieldId);
+      if (!(node instanceof InputNode) || node.editable === false) return;
+
+      this.context?.focusManager?.focus?.(node);
+      this.context?.textEditorController?.startEditing?.(node);
+      this.rootNode?.invalidate?.();
+    };
+
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(activate);
+      return;
+    }
+
+    setTimeout(activate, 0);
   }
 }

@@ -6,6 +6,7 @@ import { InputNode } from "../nodes/inputNode.js";
 import { LabelNode } from "../nodes/labelNode.js";
 import { PhotoNode } from "../nodes/photoNode.js";
 import { ScrollNode } from "../nodes/scrollNode.js";
+import { SliderNode } from "../nodes/sliderNode.js";
 import { TextNode } from "../nodes/textNode.js";
 
 
@@ -96,6 +97,12 @@ export class BaseUIFactory {
         ...def,
         placeholder: def.placeholder || 'Enter photo URL...'
       });
+      context.fieldRegistry.set(def.id, node);
+      return node;
+    },
+    slider: (def) => {
+      const { context } = def;
+      const node = new SliderNode(def);
       context.fieldRegistry.set(def.id, node);
       return node;
     },

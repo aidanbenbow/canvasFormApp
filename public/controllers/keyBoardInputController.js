@@ -16,7 +16,10 @@ export class KeyBoardInputController {
                     window.addEventListener('keydown', this.boundHandler);
                     this._keydownEnabled = true;
                 }
-        dispatcher.on(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler);
+        if (!this._virtualPressEnabled) {
+            dispatcher.on(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler);
+            this._virtualPressEnabled = true;
+        }
       }
       
       disable() {
@@ -24,7 +27,10 @@ export class KeyBoardInputController {
                     window.removeEventListener('keydown', this.boundHandler);
                     this._keydownEnabled = false;
                 }
-        dispatcher.off(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler); // remove subscription if your dispatcher supports it
+        if (this._virtualPressEnabled) {
+            dispatcher.off(ACTIONS.KEYBOARD.PRESS, this.virtualKeyHandler); // remove subscription if your dispatcher supports it
+            this._virtualPressEnabled = false;
+        }
       }
       
       handleVirtualKey(key) {

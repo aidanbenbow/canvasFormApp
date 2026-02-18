@@ -24,6 +24,8 @@ export const photoRenderer = {
       ctx.save();
       drawRoundedRect(ctx, x, y, width, height, radius);
       ctx.clip();
+      const brightness = Number(node.brightness ?? 100);
+      ctx.filter = `brightness(${Math.max(0, Math.min(300, brightness))}%)`;
 
       const imageRatio = node.image.naturalWidth / node.image.naturalHeight;
       const boxRatio = width / height;

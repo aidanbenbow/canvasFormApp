@@ -25,11 +25,27 @@ export function injectPhotoPreviewPlugin({
         type: 'photo',
         id: `photo-preview-${field.id}`,
         src: source,
+        brightness: Number(field?.brightness ?? 100),
         style: {
           fillWidth: true,
           borderColor: '#93c5fd',
           backgroundColor: '#eff6ff',
           ...previewStyle
+        }
+      });
+
+      next.push({
+        type: 'slider',
+        id: `photo-brightness-${field.id}`,
+        label: 'Brightness',
+        min: 40,
+        max: 200,
+        step: 1,
+        value: Number(field?.brightness ?? 100),
+        visible: false,
+        hitTestable: false,
+        style: {
+          fillWidth: true
         }
       });
     }
