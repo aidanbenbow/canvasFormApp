@@ -19,8 +19,12 @@ export class FormViewScreen extends BaseScreen {
     this.formStructure = this.store.getActiveForm()?.formStructure || {};
     this.fields = normalizeFields(this.formStructure);
     this.commandRegistry = commandRegistry;
+    this.captureBindings = new WeakMap();
     this.copyFieldController = new CopyFieldController({ context: this.context, commandRegistry: this.commandRegistry });
-    this.photoPreviewController = new PhotoPreviewController({ context: this.context });
+    this.photoPreviewController = new PhotoPreviewController({
+      context: this.context,
+      getFieldById: (fieldId) => this.getFieldById(fieldId)
+    });
     this.saveBrightnessCommand = `${this.id}.saveBrightness`;
     this.commandRegistry.register(this.saveBrightnessCommand, ({ fieldId } = {}) => {
       this.photoPreviewController.commitBrightness(fieldId);
@@ -41,6 +45,11 @@ export class FormViewScreen extends BaseScreen {
 
   getPhotoSource(field) {
     return getPhotoSource(field);
+  }
+
+  getFieldById(fieldId) {
+    if (!fieldId) return null;
+    return (this.fields || []).find((field) => field?.id === fieldId) ?? null;
   }
 
   isPhotoLikeField(field) {
@@ -110,22 +119,39 @@ export class FormViewScreen extends BaseScreen {
     const container = this.regions?.formContainer;
     if (!container) return;
 
-    const previousCapture = container.onEventCapture?.bind(container);
-    container.onEventCapture = (event) => {
-      const handledByPrevious = previousCapture?.(event);
-      if (handledByPrevious) return true;
+    let captureBinding = this.captureBindings.get(container);
+    if (!captureBinding) {
+      captureBinding = {
+        previousCapture: container.onEventCapture?.bind(container) ?? null,
+        wrappedCapture: null
+      };
 
-      if (event.type !== 'mousedown' && event.type !== 'click') {
+      captureBinding.wrappedCapture = (event) => {
+        const handledByPrevious = captureBinding.previousCapture?.(event);
+        if (handledByPrevious) return true;
+
+        if (event.type !== 'mousedown' && event.type !== 'click') {
+          return false;
+        }
+
+        const fieldId = this.resolvePhotoFieldIdFromNode(event.target);
+        if (!fieldId) return false;
+
+        this.photoPreviewController.showBrightnessControl(fieldId);
+        this.focusFieldInputForEditing(fieldId);
         return false;
-      }
+      };
 
-      const fieldId = this.resolvePhotoFieldIdFromNode(event.target);
-      if (!fieldId) return false;
+      this.captureBindings.set(container, captureBinding);
+      container.onEventCapture = captureBinding.wrappedCapture;
+      return;
+    }
 
-      this.photoPreviewController.showBrightnessControl(fieldId);
-      this.focusFieldInputForEditing(fieldId);
-      return false;
-    };
+    if (container.onEventCapture !== captureBinding.wrappedCapture) {
+      captureBinding.previousCapture = container.onEventCapture?.bind(container) ?? captureBinding.previousCapture;
+    }
+
+    container.onEventCapture = captureBinding.wrappedCapture;
   }
 
   resolvePhotoFieldIdFromNode(node) {

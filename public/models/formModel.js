@@ -34,6 +34,11 @@ export class FormModel {
     return normalizeFields(this.form?.formStructure);
   }
 
+  getFieldById(fieldId) {
+    if (!fieldId) return null;
+    return this.getFields().find((field) => field?.id === fieldId) ?? null;
+  }
+
   setFields(fields) {
     if (!this.form.formStructure || typeof this.form.formStructure !== 'object') {
       this.form.formStructure = { fields: [] };

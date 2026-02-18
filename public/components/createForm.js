@@ -60,7 +60,8 @@ export class CreateForm extends BaseScreen {
 
     this.photoPreviewController = new PhotoPreviewController({
       context: this.context,
-      onBrightnessCommitted: () => this.persistBrightnessMetadata()
+      onBrightnessCommitted: () => this.persistBrightnessMetadata(),
+      getFieldById: (fieldId) => this.formModel.getFieldById(fieldId)
     });
     this.fieldBindingController = new FormBuilderFieldBindingController({
       getFields: () => this.getNormalizedFields(),

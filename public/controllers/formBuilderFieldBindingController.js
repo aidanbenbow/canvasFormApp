@@ -11,6 +11,7 @@ export class FormBuilderFieldBindingController {
     this.getPhotoSource = getPhotoSource;
     this.updatePhotoPreview = updatePhotoPreview;
     this.onPhotoPreviewCreated = onPhotoPreviewCreated;
+    this.nodeOnChangeBindings = new WeakMap();
   }
 
   bindEditableNodes(container) {
@@ -23,22 +24,41 @@ export class FormBuilderFieldBindingController {
       if (!node) return;
       const field = fieldMap.get(node.id);
       if (field && node.editable) {
-        node.onChange = (value) => {
-          const previousSource = String(this.getPhotoSource?.(field) ?? '').trim();
-          field.text = value;
-          if (this.isPhotoLikeField?.(field)) {
-            field.src = value;
-            field.value = value;
-            const nextSource = String(this.getPhotoSource?.(field) ?? value ?? '').trim();
-            this.updatePhotoPreview?.(field.id, nextSource);
-            if (!previousSource && nextSource) {
-              this.onPhotoPreviewCreated?.(field.id);
+        let onChangeBinding = this.nodeOnChangeBindings.get(node);
+        if (!onChangeBinding) {
+          onChangeBinding = {
+            field: null,
+            originalOnChange: node.onChange,
+            wrappedOnChange: null
+          };
+
+          onChangeBinding.wrappedOnChange = (value) => {
+            onChangeBinding.originalOnChange?.(value);
+
+            const activeField = onChangeBinding.field;
+            if (!activeField) return;
+
+            const previousSource = String(this.getPhotoSource?.(activeField) ?? '').trim();
+            activeField.text = value;
+            if (this.isPhotoLikeField?.(activeField)) {
+              activeField.src = value;
+              activeField.value = value;
+              const nextSource = String(this.getPhotoSource?.(activeField) ?? value ?? '').trim();
+              this.updatePhotoPreview?.(activeField.id, nextSource);
+              if (!previousSource && nextSource) {
+                this.onPhotoPreviewCreated?.(activeField.id);
+              }
             }
-          }
-          if (field.label !== undefined) {
-            field.label = value;
-          }
-        };
+            if (activeField.label !== undefined) {
+              activeField.label = value;
+            }
+          };
+
+          this.nodeOnChangeBindings.set(node, onChangeBinding);
+        }
+
+        onChangeBinding.field = field;
+        node.onChange = onChangeBinding.wrappedOnChange;
       }
       if (Array.isArray(node.children)) {
         node.children.forEach(walk);

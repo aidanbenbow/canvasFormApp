@@ -26,6 +26,7 @@ export class FormBuilderInteractionController {
     this.dragHandleNodes = new Map();
     this.fieldNodes = new Map();
     this.fieldBaseStyles = new Map();
+    this.containerCaptureBindings = new WeakMap();
   }
 
   getSelectedFieldId() {
@@ -43,31 +44,48 @@ export class FormBuilderInteractionController {
   bindSelectionHandlers(container) {
     if (!container) return;
 
-    const previousCapture = container.onEventCapture?.bind(container);
-    container.onEventCapture = (event) => {
-      const handledByPrevious = previousCapture?.(event);
-      if (handledByPrevious) return true;
+    let captureBinding = this.containerCaptureBindings.get(container);
+    if (!captureBinding) {
+      captureBinding = {
+        previousCapture: container.onEventCapture?.bind(container) ?? null,
+        wrappedCapture: null
+      };
 
-      if (event.type !== 'mousedown' && event.type !== 'click') {
+      captureBinding.wrappedCapture = (event) => {
+        const handledByPrevious = captureBinding.previousCapture?.(event);
+        if (handledByPrevious) return true;
+
+        if (event.type !== 'mousedown' && event.type !== 'click') {
+          return false;
+        }
+
+        const fieldId = this.resolveFieldIdFromNode?.(event.target, {
+          allowDeleteNode: true,
+          allowHandleNode: true
+        });
+        if (!fieldId) return false;
+
+        const targetId = event?.target?.id;
+        const isPhotoPreviewNode =
+          typeof targetId === 'string' && targetId.startsWith('photo-preview-');
+
+        this.setSelectedField(fieldId);
+        if (isPhotoPreviewNode) {
+          this.onPhotoPreviewSelected?.(fieldId);
+        }
         return false;
-      }
+      };
 
-      const fieldId = this.resolveFieldIdFromNode?.(event.target, {
-        allowDeleteNode: true,
-        allowHandleNode: true
-      });
-      if (!fieldId) return false;
+      this.containerCaptureBindings.set(container, captureBinding);
+      container.onEventCapture = captureBinding.wrappedCapture;
+      return;
+    }
 
-      const targetId = event?.target?.id;
-      const isPhotoPreviewNode =
-        typeof targetId === 'string' && targetId.startsWith('photo-preview-');
+    if (container.onEventCapture !== captureBinding.wrappedCapture) {
+      captureBinding.previousCapture = container.onEventCapture?.bind(container) ?? captureBinding.previousCapture;
+    }
 
-      this.setSelectedField(fieldId);
-      if (isPhotoPreviewNode) {
-        this.onPhotoPreviewSelected?.(fieldId);
-      }
-      return false;
-    };
+    container.onEventCapture = captureBinding.wrappedCapture;
   }
 
   setSelectedField(fieldId) {
