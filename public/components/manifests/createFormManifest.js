@@ -3,34 +3,37 @@ import {
   getDeleteButtonStyle,
   isSmallScreen
 } from './screenManifestUtils.js';
+import {
+  buttonNode,
+  containerRegion,
+  defineManifest
+} from './manifestDsl.js';
 import { normalizeEditorFields } from './editor/fieldNormalization.js';
 import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
 import { runFieldPlugins } from '../fieldPlugins/runFieldPlugins.js';
 
-export const createFormUIManifest = {
+export const createFormUIManifest = defineManifest({
   layout: 'vertical',
   id: 'create-form-root',
   style: {
     background: '#ffffff'
   },
   regions: {
-    toolbar: {
-      type: 'container',
+    toolbar: containerRegion({
       layout: 'horizontal',
       style: {
         background: '#f3f4f6',
         border: { color: '#d1d5db', width: 1 }
       },
       children: []
-    },
-    formContainer: {
-      type: 'container',
+    }),
+    formContainer: containerRegion({
       scrollable: true,
       viewport: 600,
       children: []
-    }
+    })
   }
-};
+});
 
 export function buildCreateFormManifest({
   mode,
@@ -46,51 +49,46 @@ export function buildCreateFormManifest({
 
   const compactButtonStyle = getCompactToolbarButtonStyle();
   manifest.regions.toolbar.children = [
-    {
-      type: 'button',
+    buttonNode({
       id: 'save',
       label: mode === 'edit' ? 'Update Form' : 'Save Form',
       action: saveCommand,
       style: compactButtonStyle,
       skipCollect: true,
       skipClear: true
-    },
-    {
-      type: 'button',
+    }),
+    buttonNode({
       id: 'addText',
       label: 'Add Text',
       action: addTextCommand,
       style: compactButtonStyle,
       skipCollect: true,
       skipClear: true
-    },
-    {
-      type: 'button',
+    }),
+    buttonNode({
       id: 'addLabel',
       label: 'Add Label',
       action: addLabelCommand,
       style: compactButtonStyle,
       skipCollect: true,
       skipClear: true
-    },
-    {
-      type: 'button',
+    }),
+    buttonNode({
       id: 'addInput',
       label: 'Add Input',
       action: addInputCommand,
       style: compactButtonStyle,
       skipCollect: true,
       skipClear: true
-    },
-    {
-      type: 'button',
+    }),
+    buttonNode({
       id: 'addPhoto',
       label: 'Add Photo',
       action: addPhotoCommand,
       style: compactButtonStyle,
       skipCollect: true,
       skipClear: true
-    }
+    })
   ];
 
   manifest.regions.formContainer.children = displayFields;

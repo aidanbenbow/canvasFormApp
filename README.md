@@ -8,12 +8,13 @@ An attempt to create a browser-based HTML canvas app that can be used to generat
 - Manifest compiler builds root nodes and regions.
 - UI factory instantiates node types and connects command actions.
 - Engine rendering now goes through a UI renderer adapter contract: `renderManifest(manifest)`, `updateRegion(regionId, children)`, `invalidate()`.
+- A minimal manifest DSL provides shape/default helpers only (`defineManifest`, `containerRegion`, `buttonNode`) to reduce repetition and authoring friction.
 
 Key files:
 - `public/components/manifests/createFormManifest.js`
+- `public/components/manifests/manifestDsl.js`
 - `public/components/manifests/editor/fieldNormalization.js`
 - `public/components/manifests/viewFormManifest.js`
-- `public/components/createForm/formBuilderAdapters.js`
 - `public/components/createForm/formBuilderAdapters.js` (`createCanvasUiRendererAdapter`, `createDomUiRendererAdapter`)
 - `public/components/uiManifestCompiler.js`
 - `public/components/factory/baseUiFactory.js`

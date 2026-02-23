@@ -3,27 +3,30 @@ import {
   getCopyButtonStyle,
   getResponsiveViewport
 } from './screenManifestUtils.js';
+import {
+  containerRegion,
+  defineManifest
+} from './manifestDsl.js';
 import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
 import { runFieldPlugins } from '../fieldPlugins/runFieldPlugins.js';
 
-export const formViewUIManifest = {
+export const formViewUIManifest = defineManifest({
   layout: 'centre',
   id: 'form-view-root',
   style: {
     background: '#ffffff'
   },
   regions: {
-    formContainer: {
-      type: 'container',
+    formContainer: containerRegion({
       scrollable: true,
       viewport: 600,
       style: {
         background: '#f9f9f9'
       },
       children: []
-    }
+    })
   }
-};
+});
 
 export function buildViewFormManifest({
   fields,
