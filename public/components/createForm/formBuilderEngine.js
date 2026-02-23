@@ -427,6 +427,20 @@ export class FormBuilderEngine {
 
   addComponent(type) {
     const newField = this.fieldFactory(type);
+
+    if (newField?.type === 'label') {
+      const selectedFieldId = this.interactionController.getSelectedFieldId();
+      const selectedField = this.getFieldById(selectedFieldId);
+      if (isLabelBindingTarget(selectedField)) {
+        newField.forFieldId = selectedField.id;
+        const seedLabel = String(selectedField.label || selectedField.text || '').trim();
+        if (seedLabel) {
+          newField.label = seedLabel;
+          newField.text = seedLabel;
+        }
+      }
+    }
+
     this.modelAdapter.addField(newField);
     this.interactionController.setSelectedField(newField.id);
   }
@@ -451,4 +465,9 @@ export class FormBuilderEngine {
     this.unregisterCommands();
     this.detachFeatures();
   }
+}
+
+function isLabelBindingTarget(field) {
+  if (!field || typeof field !== 'object') return false;
+  return field.type === 'input' || field.type === 'photo' || field.type === 'dropDown';
 }

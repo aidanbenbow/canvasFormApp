@@ -31,6 +31,7 @@ export const pluginRegistry = {
       id: form.id || `form-${Date.now()}`,
       label: fields[0].label || 'Untitled Form',
       user: form.user || 'anonymous',
+      resultsTable: form.resultsTable || null,
       formStructure: { fields }
     };
   }

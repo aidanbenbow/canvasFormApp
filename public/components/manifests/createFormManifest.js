@@ -108,6 +108,11 @@ export function buildCreateDisplayFields({
 }) {
   const { mode, selectedFieldId, draggingFieldId } = editorState || {};
   const smallScreen = isSmallScreen();
+  const selectedField = (fields || []).find((field) => field?.id === selectedFieldId) || null;
+  const selectedLabelBindingTarget =
+    selectedField?.type === 'label' && typeof selectedField?.forFieldId === 'string'
+      ? selectedField.forFieldId.trim()
+      : '';
   const deleteButtonStyle = getDeleteButtonStyle();
   const executionContext = {
     ...(pluginContext || {}),
@@ -130,5 +135,22 @@ export function buildCreateDisplayFields({
     selectedFieldId,
     draggingFieldId
   });
-  return runFieldPlugins(normalizedFields, fieldPlugins, executionContext);
+  const displayFields = runFieldPlugins(normalizedFields, fieldPlugins, executionContext);
+
+  if (!selectedLabelBindingTarget) {
+    return displayFields;
+  }
+
+  return [
+    {
+      id: `label-link-hint-${selectedFieldId}`,
+      type: 'text',
+      text: `Linked to: ${selectedLabelBindingTarget}`,
+      style: {
+        font: smallScreen ? "26px sans-serif" : "18px sans-serif",
+        color: '#2563eb'
+      }
+    },
+    ...displayFields
+  ];
 }

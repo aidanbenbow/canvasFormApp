@@ -150,11 +150,14 @@ export class SceneNode {
     };
   }
   get uiState() {
-
-    return this.context.uiState.get(this.id);
+    const uiStateStore = this.context?.uiState;
+    if (!uiStateStore?.get) return {};
+    return uiStateStore.get(this.id) || {};
   }
   setUIState(partial) {
-    this.context.uiState.update(this.id, partial);
+    const uiStateStore = this.context?.uiState;
+    if (!uiStateStore?.update) return;
+    uiStateStore.update(this.id, partial);
   }
   
   

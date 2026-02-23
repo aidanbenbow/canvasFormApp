@@ -3,7 +3,8 @@ import { normalizeFields } from '../utils/normalizeFields.js';
 
 export class FormModel {
   constructor(form) {
-    this.form = form
+    const hasExistingForm = Boolean(form);
+    this.form = hasExistingForm
       ? structuredClone(form)
       : {
           id: `form-${Date.now()}`,
@@ -24,6 +25,10 @@ export class FormModel {
           },
           user: 'admin'
         };
+
+    if (!hasExistingForm) {
+      this.form.resultsTable = buildAutoResultsTableName(this.form.id);
+    }
   }
 
   getForm() {
@@ -32,6 +37,17 @@ export class FormModel {
 
   getFields() {
     return normalizeFields(this.form?.formStructure);
+  }
+
+  getResultsTable() {
+    return this.form?.resultsTable || null;
+  }
+
+  setResultsTable(resultsTable) {
+    if (typeof resultsTable !== 'string') return;
+    const nextResultsTable = resultsTable.trim();
+    if (!nextResultsTable) return;
+    this.form.resultsTable = nextResultsTable;
   }
 
   getFieldById(fieldId) {
@@ -71,4 +87,18 @@ export class FormModel {
   normalize() {
     return normalizeForm(this.form);
   }
+}
+
+function buildAutoResultsTableName(formId) {
+  const normalizedFormId = String(formId || `form-${Date.now()}`)
+    .toLowerCase()
+    .replace(/[^a-z0-9_.-]/g, '_');
+
+  const baseName = `form_results_${normalizedFormId}`;
+  const minLength = 3;
+  const maxLength = 255;
+  const trimmed = baseName.slice(0, maxLength);
+
+  if (trimmed.length >= minLength) return trimmed;
+  return `frm_${Date.now()}`;
 }

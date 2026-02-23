@@ -29,13 +29,13 @@ router.get('/', async (req, res) => {
 
 
     router.post('/saveFormStructure', async (req, res) => {
-        const { id, formStructure, label } = req.body;
+        const { id, formStructure, label, resultsTable } = req.body;
         if (!id || !formStructure) {
           return res.status(400).json({ error: 'Missing id or formStructure' });
         }
       
         try {
-          await db.updateFormData(id, formStructure, label);
+          await db.updateFormData(id, formStructure, label, resultsTable);
           res.json({ success: true });
         } catch (error) {
           res.status(500).json({ error: error.message });

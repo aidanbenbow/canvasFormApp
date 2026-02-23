@@ -106,6 +106,7 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
                 formStructure: updatedForm.formStructure,
                 label: updatedForm.label,
                 user: updatedForm.user,
+                resultsTable: updatedForm.resultsTable,
               });
               showToast(`Form ${updatedForm.label} created successfully!`);
         } });
@@ -123,6 +124,7 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
                 formStructure: updatedForm.formStructure,
                 label: updatedForm.label,
                 user: updatedForm.user,
+              resultsTable: updatedForm.resultsTable,
             });
         } });
       router.push(editor);

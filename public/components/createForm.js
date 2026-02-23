@@ -32,7 +32,8 @@ export class CreateForm extends BaseScreen {
           id: normalizedForm.id,
           formStructure: normalizedForm.formStructure,
           label: normalizedForm.label,
-          user: normalizedForm.user
+          user: normalizedForm.user,
+          resultsTable: normalizedForm.resultsTable
         });
       }
     });

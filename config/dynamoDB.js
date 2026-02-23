@@ -1,4 +1,4 @@
-import { DescribeTableCommand, DynamoDBClient,  } from "@aws-sdk/client-dynamodb";
+import { CreateTableCommand, DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand, QueryCommand, GetCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 dotenv.config();
@@ -17,9 +17,13 @@ class DynamoDB {
         this.docClient = DynamoDBDocumentClient.from(client);
         
     }
-    async saveMessage(formId,user, inputs = []) {
+    async saveMessage(formId,user, inputs = [], tableName = 'faithandbelief') {
       try {
         const timestamp = Date.now()
+        const normalizedTableName =
+          typeof tableName === 'string' && tableName.trim()
+            ? tableName.trim()
+            : 'faithandbelief';
     
         const payload = {
           id: 'msg-' + timestamp,
@@ -30,7 +34,7 @@ class DynamoDB {
         };
     
         const params = {
-          TableName: 'faithandbelief',
+          TableName: normalizedTableName,
           Item: payload
         };
     
@@ -204,19 +208,37 @@ async getFormDataById(id) {
 
 
 
-    async updateFormData(id, formStructure, label = 'Untitled') {
+    async updateFormData(id, formStructure, label = 'Untitled', resultsTable = null) {
         try {
+          const currentForm = await this.docClient.send(
+            new GetCommand({
+              TableName: 'formStructures',
+              Key: { id }
+            })
+          );
+
+          const normalizedProvidedTable =
+            typeof resultsTable === 'string' && resultsTable.trim()
+              ? resultsTable.trim()
+              : null;
+
+          const normalizedResultsTable =
+            currentForm?.Item?.resultsTable
+            || normalizedProvidedTable
+            || buildDefaultResultsTableName(id);
           const params = {
             TableName: 'formStructures',
             Key: { id },
-            UpdateExpression: 'SET #formStructure = :formStructure, #label = :label',
+            UpdateExpression: 'SET #formStructure = :formStructure, #label = :label, #resultsTable = :resultsTable',
             ExpressionAttributeNames: {
               '#formStructure': 'formStructure',
               '#label': 'label',
+              '#resultsTable': 'resultsTable'
             },
             ExpressionAttributeValues: {
               ':formStructure': formStructure,
               ':label': label,
+              ':resultsTable': normalizedResultsTable,
             },
             ReturnValues: 'UPDATED_NEW',
           };
@@ -246,12 +268,35 @@ async deleteFormData(id) {
         }
       }
 
-      async upsertFormData(id, formStructure, label = 'Untitled', user = 'admin') {
+      async upsertFormData(id, formStructure, label = 'Untitled', user = 'admin', resultsTable = null) {
         try {
+          const existingItem = await this.docClient.send(
+            new GetCommand({
+              TableName: 'formStructures',
+              Key: { id }
+            })
+          );
+          const currentForm = existingItem?.Item || null;
+
+          const normalizedProvidedTable =
+            typeof resultsTable === 'string' && resultsTable.trim()
+              ? resultsTable.trim()
+              : null;
+
+          const normalizedResultsTable =
+            currentForm?.resultsTable
+            || normalizedProvidedTable
+            || buildDefaultResultsTableName(id);
+
+          if (!currentForm) {
+            await this.ensureResultsTable(normalizedResultsTable);
+          }
+
           const item = {
             id,
             label,
             user,
+            resultsTable: normalizedResultsTable,
             formStructure,
             lastModified: new Date().toISOString()
           };
@@ -268,6 +313,39 @@ async deleteFormData(id) {
           console.error('Error upserting form data:', error);
           throw new Error('Could not save form data');
         }
+      }
+
+      async ensureResultsTable(tableName) {
+        const normalizedTableName =
+          typeof tableName === 'string' && tableName.trim()
+            ? tableName.trim()
+            : null;
+
+        if (!normalizedTableName) {
+          throw new Error('Cannot create results table without a valid table name');
+        }
+
+        try {
+          await this.docClient.send(new DescribeTableCommand({ TableName: normalizedTableName }));
+          return;
+        } catch (error) {
+          if (error?.name !== 'ResourceNotFoundException') {
+            throw error;
+          }
+        }
+
+        await this.docClient.send(
+          new CreateTableCommand({
+            TableName: normalizedTableName,
+            BillingMode: 'PAY_PER_REQUEST',
+            AttributeDefinitions: [
+              { AttributeName: 'id', AttributeType: 'S' }
+            ],
+            KeySchema: [
+              { AttributeName: 'id', KeyType: 'HASH' }
+            ]
+          })
+        );
       }
       
 
@@ -393,6 +471,14 @@ async deleteFormData(id) {
         }
       }
     
+}
+
+function buildDefaultResultsTableName(formId) {
+  const normalizedId = String(formId || `form-${Date.now()}`)
+    .toLowerCase()
+    .replace(/[^a-z0-9_.-]/g, '_');
+
+  return `form_results_${normalizedId}`.slice(0, 255);
 }
 
 function firstNonEmpty(...values) {

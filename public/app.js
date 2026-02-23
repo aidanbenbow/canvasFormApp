@@ -90,7 +90,7 @@ const commandRegistry = new CommandRegistry();
 const factories = {
   basic: new BaseUIFactory(context, commandRegistry ),
   commandUI: new CommandUIFactory({ commandRegistry }),
-  formsUI: new FormsUIFactory({commandRegistry}),
+  formsUI: new FormsUIFactory(context, commandRegistry),
   resultsUI: new ResultsUIFactory(context),
 };
 

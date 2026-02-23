@@ -103,18 +103,13 @@ io.on('connection', (socket) => {
         });
       } else {
         const rawResponses = data?.responses || data?.fields || {};
-        const knownIds = new Set(
-          Array.isArray(data?.formFields)
-            ? data.formFields.map((field) => field?.id).filter(Boolean)
-            : []
-        );
-        const responses = knownIds.size > 0
-          ? Object.fromEntries(
-              Object.entries(rawResponses).filter(([key]) => knownIds.has(key))
-            )
-          : rawResponses;
+        const responses = mapResponsesToLabelKeys(rawResponses, data?.formFields);
+        const targetResultsTable =
+          typeof tableName === 'string' && tableName.trim()
+            ? tableName.trim()
+            : 'faithandbelief';
         result = await db.saveMessage(
-          data.formId, data.user, responses
+          data.formId, data.user, responses, targetResultsTable
         );
       }
   
@@ -127,10 +122,10 @@ io.on('connection', (socket) => {
   });
   
   socket.on('saveFormStructure', async (payload) => {
-    const { id, formStructure, label, user } = payload;
+    const { id, formStructure, label, user, resultsTable } = payload;
  console.log('Saving form structure with payload:', payload);
     try {
-      const result = await db.upsertFormData(id, formStructure, label, user);
+      const result = await db.upsertFormData(id, formStructure, label, user, resultsTable);
       socket.emit('formSavedResponse', { success: true, result });
     } catch (error) {
       socket.emit('formSavedResponse', {
@@ -189,6 +184,84 @@ io.on('connection', (socket) => {
     console.log('User disconnected:', socket.id);
   });
 });
+
+function mapResponsesToLabelKeys(rawResponses = {}, formFields = []) {
+  const responseEntries = Object.entries(rawResponses || {});
+  if (!responseEntries.length) return {};
+
+  const normalizedFields = Array.isArray(formFields) ? formFields : [];
+  const fieldsById = new Map(
+    normalizedFields
+      .filter((field) => field?.id)
+      .map((field) => [field.id, field])
+  );
+
+  const boundLabelsByTargetFieldId = new Map();
+  for (const field of normalizedFields) {
+    if (!field || field.type !== 'label') continue;
+    const targetFieldId = String(field.forFieldId || '').trim();
+    if (!targetFieldId) continue;
+
+    const boundLabelText = String(field.text || field.label || '').trim();
+    if (!boundLabelText) continue;
+
+    if (!boundLabelsByTargetFieldId.has(targetFieldId)) {
+      boundLabelsByTargetFieldId.set(targetFieldId, boundLabelText);
+    }
+  }
+
+  const mapped = {};
+  const usedKeys = new Set();
+
+  for (const [responseKey, responseValue] of responseEntries) {
+    const fieldDef = fieldsById.get(responseKey);
+    if (!fieldDef) continue;
+
+    const preferredLabel = boundLabelsByTargetFieldId.get(responseKey);
+    const storageKey = buildLabeledStorageKey(fieldDef, responseKey, usedKeys, preferredLabel);
+    mapped[storageKey] = responseValue;
+  }
+
+  if (Object.keys(mapped).length > 0) return mapped;
+  return rawResponses;
+}
+
+function buildLabeledStorageKey(fieldDef, fallbackKey, usedKeys = new Set(), preferredLabel = null) {
+  const baseName = slugifyFieldName(
+    preferredLabel
+    || fieldDef?.label
+    || fieldDef?.text
+    || fieldDef?.placeholder
+    || fallbackKey
+  );
+
+  const seed = baseName;
+
+  if (!usedKeys.has(seed)) {
+    usedKeys.add(seed);
+    return seed;
+  }
+
+  let sequence = 2;
+  let candidate = `${seed}-${sequence}`;
+  while (usedKeys.has(candidate)) {
+    sequence += 1;
+    candidate = `${seed}-${sequence}`;
+  }
+
+  usedKeys.add(candidate);
+  return candidate;
+}
+
+function slugifyFieldName(value) {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+
+  const cleaned = normalized.replace(/^-+|-+$/g, '');
+  return cleaned || 'field';
+}
 
 //app.use('/', indexRoutes);
 

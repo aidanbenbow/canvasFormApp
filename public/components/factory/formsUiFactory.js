@@ -4,8 +4,8 @@ import { LabelNode } from "../nodes/labelNode.js";
 import { BaseUIFactory } from "./baseUiFactory.js";
 
 export class FormsUIFactory extends BaseUIFactory {
-    constructor(context) {
-        super(context);
+  constructor(context, commandRegistry) {
+    super(context, commandRegistry);
     
         this.fieldRegistry = {
           text: this.createTextField.bind(this),
@@ -88,6 +88,7 @@ export class FormsUIFactory extends BaseUIFactory {
       createLabel(form, { selected, onSelect }) {
         const node = new LabelNode({
           id: `form-${form.id}`,
+          context: this.context,
           text: form.label,
           selected,
           onSelect

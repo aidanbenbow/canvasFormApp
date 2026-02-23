@@ -8,6 +8,8 @@ export function createFormModelAdapter(form) {
   return {
     getForm: () => model.getForm(),
     getFields: () => model.getFields(),
+    getResultsTable: () => model.getResultsTable(),
+    setResultsTable: (resultsTable) => model.setResultsTable(resultsTable),
     setFields: (fields) => model.setFields(fields),
     addField: (field) => model.addField(field),
     deleteField: (fieldId) => model.deleteField(fieldId),
