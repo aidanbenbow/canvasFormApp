@@ -43,7 +43,7 @@
         this.currentScreen.createRoot?.();
         this.uiEngine.mountScene(this.currentScreen.rootNode);
         this.currentScreen.onEnter?.();
-        
+        this.context.pipeline.invalidate();
       }
     }
   }

@@ -136,19 +136,39 @@ _addResults(formId, newResults){
     subscribe(key, handler) {
         console.log("Subscribing to key:", key);
         if (key === "forms") {
-          return this.eventBusManager.on(
-            ACTIONS.STORE.FORM_FORMS,
-            ({ forms }) => handler({ forms }),
-            "ui"
-          );
+                    const namespace = `ui:forms:${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                    const wrappedHandler = ({ forms }) => handler({ forms });
+
+                    this.eventBusManager.on(
+                        ACTIONS.STORE.FORM_FORMS,
+                        wrappedHandler,
+                        namespace
+                    );
+
+                    handler({ forms: this.getForms() });
+
+                    return () => {
+                        this.eventBusManager.off(ACTIONS.STORE.FORM_FORMS, wrappedHandler, namespace);
+                    };
         }
       
         if (key === "activeForm") {
-          return this.eventBusManager.on(
-            ACTIONS.STORE.FORM_ACTIVE,
-            ({ activeForm }) => handler({activeForm}),
-            "ui"
-          );
+                    const namespace = `ui:active:${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                    const wrappedHandler = ({ activeForm }) => handler({ activeForm });
+
+                    this.eventBusManager.on(
+                        ACTIONS.STORE.FORM_ACTIVE,
+                        wrappedHandler,
+                        namespace
+                    );
+
+                    handler({ activeForm: this.getActiveForm() });
+
+                    return () => {
+                        this.eventBusManager.off(ACTIONS.STORE.FORM_ACTIVE, wrappedHandler, namespace);
+                    };
         }
+
+                return () => {};
       }
   }

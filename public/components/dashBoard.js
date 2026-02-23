@@ -59,6 +59,7 @@ export class DashBoardScreen extends BaseScreen {
 
   onExit() {
     this.unsubForms?.();
+    this.unsubActive?.();
   }
 
   bindState() {

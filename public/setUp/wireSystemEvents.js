@@ -85,13 +85,18 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
       const results = store.getFormResults(form.id);
-      const resultView = new UIFormResults({ id: 'formResultsScreen', context,
-      dispatcher,
-      eventBusManager: bus,
+      const resultView = new UIFormResults({
+        id: 'formResultsScreen',
+        context,
+        dispatcher,
+        eventBusManager: bus,
         store,
+        factories,
+        commandRegistry,
+        router,
         results
-        });      resultView.attachToStage(context.uiStage);
-        context.pipeline.invalidate();
+      });
+      router.push(resultView);
 
     }, 'wiring');
 
