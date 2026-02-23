@@ -8,11 +8,13 @@ export class RenderPipeline {
       this.constraints = { maxWidth: Infinity, maxHeight: Infinity };
       this.editor = null;
       this.currentFrame = 0;
+      this.subtreeWorkFrame = 0;
       this.subtreeBudgetMs = 8;
       this.debugSubtreeScheduling = true;
       this.forceFullFrame = false;
       this.lastSubtreeStats = {
         frame: 0,
+        renderFrame: 0,
         processed: 0,
         hasRemaining: false,
         durationMs: 0,
@@ -56,15 +58,31 @@ export class RenderPipeline {
       if (!this.root) return;
 
       this.currentFrame += 1;
-      const subtreeStart = now();
-      const subtreeWork = this.processSubtreeWork(this.root, this.subtreeBudgetMs, this.currentFrame);
-      this.lastSubtreeStats = {
-        frame: this.currentFrame,
-        processed: subtreeWork.processed,
-        hasRemaining: subtreeWork.hasRemaining,
-        durationMs: now() - subtreeStart,
-        budgetMs: this.subtreeBudgetMs
-      };
+      const hasPendingSubtreeWork = hasDirtySubtree(this.root);
+
+      if (hasPendingSubtreeWork) {
+        this.subtreeWorkFrame += 1;
+        const subtreeStart = now();
+        const subtreeWork = this.processSubtreeWork(this.root, this.subtreeBudgetMs, this.currentFrame);
+        this.lastSubtreeStats = {
+          frame: this.subtreeWorkFrame,
+          renderFrame: this.currentFrame,
+          processed: subtreeWork.processed,
+          hasRemaining: subtreeWork.hasRemaining,
+          durationMs: now() - subtreeStart,
+          budgetMs: this.subtreeBudgetMs
+        };
+      } else {
+        this.lastSubtreeStats = {
+          frame: this.subtreeWorkFrame,
+          renderFrame: this.currentFrame,
+          processed: 0,
+          hasRemaining: false,
+          durationMs: 0,
+          budgetMs: this.subtreeBudgetMs
+        };
+      }
+
       const shouldRenderFullFrame = this.forceFullFrame || this.dirty;
       if (!shouldRenderFullFrame) {
         this.renderSubtreeDebugOverlay();
@@ -163,7 +181,8 @@ export class RenderPipeline {
 
       const stats = this.lastSubtreeStats || {};
       const lines = [
-        `subtree frame: ${stats.frame ?? 0}`,
+        `subtree work frame: ${stats.frame ?? 0}`,
+        `render frame: ${stats.renderFrame ?? this.currentFrame}`,
         `processed: ${stats.processed ?? 0}`,
         `remaining: ${stats.hasRemaining ? 'yes' : 'no'}`,
         `budget: ${stats.budgetMs ?? this.subtreeBudgetMs}ms`,
@@ -171,7 +190,7 @@ export class RenderPipeline {
       ];
 
       const panelWidth = 190;
-      const panelHeight = 88;
+      const panelHeight = 102;
       const margin = 8;
       const x = Math.max(margin, (ctx.canvas?.width || 0) - panelWidth - margin);
       const y = margin;
