@@ -1,5 +1,13 @@
 import { TinyEmitter } from "../../events/tinyEmitter.js";
 
+export class SubtreeMeta {
+  constructor() {
+    this.dirty = false;
+    this.dirtyChildrenCount = 0;
+    this.lastProcessedFrame = 0;
+  }
+}
+
 export class SceneNode {
     constructor({
       id,
@@ -30,6 +38,7 @@ export class SceneNode {
       this.measured = null;
       this.bounds = null;
       this.hitTestable = true;
+      this.subtreeMeta = new SubtreeMeta();
   
       for (const child of children) this.add(child);
     }
@@ -129,11 +138,14 @@ export class SceneNode {
   }
 
   invalidate() {
+    markSubtreeDirty(this);
     this.emit("invalidate", this);
-     // Bubble invalidate up to the root
-  if (this.parent) {
-    this.parent.invalidate();
-  }
+
+    let parent = this.parent;
+    while (parent) {
+      parent.emit("invalidate", this);
+      parent = parent.parent;
+    }
 
   }
 
@@ -162,4 +174,28 @@ export class SceneNode {
   
   
 
+  }
+
+  function ensureSubtreeMeta(node) {
+    if (!node) return null;
+    if (!node.subtreeMeta) {
+      node.subtreeMeta = new SubtreeMeta();
+    }
+    return node.subtreeMeta;
+  }
+
+  function markSubtreeDirty(node) {
+    const meta = ensureSubtreeMeta(node);
+    if (!meta || meta.dirty) return;
+
+    meta.dirty = true;
+
+    let parent = node.parent;
+    while (parent) {
+      const parentMeta = ensureSubtreeMeta(parent);
+      if (parentMeta) {
+        parentMeta.dirtyChildrenCount += 1;
+      }
+      parent = parent.parent;
+    }
   }

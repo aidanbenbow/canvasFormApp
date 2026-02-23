@@ -16,6 +16,9 @@ export class SceneHitTestSystem {
 // Convert global → local
 const local = node.globalToLocal(point);
 
+    // If pointer is outside this node, none of its children should be hittable.
+    if (!node.contains(local.x, local.y)) return null;
+
     const childPoint = node.scroll
       ? { x: point.x, y: point.y + (node.scroll.offsetY || 0) }
       : point;
@@ -26,7 +29,6 @@ const local = node.globalToLocal(point);
       if (hit) return hit;
     }
     // 2. Then test this node
-    if (!node.contains(local.x, local.y)) return null;
     return node.hitTest(local, ctx) ? node : null;
   }
 }

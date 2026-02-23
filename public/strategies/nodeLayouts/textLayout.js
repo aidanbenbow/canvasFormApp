@@ -2,6 +2,14 @@ import { wrapTextByWords } from "../../controllers/textModel.js";
 
 export class TextLayoutStrategy {
   measure(node, constraints, ctx) {
+    if (!ctx) {
+      node.measured = {
+        width: node.style?.maxWidth ?? constraints?.maxWidth ?? 100,
+        height: 30
+      };
+      return node.measured;
+    }
+
     ctx.save();
     const defaultFont = node.style.font;
     const defaultColor = node.style.color;
@@ -11,6 +19,28 @@ export class TextLayoutStrategy {
     const maxWidth = node.style.maxWidth ?? constraints.maxWidth;
     const shrinkToFit = node.style.shrinkToFit === true;
     const lineHeightScale = node.style.lineHeight || 1.2;
+
+    const textFingerprint = buildTextFingerprint(node, defaultFont, defaultColor);
+    const cacheKey = [
+      textFingerprint,
+      maxWidth,
+      paddingX,
+      paddingY,
+      shrinkToFit ? 1 : 0,
+      lineHeightScale,
+      defaultFont,
+      defaultColor
+    ].join('|');
+
+    const cached = node._textLayoutCache;
+    if (cached?.key === cacheKey) {
+      node._layout = cached.layout;
+      node._renderLines = cached.renderLines;
+      node._lines = cached.renderLines;
+      node.measured = cached.measured;
+      ctx.restore();
+      return node.measured;
+    }
 
     const lines = [];
     let currentLine = { segments: [], width: 0, height: 0 };
@@ -118,6 +148,13 @@ export class TextLayoutStrategy {
       height: lines.reduce((sum, line) => sum + line.height, 0) + (shrinkToFit ? paddingY * 2 : 0)
     };
 
+    node._textLayoutCache = {
+      key: cacheKey,
+      layout: node._layout,
+      renderLines: lines,
+      measured: node.measured
+    };
+
     return node.measured;
   }
   
@@ -128,4 +165,19 @@ export class TextLayoutStrategy {
     node.height = bounds.height;
   }
   
+}
+
+function buildTextFingerprint(node, defaultFont, defaultColor) {
+  if (Array.isArray(node?.runs) && node.runs.length > 0) {
+    return node.runs
+      .map((run) => {
+        const runText = String(run?.text ?? '');
+        const runFont = run?.font || defaultFont || '';
+        const runColor = run?.color || defaultColor || '';
+        return `${runText}~${runFont}~${runColor}`;
+      })
+      .join('¦');
+  }
+
+  return String(node?.text ?? '');
 }

@@ -74,11 +74,6 @@ function buildResultsManifest({ form, closeCommand, rows }) {
                     border: { color: '#d1d5db', width: 1 }
                 },
                 children: [
-                    textNode({
-                        id: 'results-title',
-                        text: title,
-                        style: { font: '20px sans-serif', color: '#111827' }
-                    }),
                     buttonNode({
                         id: 'results-close',
                         label: 'Close',
@@ -95,7 +90,14 @@ function buildResultsManifest({ form, closeCommand, rows }) {
                 style: {
                     background: '#ffffff'
                 },
-                children: rows
+                children: [
+                    textNode({
+                        id: 'results-title',
+                        text: title,
+                        style: { font: '20px sans-serif', color: '#111827' }
+                    }),
+                    ...rows
+                ]
             })
         }
     });
@@ -115,43 +117,42 @@ function buildResultRows(results = []) {
 
     const rows = [];
 
-    normalizedResults.forEach((result, index) => {
-        const user = result?.user ? ` • ${result.user}` : '';
-        const timestamp = formatTimestamp(result?.timestamp || result?.createdAt || null);
-        const heading = `#${index + 1}${timestamp ? ` • ${timestamp}` : ''}${user}`;
+    rows.push(
+        textNode({
+            id: 'results-count',
+            text: `Total submissions: ${normalizedResults.length}`,
+            style: { font: '18px sans-serif', color: '#4b5563' }
+        })
+    );
 
+    normalizedResults.forEach((result, index) => {
         rows.push(
             textNode({
-                id: `result-heading-${index}`,
-                text: heading,
-                style: { font: '20px sans-serif', color: '#111827' }
+                id: `result-block-${index}`,
+                text: buildResultBlockText(result, index),
+                style: { font: '18px sans-serif', color: '#1f2937' }
             })
         );
-
-        const inputEntries = Object.entries(extractInputMap(result));
-        if (!inputEntries.length) {
-            rows.push(
-                textNode({
-                    id: `result-empty-${index}`,
-                    text: '  (no input values)',
-                    style: { font: '18px sans-serif', color: '#6b7280' }
-                })
-            );
-            return;
-        }
-
-        inputEntries.forEach(([key, value], entryIndex) => {
-            rows.push(
-                textNode({
-                    id: `result-item-${index}-${entryIndex}`,
-                    text: `  ${key}: ${formatValue(value)}`,
-                    style: { font: '18px sans-serif', color: '#1f2937' }
-                })
-            );
-        });
     });
 
     return rows;
+}
+
+function buildResultBlockText(result, index) {
+    const user = result?.user ? ` • ${result.user}` : '';
+    const timestamp = formatTimestamp(result?.timestamp || result?.createdAt || null);
+    const heading = `#${index + 1}${timestamp ? ` • ${timestamp}` : ''}${user}`;
+    const inputEntries = Object.entries(extractInputMap(result));
+
+    if (!inputEntries.length) {
+        return `${heading}\n  (no input values)`;
+    }
+
+    const body = inputEntries
+        .map(([key, value]) => `  ${key}: ${formatValue(value)}`)
+        .join('\n');
+
+    return `${heading}\n${body}`;
 }
 
 function extractInputMap(result) {
