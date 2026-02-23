@@ -3,25 +3,32 @@ export function injectCopyButtonPlugin({
   ensureCopyCommand,
   style = {}
 } = {}) {
-  return (fields) => {
-    const next = [];
+  return {
+    name: 'copyButton',
+    transform(field, context = {}) {
+      const shouldAdd = (context.shouldAddCopyButton || shouldAddCopyButton)?.(field);
+      if (!shouldAdd) {
+        return field;
+      }
 
-    for (const field of fields || []) {
-      next.push(field);
-      if (!shouldAddCopyButton?.(field)) continue;
+      const copyCommand = (context.ensureCopyCommand || ensureCopyCommand)?.(field.id);
+      const resolvedStyle = {
+        ...style,
+        ...(context.copyButtonStyle || {})
+      };
 
-      const copyCommand = ensureCopyCommand?.(field.id);
-      next.push({
-        type: 'button',
-        id: `copy-${field.id}`,
-        label: 'Copy',
-        action: copyCommand,
-        skipCollect: true,
-        skipClear: true,
-        style
-      });
+      return [
+        field,
+        {
+          type: 'button',
+          id: `copy-${field.id}`,
+          label: 'Copy',
+          action: copyCommand,
+          skipCollect: true,
+          skipClear: true,
+          style: resolvedStyle
+        }
+      ];
     }
-
-    return next;
   };
 }

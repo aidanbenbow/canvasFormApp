@@ -1,21 +1,24 @@
 export function ensureSubmitActionPlugin({ action = 'form.submit', style } = {}) {
-  return (fields) => {
-    return (fields || []).map((field) => {
+  return {
+    name: 'submitAction',
+    transform(field, context = {}) {
       if (field?.type !== 'button') return field;
 
+      const resolvedAction = context.submitAction || action;
+      const resolvedStyle = context.submitStyle || style;
       const nextField = {
         ...field,
-        action: field.action || field.command || action
+        action: field.action || field.command || resolvedAction
       };
 
-      if (style) {
+      if (resolvedStyle) {
         nextField.style = {
           ...(field.style || {}),
-          ...style
+          ...resolvedStyle
         };
       }
 
       return nextField;
-    });
+    }
   };
 }

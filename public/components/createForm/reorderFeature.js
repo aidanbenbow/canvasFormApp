@@ -4,16 +4,18 @@ export class ReorderFeature {
   constructor({
     context,
     dragThreshold = 8,
+    editorState,
     getRootNode,
     resolveFieldIdFromNode,
     reorderFields,
-    clearDragPreviewState,
+    stopActiveEditing,
+    applyPreviewVisuals,
     refreshFormContainer,
-    onPreviewTargetChange,
-    onDragStateChange
   } = {}) {
+    this.editorState = editorState;
     this.reorderFields = reorderFields;
-    this.clearDragPreviewState = clearDragPreviewState;
+    this.stopActiveEditing = stopActiveEditing;
+    this.applyPreviewVisuals = applyPreviewVisuals;
     this.refreshFormContainer = refreshFormContainer;
 
     this.controller = new FormReorderController({
@@ -23,14 +25,42 @@ export class ReorderFeature {
       resolveFieldIdFromNode,
       onReorder: (sourceFieldId, targetFieldId) =>
         this.handleReorder(sourceFieldId, targetFieldId),
-      onPreviewTargetChange,
-      onDragStateChange
+      onPreviewTargetChange: (fieldId) => this.handlePreviewTargetChange(fieldId),
+      onDragStateChange: ({ active, sourceFieldId }) =>
+        this.handleDragStateChange({ active, sourceFieldId })
     });
+  }
+
+  handlePreviewTargetChange(fieldId) {
+    const nextPreviewFieldId = fieldId ?? null;
+    if (this.editorState?.getPreviewInsertionBeforeFieldId?.() === nextPreviewFieldId) return;
+
+    this.editorState?.set({
+      previewInsertionBeforeFieldId: nextPreviewFieldId
+    });
+    this.applyPreviewVisuals?.();
+  }
+
+  handleDragStateChange({ active, sourceFieldId }) {
+    const nextDraggingFieldId = active ? (sourceFieldId ?? null) : null;
+    if (this.editorState?.getDraggingFieldId?.() === nextDraggingFieldId) return;
+
+    if (active) {
+      this.stopActiveEditing?.();
+    }
+
+    this.editorState?.set({
+      draggingFieldId: nextDraggingFieldId
+    });
+    this.refreshFormContainer?.();
   }
 
   handleReorder(sourceFieldId, targetFieldId) {
     this.reorderFields?.(sourceFieldId, targetFieldId);
-    this.clearDragPreviewState?.();
+    this.editorState?.set({
+      previewInsertionBeforeFieldId: null,
+      draggingFieldId: null
+    });
     this.refreshFormContainer?.();
   }
 

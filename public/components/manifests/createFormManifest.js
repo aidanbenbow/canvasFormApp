@@ -100,6 +100,8 @@ export function buildCreateFormManifest({
 export function buildCreateDisplayFields({
   fields,
   editorState,
+  plugins,
+  pluginContext,
   deleteFieldCommand,
   getDragHandlePresentation,
   isPhotoLikeField,
@@ -109,8 +111,11 @@ export function buildCreateDisplayFields({
   const { mode, selectedFieldId, draggingFieldId } = editorState || {};
   const smallScreen = isSmallScreen();
   const deleteButtonStyle = getDeleteButtonStyle();
-  const fieldPlugins = getFieldPlugins(mode, {
+  const executionContext = {
+    ...(pluginContext || {}),
+    mode,
     selectedFieldId,
+    draggingFieldId,
     deleteFieldCommand,
     getDragHandlePresentation,
     deleteButtonStyle,
@@ -118,11 +123,14 @@ export function buildCreateDisplayFields({
     isPhotoLikeField,
     getPhotoSource,
     saveBrightnessAction
-  });
+  };
+  const fieldPlugins = Array.isArray(plugins) && plugins.length
+    ? plugins
+    : getFieldPlugins(mode, executionContext);
   const normalizedFields = normalizeEditorFields(fields, {
     mode,
     selectedFieldId,
     draggingFieldId
   });
-  return runFieldPlugins(normalizedFields, fieldPlugins);
+  return runFieldPlugins(normalizedFields, fieldPlugins, executionContext);
 }

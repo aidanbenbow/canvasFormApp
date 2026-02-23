@@ -7,39 +7,44 @@ export function injectEditorSelectionControlsPlugin({
   deleteButtonStyle,
   smallScreen
 } = {}) {
-  return (fields) => {
-    const next = [];
+  return {
+    name: 'selectionControls',
+    transform(field, context = {}) {
+      const activeSelectedFieldId = context.selectedFieldId ?? selectedFieldId;
+      const activeDeleteFieldCommand = context.deleteFieldCommand || deleteFieldCommand;
+      const activeGetDragHandlePresentation = context.getDragHandlePresentation || getDragHandlePresentation;
+      const activeSmallScreen = context.smallScreen ?? smallScreen;
+      const activeDeleteButtonStyle = {
+        ...(deleteButtonStyle || {}),
+        ...(context.deleteButtonStyle || {})
+      };
+      const isSelected = activeSelectedFieldId && activeSelectedFieldId === field?.id;
 
-    for (const field of fields || []) {
-      const isSelected = selectedFieldId && selectedFieldId === field?.id;
-
-      if (isSelected) {
-        next.push({
-          type: 'text',
-          id: `drag-handle-${field.id}`,
-          ...getDragHandlePresentation?.(field.id, { smallScreen })
-        });
+      if (!isSelected) {
+        return field;
       }
 
-      next.push(field);
-
-      if (isSelected) {
-        next.push({
+      return [
+        {
+          type: 'text',
+          id: `drag-handle-${field.id}`,
+          ...activeGetDragHandlePresentation?.(field.id, { smallScreen: activeSmallScreen })
+        },
+        field,
+        {
           type: 'button',
           id: `delete-${field.id}`,
           label: '✖',
-          action: deleteFieldCommand,
+          action: activeDeleteFieldCommand,
           payload: { fieldId: field.id },
           style: {
             ...EDITOR_SELECTION_DELETE_BUTTON_STYLE,
-            ...(deleteButtonStyle || {})
+            ...activeDeleteButtonStyle
           },
           skipCollect: true,
           skipClear: true
-        });
-      }
+        }
+      ];
     }
-
-    return next;
   };
 }

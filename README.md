@@ -7,19 +7,26 @@ An attempt to create a browser-based HTML canvas app that can be used to generat
 - Editor field normalization is split from manifest construction (`normalizeEditorFields` → plugin pass).
 - Manifest compiler builds root nodes and regions.
 - UI factory instantiates node types and connects command actions.
+- Engine rendering now goes through a UI renderer adapter contract: `renderManifest(manifest)`, `updateRegion(regionId, children)`, `invalidate()`.
 
 Key files:
 - `public/components/manifests/createFormManifest.js`
 - `public/components/manifests/editor/fieldNormalization.js`
 - `public/components/manifests/viewFormManifest.js`
+- `public/components/createForm/formBuilderAdapters.js`
+- `public/components/createForm/formBuilderAdapters.js` (`createCanvasUiRendererAdapter`, `createDomUiRendererAdapter`)
 - `public/components/uiManifestCompiler.js`
 - `public/components/factory/baseUiFactory.js`
 
 ### Interaction manager
 - Selection, drag-and-drop reorder, and builder interaction state are handled by controllers.
 - Photo preview behavior (source sync, brightness slider reveal/update) is handled by `PhotoPreviewController`.
+- Editor interaction state is centralized in `EditorState` (`mode`, `selectedFieldId`, `draggingFieldId`, `previewInsertionBeforeFieldId`).
+- `ReorderFeature` writes drag/preview state into `EditorState`; `FormBuilderInteractionController` reads state for visuals and writes selection changes.
 
 Key files:
+- `public/components/createForm/editorState.js`
+- `public/components/createForm/reorderFeature.js`
 - `public/controllers/formBuilderInteractionController.js`
 - `public/controllers/formReorderController.js`
 - `public/controllers/formBuilderFieldBindingController.js`
@@ -29,6 +36,8 @@ Key files:
 - Field transformation is done through mode-based plugin pipelines.
 - Create/edit selection controls (drag handle + delete button) are injected as an editor plugin.
 - Plugin ordering and enablement is centralized in one config.
+- `FormBuilderEngine` exposes runtime plugin registration (`registerPlugin`, `unregisterPlugin`, `getRegisteredPlugins`).
+- Official plugin shape: `{ name, transform(field, context) }`.
 
 Key files:
 - `public/components/fieldPlugins/fieldPluginConfig.js`

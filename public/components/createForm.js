@@ -1,15 +1,25 @@
 import { ACTIONS } from '../events/actions.js';
 import { saveFormStructure } from '../controllers/socketController.js';
+import { BaseScreen } from './baseScreen.js';
 import { FormBuilderEngine } from './createForm/formBuilderEngine.js';
+import { getCreateFormDragHandlePresentation } from './createForm/createFormDragHandlePresentation.js';
+import { resolveCreateFormFieldIdFromNode } from './createForm/createFormFieldResolver.js';
+import { buildDefaultCreateFormField } from './createForm/createFormFieldFactory.js';
 import {
+  buildCreateDisplayFields,
+  buildCreateFormManifest
+} from './manifests/createFormManifest.js';
+import {
+  createCanvasUiRendererAdapter,
   createCommandRegistryAdapter,
   createFormModelAdapter,
-  createPersistenceAdapter,
-  createUiAdapter
+  createPersistenceAdapter
 } from './createForm/formBuilderAdapters.js';
 
-export class CreateForm extends FormBuilderEngine {
+export class CreateForm extends BaseScreen {
   constructor({ id='createForm', context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit, form, persistenceAdapter }) {
+    super({ id, context, dispatcher, eventBusManager });
+
     const model = createFormModelAdapter(form);
     const defaultPersistence = createPersistenceAdapter({
       onSave: (normalizedForm) => {
@@ -28,9 +38,13 @@ export class CreateForm extends FormBuilderEngine {
     });
     const persistence = persistenceAdapter || defaultPersistence;
     const commands = createCommandRegistryAdapter(commandRegistry);
-    const ui = createUiAdapter(factories);
+    const uiRenderer = createCanvasUiRendererAdapter({
+      factories,
+      commandRegistry,
+      context
+    });
 
-    super({
+    this.engine = new FormBuilderEngine({
       id,
       context,
       dispatcher,
@@ -42,10 +56,29 @@ export class CreateForm extends FormBuilderEngine {
       modelAdapter: model,
       persistenceAdapter: persistence,
       commandAdapter: commands,
-      uiAdapter: ui,
+      uiRendererAdapter: uiRenderer,
+      manifestBuilder: buildCreateFormManifest,
+      displayBuilder: buildCreateDisplayFields,
+      fieldFactory: buildDefaultCreateFormField,
+      fieldResolver: resolveCreateFormFieldIdFromNode,
+      dragHandlePresentation: ({ fieldId, smallScreen, previewInsertionBeforeFieldId }) =>
+        getCreateFormDragHandlePresentation({
+          fieldId,
+          smallScreen,
+          previewInsertionBeforeFieldId
+        }),
       form
     });
 
-    this.registerCommands();
+    this.engine.registerCommands();
+  }
+
+  createRoot() {
+    this.rootNode = this.engine.mount();
+    return this.rootNode;
+  }
+
+  onExit() {
+    this.engine.destroy();
   }
 }

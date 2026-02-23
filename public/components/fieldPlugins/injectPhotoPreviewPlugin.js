@@ -5,64 +5,68 @@ export function injectPhotoPreviewPlugin({
   previewStyle = {},
   placeholder = 'Enter photo URL...'
 } = {}) {
-  return (fields) => {
-    const next = [];
-
-    for (const field of fields || []) {
-      if (!isPhotoLikeField?.(field)) {
-        next.push(field);
-        continue;
+  return {
+    name: 'photoPreview',
+    transform(field, context = {}) {
+      const isPhotoField = (context.isPhotoLikeField || isPhotoLikeField)?.(field);
+      if (!isPhotoField) {
+        return field;
       }
 
-      const source = getPhotoSource?.(field) ?? '';
-      next.push({
-        ...field,
-        type: 'input',
-        value: source,
-        placeholder: field?.placeholder || placeholder
-      });
+      const resolveSource = context.getPhotoSource || getPhotoSource;
+      const source = resolveSource?.(field) ?? '';
+      const brightnessAction = context.saveBrightnessAction || saveBrightnessAction;
+      const placeholderText = field?.placeholder || context.placeholder || placeholder;
+      const resolvedPreviewStyle = {
+        ...previewStyle,
+        ...(context.previewStyle || {})
+      };
 
-      next.push({
-        type: 'photo',
-        id: `photo-preview-${field.id}`,
-        src: source,
-        brightness: Number(field?.brightness ?? 100),
-        style: {
-          fillWidth: true,
-          borderColor: '#93c5fd',
-          backgroundColor: '#eff6ff',
-          ...previewStyle
+      return [
+        {
+          ...field,
+          type: 'input',
+          value: source,
+          placeholder: placeholderText
+        },
+        {
+          type: 'photo',
+          id: `photo-preview-${field.id}`,
+          src: source,
+          brightness: Number(field?.brightness ?? 100),
+          style: {
+            fillWidth: true,
+            borderColor: '#93c5fd',
+            backgroundColor: '#eff6ff',
+            ...resolvedPreviewStyle
+          }
+        },
+        {
+          type: 'slider',
+          id: `photo-brightness-${field.id}`,
+          label: 'Brightness',
+          min: 40,
+          max: 200,
+          step: 1,
+          value: Number(field?.brightness ?? 100),
+          visible: false,
+          hitTestable: false,
+          style: {
+            fillWidth: true
+          }
+        },
+        {
+          type: 'button',
+          id: `photo-brightness-save-${field.id}`,
+          label: 'Save Brightness',
+          action: brightnessAction,
+          payload: { fieldId: field.id },
+          visible: false,
+          hitTestable: false,
+          skipCollect: true,
+          skipClear: true
         }
-      });
-
-      next.push({
-        type: 'slider',
-        id: `photo-brightness-${field.id}`,
-        label: 'Brightness',
-        min: 40,
-        max: 200,
-        step: 1,
-        value: Number(field?.brightness ?? 100),
-        visible: false,
-        hitTestable: false,
-        style: {
-          fillWidth: true
-        }
-      });
-
-      next.push({
-        type: 'button',
-        id: `photo-brightness-save-${field.id}`,
-        label: 'Save Brightness',
-        action: saveBrightnessAction,
-        payload: { fieldId: field.id },
-        visible: false,
-        hitTestable: false,
-        skipCollect: true,
-        skipClear: true
-      });
+      ];
     }
-
-    return next;
   };
 }

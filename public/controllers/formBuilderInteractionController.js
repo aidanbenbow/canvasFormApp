@@ -1,6 +1,7 @@
 export class FormBuilderInteractionController {
   constructor({
     context,
+    editorState,
     getRootNode,
     getFieldIds,
     resolveFieldIdFromNode,
@@ -11,6 +12,7 @@ export class FormBuilderInteractionController {
     onPhotoPreviewSelected
   }) {
     this.context = context;
+    this.editorState = editorState;
     this.getRootNode = getRootNode;
     this.getFieldIds = getFieldIds;
     this.resolveFieldIdFromNode = resolveFieldIdFromNode;
@@ -20,9 +22,16 @@ export class FormBuilderInteractionController {
     this.refreshFormContainer = refreshFormContainer;
     this.onPhotoPreviewSelected = onPhotoPreviewSelected;
 
-    this.selectedFieldId = null;
-    this.previewInsertionBeforeFieldId = null;
-    this.draggingFieldId = null;
+    this.editorStateSnapshot = this.editorState?.getSnapshot?.() || {
+      mode: 'create',
+      selectedFieldId: null,
+      draggingFieldId: null,
+      previewInsertionBeforeFieldId: null
+    };
+    this.unsubscribeEditorState = this.editorState?.subscribe?.((nextState) => {
+      this.editorStateSnapshot = nextState;
+    });
+
     this.dragHandleNodes = new Map();
     this.fieldNodes = new Map();
     this.fieldBaseStyles = new Map();
@@ -30,15 +39,15 @@ export class FormBuilderInteractionController {
   }
 
   getSelectedFieldId() {
-    return this.selectedFieldId;
+    return this.editorStateSnapshot.selectedFieldId;
   }
 
   getPreviewInsertionBeforeFieldId() {
-    return this.previewInsertionBeforeFieldId;
+    return this.editorStateSnapshot.previewInsertionBeforeFieldId;
   }
 
   getDraggingFieldId() {
-    return this.draggingFieldId;
+    return this.editorStateSnapshot.draggingFieldId;
   }
 
   bindSelectionHandlers(container) {
@@ -95,42 +104,26 @@ export class FormBuilderInteractionController {
    */
   setSelectedField(fieldId) {
     const nextFieldId = fieldId ?? null;
-    if (this.selectedFieldId === nextFieldId) return;
+    if (this.getSelectedFieldId() === nextFieldId) return;
     this.stopActiveEditing?.();
-    this.selectedFieldId = nextFieldId;
-    this.previewInsertionBeforeFieldId = null;
+    this.editorState?.set({
+      selectedFieldId: nextFieldId,
+      previewInsertionBeforeFieldId: null
+    });
     this.refreshFormContainer?.();
-  }
-
-  setPreviewInsertion(fieldId) {
-    const nextValue = fieldId ?? null;
-    if (this.previewInsertionBeforeFieldId === nextValue) return;
-    this.previewInsertionBeforeFieldId = nextValue;
-    this.applyPreviewToDragHandles();
-    this.applyPreviewToFields();
-  }
-
-  setDraggingState(isActive, sourceFieldId) {
-    const nextDraggingFieldId = isActive ? (sourceFieldId ?? null) : null;
-    if (this.draggingFieldId === nextDraggingFieldId) return;
-
-    if (isActive) {
-      this.stopActiveEditing?.();
-    }
-
-    this.draggingFieldId = nextDraggingFieldId;
-    this.refreshFormContainer?.();
-  }
-
-  clearDragPreviewState() {
-    this.previewInsertionBeforeFieldId = null;
-    this.draggingFieldId = null;
   }
 
   resetAllState() {
-    this.previewInsertionBeforeFieldId = null;
-    this.selectedFieldId = null;
-    this.draggingFieldId = null;
+    this.editorState?.set({
+      selectedFieldId: null,
+      previewInsertionBeforeFieldId: null,
+      draggingFieldId: null
+    });
+  }
+
+  dispose() {
+    this.unsubscribeEditorState?.();
+    this.unsubscribeEditorState = null;
   }
 
   cacheNodes(container) {
@@ -197,10 +190,12 @@ export class FormBuilderInteractionController {
   applyPreviewToFields() {
     if (!this.fieldNodes?.size) return;
 
-    const hasPreview = Boolean(this.draggingFieldId && this.previewInsertionBeforeFieldId);
+    const draggingFieldId = this.getDraggingFieldId();
+    const previewInsertionBeforeFieldId = this.getPreviewInsertionBeforeFieldId();
+    const hasPreview = Boolean(draggingFieldId && previewInsertionBeforeFieldId);
     for (const [fieldId, node] of this.fieldNodes.entries()) {
       const baseStyle = this.fieldBaseStyles.get(fieldId) || {};
-      const isPreviewTarget = hasPreview && fieldId === this.previewInsertionBeforeFieldId;
+      const isPreviewTarget = hasPreview && fieldId === previewInsertionBeforeFieldId;
 
       if (isPreviewTarget) {
         node.style = {
