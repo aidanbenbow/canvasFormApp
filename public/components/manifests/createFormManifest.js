@@ -3,6 +3,7 @@ import {
   getDeleteButtonStyle,
   isSmallScreen
 } from './screenManifestUtils.js';
+import { normalizeEditorFields } from './editor/fieldNormalization.js';
 import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
 import { runFieldPlugins } from '../fieldPlugins/runFieldPlugins.js';
 
@@ -98,87 +99,30 @@ export function buildCreateFormManifest({
 
 export function buildCreateDisplayFields({
   fields,
-  mode,
-  selectedFieldId,
-  draggingFieldId,
+  editorState,
   deleteFieldCommand,
   getDragHandlePresentation,
   isPhotoLikeField,
   getPhotoSource,
   saveBrightnessAction
 }) {
+  const { mode, selectedFieldId, draggingFieldId } = editorState || {};
   const smallScreen = isSmallScreen();
   const deleteButtonStyle = getDeleteButtonStyle();
   const fieldPlugins = getFieldPlugins(mode, {
+    selectedFieldId,
+    deleteFieldCommand,
+    getDragHandlePresentation,
+    deleteButtonStyle,
+    smallScreen,
     isPhotoLikeField,
     getPhotoSource,
     saveBrightnessAction
   });
-
-  return (fields || []).flatMap((field) => {
-    const def = structuredClone(field);
-    const nodes = [];
-    const isSelected = selectedFieldId === def.id;
-
-    if (def.type === 'text' && def.text == null) {
-      def.text = def.label || 'Text';
-    }
-
-    if (def.type === 'button') {
-      def.label = def.label || 'Submit';
-      delete def.action;
-      delete def.command;
-    }
-
-    if (mode === 'edit' && (def.type === 'input' || def.type === 'photo')) {
-      def.editable = false;
-    }
-
-    if ((def.type === 'text' || def.type === 'label') && isSelected) {
-      def.editable = true;
-    }
-
-    def.style = {
-      ...(def.style || {}),
-      borderColor: isSelected ? '#0078ff' : (def.style?.borderColor || '#ccc'),
-      backgroundColor: draggingFieldId === def.id ? '#e0f2fe' : def.style?.backgroundColor,
-      opacity: draggingFieldId === def.id ? 0.8 : (def.style?.opacity ?? 1)
-    };
-
-    if (isSelected) {
-      nodes.push({
-        type: 'text',
-        id: `drag-handle-${def.id}`,
-        ...getDragHandlePresentation(def.id, { smallScreen })
-      });
-    }
-
-    const normalizedFieldNodes = runFieldPlugins([def], fieldPlugins);
-    nodes.push(...normalizedFieldNodes);
-
-    if (isSelected) {
-      nodes.push({
-        type: 'button',
-        id: `delete-${def.id}`,
-        label: '✖',
-        action: deleteFieldCommand,
-        payload: { fieldId: def.id },
-        style: {
-          textColor: '#ffffff',
-          background: '#dc2626',
-          hoverBackground: '#b91c1c',
-          pressedBackground: '#991b1b',
-          borderColor: '#7f1d1d',
-          fillWidth: false,
-          paddingX: 0,
-          paddingY: 0,
-          ...deleteButtonStyle
-        },
-        skipCollect: true,
-        skipClear: true
-      });
-    }
-
-    return nodes;
+  const normalizedFields = normalizeEditorFields(fields, {
+    mode,
+    selectedFieldId,
+    draggingFieldId
   });
+  return runFieldPlugins(normalizedFields, fieldPlugins);
 }

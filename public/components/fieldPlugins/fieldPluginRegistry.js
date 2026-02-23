@@ -1,5 +1,6 @@
 import { ensureSubmitActionPlugin } from './ensureSubmitActionPlugin.js';
 import { injectCopyButtonPlugin } from './injectCopyButtonPlugin.js';
+import { injectEditorSelectionControlsPlugin } from './editor/injectSelectionControlsPlugin.js';
 import { injectPhotoPreviewPlugin } from './injectPhotoPreviewPlugin.js';
 import { FIELD_PLUGIN_MODE_CONFIG } from './fieldPluginConfig.js';
 
@@ -21,7 +22,12 @@ export function getFieldPlugins(mode, context = {}) {
     copyButtonStyle,
     submitStyle,
     submitAction = 'form.submit',
-    saveBrightnessAction = 'photo.preview.saveBrightness'
+    saveBrightnessAction = 'photo.preview.saveBrightness',
+    selectedFieldId,
+    deleteFieldCommand,
+    getDragHandlePresentation,
+    deleteButtonStyle,
+    smallScreen
   } = context;
 
   const photoPreview = injectPhotoPreviewPlugin({
@@ -31,6 +37,14 @@ export function getFieldPlugins(mode, context = {}) {
   });
 
   const pluginFactories = {
+    selectionControls: () =>
+      injectEditorSelectionControlsPlugin({
+        selectedFieldId,
+        deleteFieldCommand,
+        getDragHandlePresentation,
+        deleteButtonStyle,
+        smallScreen
+      }),
     photoPreview: () => photoPreview,
     copyButton: () =>
       injectCopyButtonPlugin({

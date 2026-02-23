@@ -88,6 +88,11 @@ export class FormBuilderInteractionController {
     container.onEventCapture = captureBinding.wrappedCapture;
   }
 
+  /**
+   * Selection is the re-render trigger for the builder container.
+   * Callers should not invoke refresh separately after selecting,
+   * because this method already calls refreshFormContainer.
+   */
   setSelectedField(fieldId) {
     const nextFieldId = fieldId ?? null;
     if (this.selectedFieldId === nextFieldId) return;

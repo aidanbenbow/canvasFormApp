@@ -11,6 +11,18 @@ export class CommandRegistry {
     register(name, handler, meta = {}) {
       this.commands.set(name, { handler, meta });
     }
+
+    unregister(name) {
+      if (!name) return;
+      this.commands.delete(name);
+    }
+
+    unregisterMany(names = []) {
+      if (!Array.isArray(names)) return;
+      for (const name of names) {
+        this.unregister(name);
+      }
+    }
   
     async execute(name, payload) {
       const entry = this.commands.get(name);

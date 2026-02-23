@@ -1,5 +1,5 @@
 /** @type {const} */
-export const FIELD_PLUGIN_KEYS = ['photoPreview', 'copyButton', 'submitAction'];
+export const FIELD_PLUGIN_KEYS = ['selectionControls', 'photoPreview', 'copyButton', 'submitAction'];
 
 /**
  * @typedef {typeof FIELD_PLUGIN_KEYS[number]} FieldPluginKey
@@ -22,8 +22,14 @@ export const FIELD_PLUGIN_MODES = ['create', 'edit', 'view'];
  * @type {Record<FieldPluginMode, FieldPluginConfigEntry[]>}
  */
 export const FIELD_PLUGIN_MODE_CONFIG = {
-  create: [{ key: 'photoPreview', enabled: true }],
-  edit: [{ key: 'photoPreview', enabled: true }],
+  create: [
+    { key: 'selectionControls', enabled: true },
+    { key: 'photoPreview', enabled: true }
+  ],
+  edit: [
+    { key: 'selectionControls', enabled: true },
+    { key: 'photoPreview', enabled: true }
+  ],
   view: [
     { key: 'photoPreview', enabled: true },
     { key: 'copyButton', enabled: true },
