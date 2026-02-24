@@ -94,12 +94,16 @@ export function emitFeedback({ success, error, box }) {
     });
   }
   
-export function fetchFormResults(formId, tableName = 'faithandbelief') {
+export function fetchFormResults(formId, tableName = null) {
  
   return new Promise((resolve, reject) => {
     socket.emit('getFormResults', { formId, tableName });
 
-    socket.once('formResultsData', ({ formId, results }) => {
+    socket.once('formResultsData', ({ formId, results, error }) => {
+      if (error) {
+        reject(new Error(error));
+        return;
+      }
       console.log('[SOCKET] Received formResultsData:', results);
       resolve(results);
     });
@@ -108,11 +112,15 @@ export function fetchFormResults(formId, tableName = 'faithandbelief') {
   });
 }
 
-export function fetchAllFormResults(tableName = 'faithandbelief') {
+export function fetchAllFormResults(tableName = null) {
   return new Promise((resolve, reject) => {
     socket.emit('getAllFormResults', { tableName });
 
-    socket.once('allFormResultsData', ({ tableName, results }) => {
+    socket.once('allFormResultsData', ({ tableName, results, error }) => {
+      if (error) {
+        reject(new Error(error));
+        return;
+      }
       console.log('[SOCKET] Received allFormResultsData:', results);
       resolve(results);
     });
@@ -139,6 +147,21 @@ export function fetchArticleById(articleID){
     socket.once('articleDataById', ({ articleID, articleData, error }) => {
       if (error) reject(error);
       else resolve(articleData);
+    });
+  });
+}
+
+export function updateArticle(articleID, updates = {}) {
+  return new Promise((resolve, reject) => {
+    socket.emit('updateArticle', { articleID, updates });
+
+    socket.once('articleUpdatedResponse', ({ success, article, error }) => {
+      if (!success) {
+        reject(new Error(error || 'Failed to update article'));
+        return;
+      }
+
+      resolve(article);
     });
   });
 }

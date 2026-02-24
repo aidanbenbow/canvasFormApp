@@ -5,7 +5,7 @@ import { EditForm } from "../components/editForm.js";
 import { UIFormResults } from "../components/formResults.js";
 import { FormViewScreen } from "../components/viewForm.js";
 
-import { onDelete, saveFormStructure, sendLog } from "../controllers/socketController.js";
+import { onDelete, saveFormStructure, sendLog, updateArticle } from "../controllers/socketController.js";
 import { ACTIONS } from "../events/actions.js";
 
 export function wireSystemEvents(system, context, store ={}, router, factories, commandRegistry) {
@@ -81,6 +81,24 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
 
     }
     , "wiring");
+
+    dispatcher.on(ACTIONS.ARTICLE.EDIT, async (article) => {
+      if (!article) return;
+
+      const editor = new articleViewScreen({
+        context,
+        dispatcher,
+        eventBusManager: bus,
+        store,
+        factories,
+        commandRegistry,
+        article,
+        mode: 'edit',
+        onSave: ({ articleId, updates }) => updateArticle(articleId, updates)
+      });
+
+      router.push(editor);
+    }, "wiring");
 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);

@@ -160,6 +160,7 @@ wireSystemEvents(system, context, store, screenRouter, factories, commandRegistr
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
 const articleID = urlParams.get('articleId');
+const mode = String(urlParams.get('mode') || '').trim().toLowerCase();
 context.pipeline.start({
   maxWidth: mainCanvas.width,
   maxHeight: mainCanvas.height
@@ -168,7 +169,7 @@ context.pipeline.start({
 
 if (formId) {
   const form = await fetchFormById(formId);
-  const tableName = (form.resultsTable || 'progressreports').trim();
+  const tableName = resolveResultsTableName(form);
   const results = await fetchFormResults(form.id, tableName);
 
   system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
@@ -178,13 +179,17 @@ if (formId) {
 } else if(articleID){
   const article = await fetchArticleById(articleID);
   console.log('Fetched article:', article);
-  system.actionDispatcher.dispatch(ACTIONS.ARTICLE.VIEW, article, 'bootstrap');
+  if (mode === 'edit') {
+    system.actionDispatcher.dispatch(ACTIONS.ARTICLE.EDIT, article, 'bootstrap');
+  } else {
+    system.actionDispatcher.dispatch(ACTIONS.ARTICLE.VIEW, article, 'bootstrap');
+  }
 }
 else{
   const {forms} = await fetchAllForms('admin');
- 
+ console.log('Fetched forms:', forms);
 for(const f of forms){
-  const tableName = (f.resultsTable || 'faithandbelief').trim();
+  const tableName = resolveResultsTableName(f);
   const results = await fetchFormResults(f.id, tableName);
   
 system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
@@ -225,6 +230,17 @@ system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
   system.eventBus.on('formResultsUpdated', () => {
     context.pipeline.invalidate();
   });
+
+function resolveResultsTableName(form) {
+  const explicitTable = typeof form?.resultsTable === 'string' ? form.resultsTable.trim() : '';
+  if (explicitTable) return explicitTable;
+
+  const normalizedFormId = String(form?.id || `form-${Date.now()}`)
+    .toLowerCase()
+    .replace(/[^a-z0-9_.-]/g, '_');
+
+  return `form_results_${normalizedFormId}`.slice(0, 255);
+}
 
   let activeKeyboard = null;
 

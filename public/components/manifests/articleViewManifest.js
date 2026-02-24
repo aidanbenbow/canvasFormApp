@@ -59,6 +59,75 @@ export function buildArticleViewManifest(article) {
   return manifest;
 }
 
+export function buildArticleEditManifest(article, { saveCommand } = {}) {
+  const manifest = structuredClone(articleViewManifestTemplate);
+
+  manifest.regions.formContainer.children = [
+    {
+      type: 'text',
+      id: 'article-edit-title-label',
+      text: 'Edit Article',
+      style: { font: "32px 'Segoe UI Semibold'", color: '#0f172a' }
+    },
+    {
+      type: 'input',
+      id: 'article-edit-title',
+      value: String(article?.title || ''),
+      placeholder: 'Article title',
+      style: {
+        font: "24px 'Segoe UI'",
+        minHeight: 56
+      }
+    },
+    {
+      type: 'input',
+      id: 'article-edit-body',
+      value: String(article?.article || ''),
+      placeholder: 'Article content',
+      style: {
+        font: "22px 'Segoe UI'",
+        minHeight: 280,
+        allowContentOverflow: true
+      }
+    },
+    {
+      type: 'input',
+      id: 'article-edit-photo',
+      value: String(article?.photo || article?.imageUrl || ''),
+      placeholder: 'Photo URL (optional)',
+      style: {
+        font: "20px 'Segoe UI'",
+        minHeight: 48
+      }
+    },
+    {
+      type: 'input',
+      id: 'article-edit-color',
+      value: String(article?.style?.color || '#111827'),
+      placeholder: 'Text color (optional)',
+      style: {
+        font: "20px 'Segoe UI'",
+        minHeight: 48
+      }
+    },
+    {
+      type: 'button',
+      id: 'article-edit-save',
+      label: 'Save Article',
+      action: saveCommand,
+      skipClear: true,
+      style: {
+        font: "22px 'Segoe UI Semibold'",
+        paddingX: 18,
+        paddingY: 10,
+        fillWidth: false
+      }
+    }
+  ];
+
+  return manifest;
+}
+
 function buildArticleRuns(article) {
   const defaultBodyColor = article?.style?.color || '#111827';
   const defaultBodyFont = "24px 'Segoe UI'";

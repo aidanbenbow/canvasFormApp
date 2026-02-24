@@ -45,7 +45,10 @@ export class InputLayoutStrategy {
 
   const boxHeight = Math.max(minHeight, contentHeight);
   const rawHeight = boxHeight + (wordCountHeight > 0 ? wordCountHeight + wordCountSpacing : 0);
-  const height = Math.min(rawHeight, constraints.maxHeight);
+  const allowContentOverflow = node.style.allowContentOverflow === true;
+  const height = allowContentOverflow
+    ? rawHeight
+    : Math.min(rawHeight, constraints.maxHeight);
  
     return { width, height };
   }

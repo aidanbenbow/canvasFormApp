@@ -67,6 +67,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('updateArticle', async ({ articleID, updates }) => {
+    try {
+      const article = await db.updateDorcasArticle(articleID, updates || {});
+      socket.emit('articleUpdatedResponse', { success: true, articleID, article });
+    } catch (error) {
+      socket.emit('articleUpdatedResponse', {
+        success: false,
+        articleID,
+        error: error.message || 'Unknown error'
+      });
+    }
+  });
+
   socket.on('log', async ({ message, data }) => {
     console.log(`[LOG] ${message}`);
     console.log('Received data:', data);
@@ -161,7 +174,7 @@ io.on('connection', (socket) => {
   socket.on('getFormResults', async ({ formId, tableName }) => {
     try {
       const results = await db.getFormResults(formId, tableName);
-      console.log(`Fetched results for form ${formId} from table ${tableName}:`, results);
+     // console.log(`Fetched results for form ${formId} from table ${tableName}:`, results);
       socket.emit('formResultsData', { formId, results });
     } catch (err) {
       socket.emit('formResultsData', { formId, results: [], error: err.message });
@@ -172,7 +185,7 @@ io.on('connection', (socket) => {
   socket.on('getAllFormResults', async ({ tableName }) => {
     try {
       const results = await db.getAllFormResults(tableName);
-      console.log(`Fetched all results for table ${tableName}:`, results);
+     // console.log(`Fetched all results for table ${tableName}:`, results);
       socket.emit('allFormResultsData', { tableName, results });
     } catch (err) {
       socket.emit('allFormResultsData', { tableName, results: [], error: err.message });

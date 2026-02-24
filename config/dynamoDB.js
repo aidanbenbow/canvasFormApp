@@ -366,8 +366,11 @@ async deleteFormData(id) {
 
       async getFormResults(formId, tableName = 'cscstudents') {
         try {
-          if (tableName === 'progressreports') {
-            // progressreports table does not store formId; return all items
+          const normalizedTableName =
+            typeof tableName === 'string' ? tableName.trim().toLowerCase() : '';
+
+          if (normalizedTableName === 'progressreports' || normalizedTableName === 'dorcasusers') {
+            // global content tables do not require formId filtering
             return await this.getAllFormResults(tableName);
           }
 
@@ -392,6 +395,10 @@ async deleteFormData(id) {
 
           return items;
         } catch (error) {
+          if (error?.name === 'ResourceNotFoundException') {
+            console.warn(`Results table not found: ${tableName}. Returning empty results.`);
+            return [];
+          }
           console.error("Error fetching form results:", error);
           throw new Error("Could not fetch form results");
         }
@@ -456,6 +463,69 @@ async deleteFormData(id) {
         const result = await this.docClient.send(new UpdateCommand(params));
         return result.Attributes || result;
       }
+
+      async updateDorcasArticle(articleId, updates = {}) {
+        const normalizedArticleId = String(articleId || '').trim();
+        if (!normalizedArticleId) {
+          throw new Error('Missing articleId for dorcasusers update');
+        }
+
+        const cleaned = Object.entries(updates || {})
+          .filter(([, value]) => value !== undefined)
+          .reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+          }, {});
+
+        const expressionAttributeNames = {
+          '#title': 'title',
+          '#article': 'article',
+          '#photo': 'photo',
+          '#updatedAt': 'updatedAt',
+          '#updatedBy': 'updatedBy'
+        };
+
+        const expressionAttributeValues = {
+          ':updatedAt': new Date().toISOString(),
+          ':updatedBy': firstNonEmpty(cleaned.updatedBy, 'admin')
+        };
+
+        const updateClauses = ['#updatedAt = :updatedAt', '#updatedBy = :updatedBy'];
+
+        if (cleaned.title !== undefined) {
+          updateClauses.push('#title = :title');
+          expressionAttributeValues[':title'] = String(cleaned.title || '').trim();
+        }
+
+        if (cleaned.article !== undefined) {
+          updateClauses.push('#article = :article');
+          expressionAttributeValues[':article'] = String(cleaned.article || '').trim();
+        }
+
+        if (cleaned.photo !== undefined) {
+          updateClauses.push('#photo = :photo');
+          expressionAttributeValues[':photo'] = normalizePhotoSource(cleaned.photo);
+        }
+
+        if (cleaned.color !== undefined) {
+          expressionAttributeNames['#style'] = 'style';
+          expressionAttributeNames['#color'] = 'color';
+          expressionAttributeValues[':color'] = firstNonEmpty(cleaned.color, '#111827');
+          updateClauses.push('#style.#color = :color');
+        }
+
+        const result = await this.docClient.send(new UpdateCommand({
+          TableName: 'dorcasusers',
+          Key: { userId: normalizedArticleId },
+          UpdateExpression: `SET ${updateClauses.join(', ')}`,
+          ExpressionAttributeNames: expressionAttributeNames,
+          ExpressionAttributeValues: expressionAttributeValues,
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: 'attribute_exists(userId)'
+        }));
+
+        return result.Attributes || result;
+      }
       
     async getAllFormResults(tableName = 'cscstudents') {
         try {
@@ -466,6 +536,10 @@ async deleteFormData(id) {
           const data = await this.docClient.send(new ScanCommand(params));
           return data.Items || [];
         } catch (error) {
+              if (error?.name === 'ResourceNotFoundException') {
+                console.warn(`Results table not found: ${tableName}. Returning empty results.`);
+                return [];
+              }
           console.error("Error fetching all form results:", error);
           throw new Error("Could not fetch all form results");
         }

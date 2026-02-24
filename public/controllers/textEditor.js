@@ -451,10 +451,12 @@ this.clipboardProxy.addEventListener("cut", (e) => {
       const cutBtn = this.createSelectionButton("Cut", () => this.cutSelection());
       const copyBtn = this.createSelectionButton("Copy", () => this.copySelection());
       const pasteBtn = this.createSelectionButton("Paste", () => this.pasteFromClipboard());
+      const boldBtn = this.createSelectionButton("Bold", () => this.toggleBoldSelection());
 
       this.selectionMenu.appendChild(cutBtn);
       this.selectionMenu.appendChild(copyBtn);
       this.selectionMenu.appendChild(pasteBtn);
+      this.selectionMenu.appendChild(boldBtn);
 
       document.body.appendChild(this.selectionMenu);
 
@@ -593,6 +595,35 @@ this.clipboardProxy.addEventListener("cut", (e) => {
         this.clipboardProxy.blur();
         this.clipboardProxy.value = "";
       }, 0);
+    }
+
+    toggleBoldSelection() {
+      if (!this.textModel || !this.caretController) return;
+
+      const range = this.getSelectionRange();
+      if (!range) return;
+
+      const fullText = this.textModel.getText();
+      const selected = fullText.slice(range.start, range.end);
+      if (!selected) return;
+
+      const isAlreadyBold = selected.startsWith('**') && selected.endsWith('**') && selected.length >= 4;
+      const replacement = isAlreadyBold
+        ? selected.slice(2, -2)
+        : `**${selected}**`;
+
+      this.caretController.selectionStart = range.start;
+      this.caretController.selectionEnd = range.end;
+      this.textModel.replaceSelection(replacement);
+
+      const nextStart = range.start;
+      const nextEnd = range.start + replacement.length;
+      this.caretController.selectionStart = nextStart;
+      this.caretController.selectionEnd = nextEnd;
+      this.caretController.caretIndex = nextEnd;
+
+      this.pipeline.invalidate();
+      this.hideSelectionMenu();
     }
     
     

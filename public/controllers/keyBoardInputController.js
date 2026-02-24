@@ -63,6 +63,11 @@ export class KeyBoardInputController {
                 this.editor.pasteFromClipboard?.();
                 return;
             }
+            if (shortcutKey === 'b') {
+                event.preventDefault();
+                this.editor.toggleBoldSelection?.();
+                return;
+            }
         }
 
         if (this.editor.activeNode?.onKeyDown) {
