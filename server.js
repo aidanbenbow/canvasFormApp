@@ -7,7 +7,16 @@ import { Server } from "socket.io";
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 import db from './config/dynamoDB.js';
+
+import UserAuth from './config/userAuth.js';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import crypto from 'crypto';
+
+const userAuth = new UserAuth(db.docClient);
+const sessions = new Map(); // sessionToken -> username
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +40,38 @@ app.use(express.urlencoded({ extended: true }));
 
 io.on('connection', (socket) => {
  // console.log('A user connected:', socket.id);
+
+  // User registration (admin only, or seed)
+  socket.on('registerUser', async ({ username, password }) => {
+    try {
+      await userAuth.registerUser(username, password);
+      socket.emit('registerUserResponse', { success: true });
+    } catch (e) {
+      socket.emit('registerUserResponse', { success: false, error: e.message });
+    }
+  });
+
+  // User login
+  socket.on('loginUser', async ({ username, password }) => {
+    try {
+      const valid = await userAuth.authenticateUser(username, password);
+      if (valid) {
+        const token = crypto.randomBytes(32).toString('hex');
+        sessions.set(token, username);
+        socket.emit('loginUserResponse', { success: true, token });
+      } else {
+        socket.emit('loginUserResponse', { success: false, error: 'Invalid credentials' });
+      }
+    } catch (e) {
+      socket.emit('loginUserResponse', { success: false, error: e.message });
+    }
+  });
+
+  // Session validation
+  socket.on('validateSession', ({ token }) => {
+    const username = sessions.get(token);
+    socket.emit('validateSessionResponse', { valid: !!username, username });
+  });
 
  socket.on('getAllForms', async ({ user }) => {
   
@@ -87,11 +128,11 @@ io.on('connection', (socket) => {
     try {
       let result = null;
       const tableName = data?.resultsTable;
-      const isBlogSubmit =
-        (typeof tableName === 'string' && tableName.trim().toLowerCase() === 'dorcasusers') ||
+      const isArticleSubmit =
+        (typeof tableName === 'string' && tableName.trim().toLowerCase() === 'articles_table') ||
         (typeof data?.formLabel === 'string' && data.formLabel.trim().toLowerCase() === 'blog');
 
-      if (tableName === 'progressreports') {
+      if (tableName === 'progress_reports_table') {
         const fields = { ...(data?.fields || {}) };
         delete fields.done;
         const reportId = fields['input-name'] || fields.nameInput || fields.name;
@@ -104,25 +145,20 @@ io.on('connection', (socket) => {
           report: fields.reportInput || fields.report || null,
           messageYear
         };
-
         result = await db.updateProgressReport(reportId, updates);
-      } else if (isBlogSubmit) {
-        result = await db.createDorcasArticle({
-          formId: data?.formId,
-          user: data?.user,
-          formLabel: data?.formLabel,
-          formFields: data?.formFields,
-          fields: data?.fields
+      } else if (isArticleSubmit) {
+        // Expect articleId, title, article, style, etc. in data.fields
+        const articleId = data?.fields?.articleId || data?.fields?.userId || data?.fields?.id || `article-${Date.now()}`;
+        result = await db.createArticle({
+          articleId,
+          ...data?.fields
         });
       } else {
         const rawResponses = data?.responses || data?.fields || {};
         const responses = mapResponsesToLabelKeys(rawResponses, data?.formFields);
-        const targetResultsTable =
-          typeof tableName === 'string' && tableName.trim()
-            ? tableName.trim()
-            : 'faithandbelief';
+        // Always use form_results_table for results
         result = await db.saveMessage(
-          data.formId, data.user, responses, targetResultsTable
+          data.formId, data.user, responses, 'form_results_table'
         );
       }
   

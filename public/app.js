@@ -23,6 +23,8 @@ import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
 import { UIEngine } from "./setUp/uiEngine.js";
 import { wireSystemEvents } from "./setUp/wireSystemEvents.js";
+import { LoginScreen } from "./components/loginScreen.js";
+import socket from "./socketClient.js";
 import { engineRootLayoutStrategy } from "./strategies/engineRootLayout.js";
 import {  utilsRegister } from "./utils/register.js";
 import { normalizeFields } from "./utils/normalizeFields.js";
@@ -93,6 +95,50 @@ const factories = {
   formsUI: new FormsUIFactory(context, commandRegistry),
   resultsUI: new ResultsUIFactory(context),
 };
+context.factories = factories;
+
+function showLoginScreen() {
+  const login = new LoginScreen({
+    context,
+    dispatcher: system.actionDispatcher
+  });
+  const rootNode = login.createRoot();
+  // ⭐ VERY IMPORTANT
+  context.uiState = context.uiState || {};
+  context.uiState.currentScreen = login;
+  uiengine.mountScene(rootNode);
+}
+
+// Register LOGIN command for login screen
+commandRegistry.register('LOGIN', (payload = {}) => {
+  // Find the login screen's rootNode and extract input values
+  const loginScreen = context.uiState?.currentScreen;
+  const rootNode = loginScreen?.rootNode;
+  console.log('[DEBUG] LOGIN rootNode:', rootNode);
+  const usernameNode = rootNode?.findById?.("login-username");
+  const passwordNode = rootNode?.findById?.("login-password");
+  console.log('[DEBUG] usernameNode:', usernameNode);
+  const username = usernameNode?.getValue?.() || '';
+  const password = passwordNode?.getValue?.() || '';
+  console.log('[DEBUG] LOGIN command executed', { username, password });
+  if (!username || !password) {
+    loginScreen?.showError?.('Enter username and password');
+    return;
+  }
+  socket.emit('loginUser', { username, password });
+  socket.once('loginUserResponse', (resp) => {
+    console.log('[DEBUG] loginUserResponse', resp);
+    if (resp.success && resp.token) {
+      localStorage.setItem('sessionToken', resp.token);
+      localStorage.setItem('username', username);
+      // Show dashboard after login
+      runMainApp();
+    } else {
+      // Find login screen and show error
+      loginScreen?.showError?.(resp.error || 'Login failed');
+    }
+  });
+});
 
 commandRegistry.register("form.submit", (payload) => {
   console.log("Form submitted with payload:", payload);
@@ -167,35 +213,57 @@ context.pipeline.start({
 })
 
 
-if (formId) {
-  const form = await fetchFormById(formId);
-  const tableName = resolveResultsTableName(form);
-  const results = await fetchFormResults(form.id, tableName);
-
-  system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
-  system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
-  system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: form.id, results }, 'bootstrap');
-  system.actionDispatcher.dispatch(ACTIONS.FORM.VIEW, form, 'bootstrap');
-} else if(articleID){
-  const article = await fetchArticleById(articleID);
-  console.log('Fetched article:', article);
-  if (mode === 'edit') {
-    system.actionDispatcher.dispatch(ACTIONS.ARTICLE.EDIT, article, 'bootstrap');
-  } else {
-    system.actionDispatcher.dispatch(ACTIONS.ARTICLE.VIEW, article, 'bootstrap');
+// Session check and main app logic
+const token = localStorage.getItem('sessionToken');
+const username = localStorage.getItem('username');
+function runMainApp() {
+  console.log('[DEBUG] runMainApp called');
+  if (formId) {
+    fetchFormById(formId).then(form => {
+      const tableName = resolveResultsTableName(form);
+      fetchFormResults(form.formId, tableName).then(results => {
+        system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
+        system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
+        system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: form.formId, results }, 'bootstrap');
+        system.actionDispatcher.dispatch(ACTIONS.FORM.VIEW, form, 'bootstrap');
+      });
+    });
+  } else if(articleID){
+    fetchArticleById(articleID).then(article => {
+      if (mode === 'edit') {
+        system.actionDispatcher.dispatch(ACTIONS.ARTICLE.EDIT, article, 'bootstrap');
+      } else {
+        system.actionDispatcher.dispatch(ACTIONS.ARTICLE.VIEW, article, 'bootstrap');
+      }
+    });
+  }
+  else{
+    fetchAllForms(username || 'admin').then(({forms}) => {
+      console.log('[DEBUG] Forms fetched in runMainApp:', forms);
+      for(const f of forms){
+        const tableName = resolveResultsTableName(f);
+        fetchFormResults(f.formId, tableName).then(results => {
+          system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.formId, results }, 'bootstrap');
+        });
+      }
+      system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
+    });
   }
 }
-else{
-  const {forms} = await fetchAllForms('admin');
- console.log('Fetched forms:', forms);
-for(const f of forms){
-  const tableName = resolveResultsTableName(f);
-  const results = await fetchFormResults(f.id, tableName);
-  
-system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.id, results }, 'bootstrap');
-}
-system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
 
+if (token && username) {
+  socket.emit('validateSession', { token });
+  socket.once('validateSessionResponse', (resp) => {
+    if (resp.valid) {
+      runMainApp();
+    } else {
+      localStorage.removeItem('sessionToken');
+      localStorage.removeItem('username');
+      showLoginScreen();
+    }
+  });
+} else {
+  showLoginScreen();
 }
 
 
@@ -235,7 +303,7 @@ function resolveResultsTableName(form) {
   const explicitTable = typeof form?.resultsTable === 'string' ? form.resultsTable.trim() : '';
   if (explicitTable) return explicitTable;
 
-  const normalizedFormId = String(form?.id || `form-${Date.now()}`)
+  const normalizedFormId = String(form?.formId || form?.id || `form-${Date.now()}`)
     .toLowerCase()
     .replace(/[^a-z0-9_.-]/g, '_');
 

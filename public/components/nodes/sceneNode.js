@@ -9,59 +9,72 @@ export class SubtreeMeta {
 }
 
 export class SceneNode {
-    constructor({
-      id,
-      context,
-      style = {},
-      visible = true,
-      layoutStrategy = null,
-      renderStrategy = null,
-      updateStrategy = null,
-      hitTestStrategy = null,
-      children = []
-    }) {
-      this.id = id;
-      this.context = context;
-      this.style = style;
-      this.visible = visible;
+  constructor({
+    id,
+    context,
+    style = {},
+    visible = true,
+    layoutStrategy = null,
+    renderStrategy = null,
+    updateStrategy = null,
+    hitTestStrategy = null,
+    children = []
+  }) {
+    this.id = id;
+    this.context = context;
+    this.style = style;
+    this.visible = visible;
 
-      this.emitter = new TinyEmitter();
-  
-      this.layoutStrategy = layoutStrategy;
-      this.renderStrategy = renderStrategy;
-      this.updateStrategy = updateStrategy;
-      this.hitTestStrategy = hitTestStrategy;
-  
-      this.children = [];
-      this.parent = null;
-  
-      this.measured = null;
-      this.bounds = null;
-      this.hitTestable = true;
-      this.subtreeMeta = new SubtreeMeta();
-  
-      for (const child of children) this.add(child);
-    }
-  
-    add(child) {
-      child.parent = this;
-      if(!child.context) {
-        child.context = this.context;
-      }
-      this.children.push(child);
-    }
+    this.emitter = new TinyEmitter();
 
-    remove(child) {
-      const index = this.children.indexOf(child);
-      if (index >= 0) {
-        this.children.splice(index, 1);
-        child.parent = null;
+    this.layoutStrategy = layoutStrategy;
+    this.renderStrategy = renderStrategy;
+    this.updateStrategy = updateStrategy;
+    this.hitTestStrategy = hitTestStrategy;
+
+    this.children = [];
+    this.parent = null;
+
+    this.measured = null;
+    this.bounds = null;
+    this.hitTestable = true;
+    this.subtreeMeta = new SubtreeMeta();
+
+    for (const child of children) this.add(child);
+  }
+
+  findById(id) {
+    if (this.id === id) return this;
+    if (this.children && this.children.length) {
+      for (const child of this.children) {
+        if (typeof child.findById === 'function') {
+          const found = child.findById(id);
+          if (found) return found;
+        }
       }
     }
-  
-    // --- Lifecycle Pipelines ---
-  
-    measure( constraints = { maxWidth: Infinity, maxHeight: Infinity }, ctx) {
+    return null;
+  }
+
+  add(child) {
+    child.parent = this;
+    if(!child.context) {
+      child.context = this.context;
+    }
+    this.children.push(child);
+  }
+
+  remove(child) {
+    const index = this.children.indexOf(child);
+    if (index >= 0) {
+      this.children.splice(index, 1);
+      child.parent = null;
+    }
+  }
+
+  // --- Lifecycle Pipelines ---
+
+  measure( constraints = { maxWidth: Infinity, maxHeight: Infinity }, ctx) {
     
         // Then measure self via strategy
         this.measured = this.layoutStrategy?.measure?.(this, constraints, ctx) ?? {
@@ -72,38 +85,38 @@ export class SceneNode {
       }
     
   
-    layout(bounds, ctx) {
-      this.bounds = bounds;
-      this.layoutStrategy?.layout?.(this, bounds, ctx);
-      for (const child of this.children) {
-        if (!child.bounds) {
-          throw new Error(
-            `Child ${child.id} was not laid out by ${this.id}`
-          );
-        }
-    
-       // child.layout(child.bounds, ctx);
+  layout(bounds, ctx) {
+    this.bounds = bounds;
+    this.layoutStrategy?.layout?.(this, bounds, ctx);
+    for (const child of this.children) {
+      if (!child.bounds) {
+        throw new Error(
+          `Child ${child.id} was not laid out by ${this.id}`
+        );
       }
     
+     // child.layout(child.bounds, ctx);
     }
+    
+  }
   
-    update(dt, ctx) {
-      this.updateStrategy?.update?.(this, dt, ctx);
-      for (const child of this.children) child.update(dt, ctx);
-    }
+  update(dt, ctx) {
+    this.updateStrategy?.update?.(this, dt, ctx);
+    for (const child of this.children) child.update(dt, ctx);
+  }
   
-    render(ctx) {
-      if (!this.visible) return;
-      ctx.save();
-      this.renderStrategy?.render?.(this, ctx);
-      for (const child of this.children) child.render(ctx);
-      ctx.restore();
-    }
+  render(ctx) {
+    if (!this.visible) return;
+    ctx.save();
+    this.renderStrategy?.render?.(this, ctx);
+    for (const child of this.children) child.render(ctx);
+    ctx.restore();
+  }
   
-    hitTest(point) {
-      if (!this.hitTestable) return null;
-      return this.hitTestStrategy?.hitTest?.(this, point) ?? null;
-    }
+  hitTest(point) {
+    if (!this.hitTestable) return null;
+    return this.hitTestStrategy?.hitTest?.(this, point) ?? null;
+  }
    
   contains(x, y) {
     const b = this.bounds;

@@ -24,7 +24,7 @@ export class UIFormResults extends BaseScreen {
         this.form = this.store.getActiveForm();
         this.results = Array.isArray(results)
             ? results
-            : this.store.getFormResults(this.form?.id);
+            : this.store.getFormResults(this.form?.formId);
 
         this.closeCommand = `${this.id}.close`;
         this.articleOpenCommands = new Set();

@@ -1,3 +1,12 @@
+export function inputNode({ id, placeholder, inputType = 'text', style } = {}) {
+  return {
+    type: 'input',
+    ...(id ? { id } : {}),
+    ...(placeholder !== undefined ? { placeholder } : {}),
+    ...(inputType ? { inputType } : {}),
+    ...(style ? { style } : {})
+  };
+}
 export function defineManifest({
   layout,
   id,

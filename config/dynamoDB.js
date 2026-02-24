@@ -7,15 +7,15 @@ class DynamoDB {
     constructor() {
         
         const client = new DynamoDBClient({
-            region: process.env.AWS_REGION || "eu-central-1",
-            // credentials: {
-            //     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            // },
+          region: process.env.AWS_REGION || "eu-central-1",
+          // credentials: {
+          //     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          // },
         });
 
+        this.client = client;
         this.docClient = DynamoDBDocumentClient.from(client);
-        
     }
     async saveMessage(formId,user, inputs = [], tableName = 'faithandbelief') {
       try {
@@ -50,303 +50,177 @@ class DynamoDB {
     async getFormData(user) {
       try {
         const params = {
-          TableName: 'formStructures',
-          ProjectionExpression: '#id, #label, #formStructure, #resultsTable, #inputs, #user', 
+          TableName: 'forms_table',
+          ProjectionExpression: '#formId, #label, #formStructure, #resultsTable, #inputs, #user',
           ExpressionAttributeNames: {
-            '#id': 'id',
+            '#formId': 'formId',
             '#label': 'label',
             '#formStructure': 'formStructure',
             '#resultsTable': 'resultsTable',
             '#inputs': 'inputs',
-             '#user': 'user'
+            '#user': 'user'
           }
         };
-    
         const data = await this.docClient.send(new ScanCommand(params));
-        
         const allForms = data.Items || [];
-    
-        // ✅ Filter by user inside inputs
         const userForms = allForms.filter(form => form.user === user);
-    
         return userForms;
       } catch (error) {
         console.error("Error fetching form data:", error);
         throw new Error("Could not fetch form data");
       }
     }
-async getFormDataById(id) {
-        try {
-            const params = {
-                TableName: 'formStructures',
-                Key: { id },
-            };
-            const data = await this.docClient.send(new GetCommand(params));
-            
-            return data.Item || null;
-        } catch (error) {
-            console.error("Error fetching form data by ID:", error);
-            throw new Error("Could not fetch form data by ID");
-        }
-    }
-
-    async getArticleById(userId) {
-        try {
-            const params = {
-                TableName: 'dorcasusers',
-                Key: { userId },
-            };
-            const data = await this.docClient.send(new GetCommand(params));
-            
-            return data.Item || null;
-        }
-        catch (error) {
-            console.error("Error fetching article by ID:", error);
-            throw new Error("Could not fetch article by ID");
-        }
-    }
-
-    async createDorcasArticle({ formId, user = 'admin', formLabel, formFields = [], fields = {} } = {}) {
+    async getFormDataById(formId) {
       try {
-        const normalizedFields = fields && typeof fields === 'object' ? fields : {};
-        const inputDefs = Array.isArray(formFields)
-          ? formFields.filter((field) => field?.type === 'input' || field?.type === 'photo')
-          : [];
-
-        const firstInputValue = firstNonEmpty(
-          inputDefs[0]?.id ? normalizedFields[inputDefs[0].id] : ''
-        );
-        const secondInputValue = firstNonEmpty(
-          inputDefs[1]?.id ? normalizedFields[inputDefs[1].id] : ''
-        );
-
-        const titledInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(title|headline|subject)/i);
-        const articleInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(article|content|body|message|report|text)/i);
-        const photoInputValue = findInputValueByLabel(inputDefs, normalizedFields, /(photo|image|img|picture|thumbnail)/i);
-
-        const title = firstNonEmpty(
-          normalizedFields.title,
-          normalizedFields.blogTitle,
-          normalizedFields['input-title'],
-          titledInputValue,
-          firstInputValue,
-          formLabel,
-          'Blog'
-        );
-
-        const articleText = firstNonEmpty(
-          normalizedFields.article,
-          normalizedFields.articleInput,
-          normalizedFields.message,
-          normalizedFields.messageInput,
-          normalizedFields.report,
-          normalizedFields.reportInput,
-          articleInputValue,
-          secondInputValue,
-          firstContentField(normalizedFields, {
-            excludeKeys: [
-              'done',
-              'messageYear',
-              'title',
-              'blogTitle',
-              'input-title',
-              inputDefs[0]?.id
-            ]
-          })
-        );
-
-        const color = firstNonEmpty(
-          normalizedFields.color,
-          normalizedFields.styleColor,
-          normalizedFields['style.color'],
-          '#792A58'
-        );
-
-        const slugBase = slugify(firstNonEmpty(title, formLabel, 'blog-article'));
-        const userId = slugBase || `blog-article-${Date.now()}`;
-        const photo = firstNonEmpty(
-          normalizedFields.photo,
-          normalizedFields.image,
-          normalizedFields.imageUrl,
-          normalizedFields.photoUrl,
-          normalizedFields.photoSrc,
-          photoInputValue
-        );
-        const normalizedPhoto = normalizePhotoSource(photo);
-        const photoFieldDef = inputDefs.find((field) => {
-          if (!field) return false;
-          if (field.type === 'photo') return true;
-
-          const probe = `${field.id || ''} ${field.label || ''} ${field.placeholder || ''}`.toLowerCase();
-          const hasPhotoKeyword = /photo|image|img|picture|thumbnail/.test(probe);
-          const hasUrlKeyword = /url|link/.test(probe);
-          return field.type === 'input' && (hasPhotoKeyword || hasUrlKeyword);
-        });
-        const photoBrightness = normalizeBrightnessValue(photoFieldDef?.brightness);
-
-        const item = {
-          userId,
-          title,
-          article: articleText,
-          style: { color },
-          ...(Number.isFinite(photoBrightness) ? { photoBrightness } : {}),
-          ...(normalizedPhoto ? { photo: normalizedPhoto } : {})
-        };
-
         const params = {
-          TableName: 'dorcasusers',
+          TableName: 'forms_table',
+          Key: { formId },
+        };
+        const data = await this.docClient.send(new GetCommand(params));
+        return data.Item || null;
+      } catch (error) {
+        console.error("Error fetching form data by ID:", error);
+        throw new Error("Could not fetch form data by ID");
+      }
+    }
+
+    async getArticleById(articleId) {
+      try {
+        const params = {
+          TableName: 'articles_table',
+          Key: { articleId },
+        };
+        const data = await this.docClient.send(new GetCommand(params));
+        return data.Item || null;
+      } catch (error) {
+        console.error("Error fetching article by ID:", error);
+        throw new Error("Could not fetch article by ID");
+      }
+    }
+
+    async createArticle({ articleId, title, article, style = {}, photo, photoBrightness, ...rest }) {
+      try {
+        if (!articleId) throw new Error('Missing articleId for articles_table');
+        const item = {
+          articleId,
+          title,
+          article,
+          style,
+          ...(photo ? { photo } : {}),
+          ...(Number.isFinite(photoBrightness) ? { photoBrightness } : {}),
+          ...rest
+        };
+        const params = {
+          TableName: 'articles_table',
           Item: item
         };
-
         const result = await this.docClient.send(new PutCommand(params));
         return { ...result, item };
       } catch (error) {
-        console.error('Error creating dorcasusers article:', error);
+        console.error('Error creating article:', error);
         throw new Error('Could not create article');
       }
     }
 
 
 
-    async updateFormData(id, formStructure, label = 'Untitled', resultsTable = null) {
-        try {
-          const currentForm = await this.docClient.send(
-            new GetCommand({
-              TableName: 'formStructures',
-              Key: { id }
-            })
-          );
-
-          const normalizedProvidedTable =
-            typeof resultsTable === 'string' && resultsTable.trim()
-              ? resultsTable.trim()
-              : null;
-
-          const normalizedResultsTable =
-            currentForm?.Item?.resultsTable
-            || normalizedProvidedTable
-            || buildDefaultResultsTableName(id);
-          const params = {
-            TableName: 'formStructures',
-            Key: { id },
-            UpdateExpression: 'SET #formStructure = :formStructure, #label = :label, #resultsTable = :resultsTable',
-            ExpressionAttributeNames: {
-              '#formStructure': 'formStructure',
-              '#label': 'label',
-              '#resultsTable': 'resultsTable'
-            },
-            ExpressionAttributeValues: {
-              ':formStructure': formStructure,
-              ':label': label,
-              ':resultsTable': normalizedResultsTable,
-            },
-            ReturnValues: 'UPDATED_NEW',
-          };
-    
-          const result = await this.docClient.send(new UpdateCommand(params));
-          console.log('Form updated:', result);
-          return result;
-        } catch (error) {
-          console.error('Error updating form data:', error);
-          throw new Error('Could not update form data');
-        }
-      }
-    
-async deleteFormData(id) {
-        try {
-          const params = {
-            TableName: 'formStructures',
-            Key: { id },
-          };
-    console.log('Deleting form data with params:', params)
-          const result = await this.docClient.send(new DeleteCommand(params));
-          console.log('Form deleted:', result);
-          return result;
-        } catch (error) {
-          console.error('Error deleting form data:', error);
-          throw new Error('Could not delete form data');
-        }
-      }
-
-      async upsertFormData(id, formStructure, label = 'Untitled', user = 'admin', resultsTable = null) {
-        try {
-          const existingItem = await this.docClient.send(
-            new GetCommand({
-              TableName: 'formStructures',
-              Key: { id }
-            })
-          );
-          const currentForm = existingItem?.Item || null;
-
-          const normalizedProvidedTable =
-            typeof resultsTable === 'string' && resultsTable.trim()
-              ? resultsTable.trim()
-              : null;
-
-          const normalizedResultsTable =
-            currentForm?.resultsTable
-            || normalizedProvidedTable
-            || buildDefaultResultsTableName(id);
-
-          if (!currentForm) {
-            await this.ensureResultsTable(normalizedResultsTable);
-          }
-
-          const item = {
-            id,
-            label,
-            user,
-            resultsTable: normalizedResultsTable,
-            formStructure,
-            lastModified: new Date().toISOString()
-          };
-      
-          const params = {
-            TableName: 'formStructures',
-            Item: item
-          };
-      console.log('Upserting form data with params:', params);
-          const result = await this.docClient.send(new PutCommand(params));
-          console.log('Form upserted:', result);
-          return result;
-        } catch (error) {
-          console.error('Error upserting form data:', error);
-          throw new Error('Could not save form data');
-        }
-      }
-
-      async ensureResultsTable(tableName) {
-        const normalizedTableName =
-          typeof tableName === 'string' && tableName.trim()
-            ? tableName.trim()
-            : null;
-
-        if (!normalizedTableName) {
-          throw new Error('Cannot create results table without a valid table name');
-        }
-
-        try {
-          await this.docClient.send(new DescribeTableCommand({ TableName: normalizedTableName }));
-          return;
-        } catch (error) {
-          if (error?.name !== 'ResourceNotFoundException') {
-            throw error;
-          }
-        }
-
-        await this.docClient.send(
-          new CreateTableCommand({
-            TableName: normalizedTableName,
-            BillingMode: 'PAY_PER_REQUEST',
-            AttributeDefinitions: [
-              { AttributeName: 'id', AttributeType: 'S' }
-            ],
-            KeySchema: [
-              { AttributeName: 'id', KeyType: 'HASH' }
-            ]
+    async updateFormData(formId, formStructure, label = 'Untitled', resultsTable = null) {
+      try {
+        const currentForm = await this.docClient.send(
+          new GetCommand({
+            TableName: 'forms_table',
+            Key: { formId }
           })
         );
+        const normalizedProvidedTable =
+          typeof resultsTable === 'string' && resultsTable.trim()
+            ? resultsTable.trim()
+            : null;
+        const normalizedResultsTable =
+          currentForm?.Item?.resultsTable
+          || normalizedProvidedTable
+          || buildDefaultResultsTableName(formId);
+        const params = {
+          TableName: 'forms_table',
+          Key: { formId },
+          UpdateExpression: 'SET #formStructure = :formStructure, #label = :label, #resultsTable = :resultsTable',
+          ExpressionAttributeNames: {
+            '#formStructure': 'formStructure',
+            '#label': 'label',
+            '#resultsTable': 'resultsTable'
+          },
+          ExpressionAttributeValues: {
+            ':formStructure': formStructure,
+            ':label': label,
+            ':resultsTable': normalizedResultsTable,
+          },
+          ReturnValues: 'UPDATED_NEW',
+        };
+        const result = await this.docClient.send(new UpdateCommand(params));
+        console.log('Form updated:', result);
+        return result;
+      } catch (error) {
+        console.error('Error updating form data:', error);
+        throw new Error('Could not update form data');
       }
+    }
+    
+    async deleteFormData(formId) {
+      try {
+        const params = {
+          TableName: 'forms_table',
+          Key: { formId },
+        };
+        console.log('Deleting form data with params:', params)
+        const result = await this.docClient.send(new DeleteCommand(params));
+        console.log('Form deleted:', result);
+        return result;
+      } catch (error) {
+        console.error('Error deleting form data:', error);
+        throw new Error('Could not delete form data');
+      }
+    }
+
+    async upsertFormData(formId, formStructure, label = 'Untitled', user = 'admin', resultsTable = null) {
+      try {
+        const existingItem = await this.docClient.send(
+          new GetCommand({
+            TableName: 'forms_table',
+            Key: { formId }
+          })
+        );
+        const currentForm = existingItem?.Item || null;
+        const normalizedProvidedTable =
+          typeof resultsTable === 'string' && resultsTable.trim()
+            ? resultsTable.trim()
+            : null;
+        const normalizedResultsTable =
+          currentForm?.resultsTable
+          || normalizedProvidedTable
+          || buildDefaultResultsTableName(formId);
+        const item = {
+          formId,
+          label,
+          user,
+          resultsTable: normalizedResultsTable,
+          formStructure,
+          lastModified: new Date().toISOString()
+        };
+        const params = {
+          TableName: 'forms_table',
+          Item: item
+        };
+        console.log('Upserting form data with params:', params);
+        const result = await this.docClient.send(new PutCommand(params));
+        console.log('Form upserted:', result);
+        return result;
+      } catch (error) {
+        console.error('Error upserting form data:', error);
+        throw new Error('Could not save form data');
+      }
+    }
+
+    // No longer needed: ensureResultsTable (tables are now static)
       
 
       async fetchStudentCount() {
@@ -364,47 +238,26 @@ async deleteFormData(id) {
         }
       }
 
-      async getFormResults(formId, tableName = 'cscstudents') {
-        try {
-          const normalizedTableName =
-            typeof tableName === 'string' ? tableName.trim().toLowerCase() : '';
-
-          if (normalizedTableName === 'progressreports' || normalizedTableName === 'dorcasusers') {
-            // global content tables do not require formId filtering
-            return await this.getAllFormResults(tableName);
+    async getFormResults(formId) {
+      try {
+        if (!formId) return [];
+        const params = {
+          TableName: 'form_results_table',
+          KeyConditionExpression: '#formId = :formIdVal',
+          ExpressionAttributeNames: {
+            '#formId': 'formId'
+          },
+          ExpressionAttributeValues: {
+            ':formIdVal': formId
           }
-
-          const params = {
-            TableName: tableName,
-            FilterExpression: '#formId = :formIdVal',
-            ExpressionAttributeNames: {
-              '#formId': 'formId'
-            },
-            ExpressionAttributeValues: {
-              ':formIdVal': formId
-            }
-          };
-      
-          const data = await this.docClient.send(new ScanCommand(params));
-          const items = data.Items || [];
-
-          if (items.length === 0) {
-            const fallback = await this.getAllFormResults(tableName);
-            return fallback;
-          }
-
-          return items;
-        } catch (error) {
-          if (error?.name === 'ResourceNotFoundException') {
-            console.warn(`Results table not found: ${tableName}. Returning empty results.`);
-            return [];
-          }
-          console.error("Error fetching form results:", error);
-          throw new Error("Could not fetch form results");
-        }
-
-    
+        };
+        const data = await this.docClient.send(new QueryCommand(params));
+        return data.Items || [];
+      } catch (error) {
+        console.error("🔥 Query Error:", error);
+        return [];
       }
+    }
 
       async updateProgressReport(reportId, updates = {}) {
         if (!reportId) {

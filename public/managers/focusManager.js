@@ -8,13 +8,13 @@ export class FocusManager {
     }
   
     focus(Node) {
-      console.log("Focusing Node:", Node);
+    
       if (this.focusedNode===Node) {
        return; // Node is already focused, do nothing
       }
   
       if (this.focusedNode) {
-        console.log("Node is already focused:", Node);
+       
         if (this.focusedNode.id) {
           this.uiState.update(this.focusedNode.id, { focused: false });
         }

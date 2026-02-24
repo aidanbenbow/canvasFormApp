@@ -46,7 +46,7 @@ export class DashBoardScreen extends BaseScreen {
     this.unsubActive = this.store.subscribe('activeForm', ({ activeForm }) => {
       const active = activeForm;
       for (const child of this.regions.forms.children) {
-        const isSelected = child.id === (active ? `form-${active.id}` : null);
+        const isSelected = child.id === (active ? `form-${active.formId}` : null);
         const current = child.uiState?.selected ?? false;
         if (current !== isSelected) {
           child.setUIState?.({ selected: isSelected });
@@ -69,14 +69,12 @@ export class DashBoardScreen extends BaseScreen {
       container: this.regions.forms,
       factory: this.factories.formsUI,
       mapItem: (form) =>
-  this.factories.formsUI.createLabel(form, {
-    selected: form.id === this.store.getActiveForm()?.id,
-    onSelect: () => {
-      this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace)
-
-    }
-      
-  })
+        this.factories.formsUI.createLabel(form, {
+          selected: form.formId === this.store.getActiveForm()?.formId,
+          onSelect: () => {
+            this.dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, this.namespace)
+          }
+        })
     });
   
   }

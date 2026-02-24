@@ -73,21 +73,33 @@ export class LoginPlugin extends UIElement {
 
   // 🔹 Login logic
   tryLogin() {
-    const username = this.editorController.activeBox?.text?.trim?.() || '';
+    const username = this.usernameBox.text?.trim?.() || '';
     const password = this.passwordBox.text?.trim?.() || '';
-
-    if (username === 'a' && password === 'aa') {
-      this.onLogin();
-    } else {
-      const canvas = this.layoutRenderer.canvas;
-const bounds = this.layoutManager.getScaledBounds('loginButton', canvas.width, canvas.height);
-
+    if (!username || !password) {
       this.eventBus.emit('socketFeedback', {
-        text: 'Incorrect credentials ❌',
-        position: { x: bounds.x, y: bounds.y + 50 },
+        text: 'Enter username and password',
+        position: { x: 10, y: 100 },
         duration: 2000
       });
+      return;
     }
+    // Use socket.io to authenticate
+    import('../socketClient.js').then(({ default: socket }) => {
+      socket.emit('loginUser', { username, password });
+      socket.once('loginUserResponse', (resp) => {
+        if (resp.success && resp.token) {
+          localStorage.setItem('sessionToken', resp.token);
+          localStorage.setItem('username', username);
+          this.onLogin();
+        } else {
+          this.eventBus.emit('socketFeedback', {
+            text: resp.error || 'Login failed',
+            position: { x: 10, y: 100 },
+            duration: 2000
+          });
+        }
+      });
+    });
   }
 }
 

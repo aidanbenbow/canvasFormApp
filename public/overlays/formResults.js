@@ -35,7 +35,7 @@ const get = utilsRegister.get.bind(utilsRegister);
 
 // 🔄 Listen for live updates
 eventBus.on('formResultsUpdated', ({ formId, results }) => {
-  if (formId === this.form.id) {
+  if (formId === (this.form.formId || this.form.id)) {
     this.updateResponses(results);
   }
 });

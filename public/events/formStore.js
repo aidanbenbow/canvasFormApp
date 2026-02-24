@@ -29,17 +29,16 @@ export class FormStore {
             this._add(form);
         }, this.namespace);
 
-        dispatcher.on(ACTIONS.FORM.RESULTS_SET,( {formId, results} )=>{
+        dispatcher.on(ACTIONS.FORM.RESULTS_SET,({ formId, results })=>{
             this._setResults(formId, results);
         }, this.namespace);
 
-dispatcher.on(ACTIONS.FORM.ADD_RESULTS,( {formId, newResults} )=>{
+        dispatcher.on(ACTIONS.FORM.ADD_RESULTS,({ formId, newResults })=>{
             this._addResults(formId, newResults);
         }, this.namespace);
 
-dispatcher.on(ACTIONS.FORM.DELETE,( formId )=>{
+        dispatcher.on(ACTIONS.FORM.DELETE,(formId)=>{
             this.removeForm(formId);
-            
         }, this.namespace);
 
     }
@@ -70,19 +69,19 @@ _addResults(formId, newResults){
 
     _update(updatedForm){
         const formWithId = normalizeForm(updatedForm);
-       let found = false;
-       this.state.forms = this.state.forms.map(f => {
-            if(f.id === formWithId.id){
+        let found = false;
+        this.state.forms = this.state.forms.map(f => {
+            if((f.formId || f.id) === (formWithId.formId || formWithId.id)){
                 found = true;
                 return formWithId;
             }
             return f;
-        } );
+        });
         if(!found){
             this.state.forms = [...this.state.forms, formWithId];
         }
         this._emitForms();
-        if(this.state.activeForm && this.state.activeForm.id === formWithId.id){
+        if(this.state.activeForm && (this.state.activeForm.formId || this.state.activeForm.id) === (formWithId.formId || formWithId.id)){
             this.state = {
                 ...this.state,
                 activeForm: formWithId
@@ -126,8 +125,8 @@ _addResults(formId, newResults){
         return 'form-' + Math.random().toString(36).substr(2, 9);
     }
     removeForm(formId){
-        this.state.forms = this.state.forms.filter(f => f.id !== formId);
-        if(this.state.activeForm && this.state.activeForm.id === formId){
+        this.state.forms = this.state.forms.filter(f => (f.formId || f.id) !== formId);
+        if(this.state.activeForm && (this.state.activeForm.formId || this.state.activeForm.id) === formId){
             this.state.activeForm = null;
             this._emitActiveForm();
         }

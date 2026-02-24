@@ -35,16 +35,16 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
     };
 
     dispatcher.on(ACTIONS.DASHBOARD.SHOW, (forms)=> {
-       
-        const dash = new DashBoardScreen({ context, dispatcher, eventBusManager: bus, store, factories, commandRegistry  });
-        router.replace(dash);
-        dispatcher.dispatch(ACTIONS.FORM.SET_LIST,forms)
+      console.log('[DEBUG] ACTIONS.DASHBOARD.SHOW called with forms:', forms);
+      const dash = new DashBoardScreen({ context, dispatcher, eventBusManager: bus, store, factories, commandRegistry  });
+      router.replace(dash);
+      dispatcher.dispatch(ACTIONS.FORM.SET_LIST,forms)
     },'wiring');
 
     dispatcher.on(ACTIONS.FORM.VIEW, async (form) => {
       dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
-      console.log(`Viewing form with id: ${form.id}`);
-  
+      console.log(`Viewing form with id: ${form.formId}`);
+
       const view = new FormViewScreen({
         context,
         dispatcher,
@@ -52,16 +52,16 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
         store,
         factories,
         commandRegistry,
-        formId: form.id,
+        formId: form.formId,
         onSubmit: (responseData) => {
           dispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
             form: store.getActiveForm(),
             responseData
           })
         },
-        results: store.getFormResults(form.id)
+        results: store.getFormResults(form.formId)
       });
-  
+
       router.push(view);
     }, "wiring");
   
@@ -101,8 +101,8 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
     }, "wiring");
 
     dispatcher.on(ACTIONS.FORM.RESULTS, async (form) => {
-        dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
-      const results = store.getFormResults(form.id);
+      dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
+      const results = store.getFormResults(form.formId);
       const resultView = new UIFormResults({
         id: 'formResultsScreen',
         context,
@@ -160,9 +160,16 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
 
     dispatcher.on(ACTIONS.FORM.DELETE, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
-        // Here you might want to add confirmation dialog before deletion
-   console.log(`Deleting form with id: ${form.id}`);
-        onDelete({id: form.id});
+         const formId = form?.id;
+         const formLabel = String(form?.label || 'this form').trim();
+         const confirmed = window.confirm(`Delete ${formLabel}? This action cannot be undone.`);
+         if (!confirmed) {
+        showToast('Delete cancelled.');
+        return;
+         }
+
+       console.log(`Deleting form with id: ${formId}`);
+         onDelete({id: formId});
         //store.removeForm(form.id);
         context.pipeline.invalidate();
     }, 'wiring');
