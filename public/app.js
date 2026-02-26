@@ -32,8 +32,13 @@ import { articleService } from "./services/articleService.js";
 import { articleRepository } from "./repositories/articleRepository.js";
 import { formRepository } from "./repositories/formRepository.js";
 import { formResultsRepository } from "./repositories/formResultsRepository.js";
+// ⭐ NEW: command loader
+import { registerAllCommands } from "./commands/index.js";
 
 
+// ------------------------------------------------------------
+// ENGINE + CONTEXT SETUP
+// ------------------------------------------------------------
 const canvas = new CanvasManager(canvasConfig)
 
 const canvasBuilder = new CanvasSystemBuilder(canvas)
@@ -101,6 +106,9 @@ const factories = {
 };
 context.factories = factories;
 
+// ------------------------------------------------------------
+// LOGIN SCREEN
+// ------------------------------------------------------------
 function showLoginScreen() {
   const login = new LoginScreen({
     context,
@@ -113,47 +121,20 @@ function showLoginScreen() {
   uiengine.mountScene(rootNode);
 }
 
-// Register LOGIN command for login screen
-commandRegistry.register('LOGIN', (payload = {}) => {
-  // Find the login screen's rootNode and extract input values
-  const loginScreen = context.uiState?.currentScreen;
-  const rootNode = loginScreen?.rootNode;
-  console.log('[DEBUG] LOGIN rootNode:', rootNode);
-  const usernameNode = rootNode?.findById?.("login-username");
-  const passwordNode = rootNode?.findById?.("login-password");
-  console.log('[DEBUG] usernameNode:', usernameNode);
-  const username = usernameNode?.getValue?.() || '';
-  const password = passwordNode?.getValue?.() || '';
-  console.log('[DEBUG] LOGIN command executed', { username, password });
-  if (!username || !password) {
-    loginScreen?.showError?.('Enter username and password');
-    return;
-  }
-  socket.emit('loginUser', { username, password });
-  socket.once('loginUserResponse', (resp) => {
-    console.log('[DEBUG] loginUserResponse', resp);
-    if (resp.success && resp.token) {
-      localStorage.setItem('sessionToken', resp.token);
-      localStorage.setItem('username', username);
-      // Show dashboard after login
-      runMainApp();
-    } else {
-      // Find login screen and show error
-      loginScreen?.showError?.(resp.error || 'Login failed');
-    }
-  });
-});
-
-
-
 const sceneInput = new SceneInputSystem({
   canvas: mainCanvas,
   pipeline: context.pipeline,
   ctx: context.ctx
 });
 
+// ------------------------------------------------------------
+// WIRE SYSTEM EVENTS
+// ------------------------------------------------------------
 wireSystemEvents(system, context, store, screenRouter, factories, commandRegistry);
 
+// ------------------------------------------------------------
+// MAIN APP BOOTSTRAP LOGIC
+// ------------------------------------------------------------
 const urlParams = new URLSearchParams(window.location.search);
 const formId = urlParams.get('formId');
 const articleID = urlParams.get('articleId');
@@ -205,6 +186,9 @@ function runMainApp() {
   }
 }
 
+// ------------------------------------------------------------
+// SESSION VALIDATION
+// ------------------------------------------------------------
 if (token && username) {
   socket.emit('validateSession', { token });
   socket.once('validateSessionResponse', (resp) => {
@@ -220,7 +204,9 @@ if (token && username) {
   showLoginScreen();
 }
 
-
+// ------------------------------------------------------------
+// TOASTS
+// ------------------------------------------------------------
   const toastLayer = context.uiServices.toastLayer;
   const showToast = (text, timeoutMs = 2500) => {
     if (!toastLayer) return;
@@ -243,65 +229,109 @@ if (token && username) {
     toastLayer.showMessage(node, { timeoutMs });
   };
 
-  commandRegistry.register("form.submit", (payload) => {
-  console.log("Form submitted with payload:", payload);
-  const activeForm = store.getActiveForm();
-  if (!activeForm) return;
-
-  // Only send user intent and raw input fields
-  const submission = {
-    formId: activeForm.formId,
-    userId: username || 'admin',
-    fields: { ...(payload?.fields || {}) }
-  };
-console.log("Dispatching form submission:", submission);
-  system.actionDispatcher.dispatch(ACTIONS.FORM.SUBMIT, submission);
-  showToast("Form submitted ✅", 3000);
-
-  system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
-  system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);
-  system.actionDispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
-  context.pipeline.invalidate();
+  // ------------------------------------------------------------
+// ⭐ REGISTER ALL COMMANDS (clean, modular)
+// ------------------------------------------------------------
+registerAllCommands({
+  commandRegistry,
+  context,
+  store,
+  system,
+  socket,
+  showToast
 });
 
-commandRegistry.register("article.save", async payload => {
-  try {
-    const article = await articleRepository.updateArticle(
-      payload.articleId,
-      payload.updates
-    );
 
-    articleService.updateArticle(article);
+//   commandRegistry.register("form.submit", (payload) => {
+//   console.log("Form submitted with payload:", payload);
+//   const activeForm = store.getActiveForm();
+//   if (!activeForm) return;
 
-    system.eventBus.emit("socketFeedback", {
-      text: "Article saved successfully! ✅"
-    });
-  } catch (err) {
-    console.error(err);
-  }
-});
+//   // Only send user intent and raw input fields
+//   const submission = {
+//     formId: activeForm.formId,
+//     userId: username || 'admin',
+//     fields: { ...(payload?.fields || {}) }
+//   };
+// console.log("Dispatching form submission:", submission);
+//   system.actionDispatcher.dispatch(ACTIONS.FORM.SUBMIT, submission);
+//   showToast("Form submitted ✅", 3000);
 
-commandRegistry.register('report.save', (payload) => {
-  console.log('Report save command received with payload:', payload);
-  // Simulate save operation
-  setTimeout(() => {
-    system.eventBus.emit('socketFeedback', {
-      text: 'Report saved successfully! ✅',
-      position: { x: 100, y: 50 },
-      duration: 2200
-    });
-  }, 1000);
-});
+//   system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
+//   system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);
+//   system.actionDispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
+//   context.pipeline.invalidate();
+// });
 
-  system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
-    console.log('Showing message:', text, position, duration);
-    showToast(text, duration);
-  });
+// commandRegistry.register("article.save", async payload => {
+//   try {
+//     const article = await articleRepository.updateArticle(
+//       payload.articleId,
+//       payload.updates
+//     );
+
+//     articleService.updateArticle(article);
+
+//     system.eventBus.emit("socketFeedback", {
+//       text: "Article saved successfully! ✅"
+//     });
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
+
+// commandRegistry.register('report.save', (payload) => {
+//   console.log('Report save command received with payload:', payload);
+//   // Simulate save operation
+//   setTimeout(() => {
+//     system.eventBus.emit('socketFeedback', {
+//       text: 'Report saved successfully! ✅',
+//       position: { x: 100, y: 50 },
+//       duration: 2200
+//     });
+//   }, 1000);
+// });
+
+// // Register LOGIN command for login screen
+// commandRegistry.register('LOGIN', (payload = {}) => {
+//   // Find the login screen's rootNode and extract input values
+//   const loginScreen = context.uiState?.currentScreen;
+//   const rootNode = loginScreen?.rootNode;
+//   console.log('[DEBUG] LOGIN rootNode:', rootNode);
+//   const usernameNode = rootNode?.findById?.("login-username");
+//   const passwordNode = rootNode?.findById?.("login-password");
+//   console.log('[DEBUG] usernameNode:', usernameNode);
+//   const username = usernameNode?.getValue?.() || '';
+//   const password = passwordNode?.getValue?.() || '';
+//   console.log('[DEBUG] LOGIN command executed', { username, password });
+//   if (!username || !password) {
+//     loginScreen?.showError?.('Enter username and password');
+//     return;
+//   }
+//   socket.emit('loginUser', { username, password });
+//   socket.once('loginUserResponse', (resp) => {
+//     console.log('[DEBUG] loginUserResponse', resp);
+//     if (resp.success && resp.token) {
+//       localStorage.setItem('sessionToken', resp.token);
+//       localStorage.setItem('username', username);
+//       // Show dashboard after login
+//       runMainApp();
+//     } else {
+//       // Find login screen and show error
+//       loginScreen?.showError?.(resp.error || 'Login failed');
+//     }
+//   });
+// });
+
+//   system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
+//     console.log('Showing message:', text, position, duration);
+//     showToast(text, duration);
+//   });
 
 
-  system.eventBus.on('formResultsUpdated', () => {
-    context.pipeline.invalidate();
-  });
+//   system.eventBus.on('formResultsUpdated', () => {
+//     context.pipeline.invalidate();
+//   });
 
 function resolveResultsTableName(form) {
   const explicitTable = typeof form?.resultsTable === 'string' ? form.resultsTable.trim() : '';
