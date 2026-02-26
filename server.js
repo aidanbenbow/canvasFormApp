@@ -53,6 +53,7 @@ io.on("connection", (socket) => {
 
 app.get('/', async (req, res) => {
 const data = await formRepository.fetchAllForms(); // Fetch all forms to display on the homepage
+console.log('Fetched forms for homepage:', data);
   res.render('index', { data });
 });
 

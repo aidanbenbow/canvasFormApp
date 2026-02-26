@@ -30,6 +30,8 @@ import {  utilsRegister } from "./utils/register.js";
 import { normalizeFields } from "./utils/normalizeFields.js";
 import { articleService } from "./services/articleService.js";
 import { articleRepository } from "./repositories/articleRepository.js";
+import { formRepository } from "./repositories/formRepository.js";
+import { formResultsRepository } from "./repositories/formResultsRepository.js";
 
 
 const canvas = new CanvasManager(canvasConfig)
@@ -187,14 +189,17 @@ function runMainApp() {
     });
   }
   else{
-    fetchAllForms(username || 'admin').then(({forms}) => {
-      console.log('[DEBUG] Forms fetched in runMainApp:', forms);
-      for(const f of forms){
-        const tableName = resolveResultsTableName(f);
-        fetchFormResults(f.formId, tableName).then(results => {
-          system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: f.formId, results }, 'bootstrap');
+    formRepository.fetchAllForms().then((forms) => {
+      for (const f of forms) {
+        formResultsRepository.fetchResults(f.formId).then((results) => {
+          system.actionDispatcher.dispatch(
+            ACTIONS.FORM.RESULTS_SET,
+            { formId: f.formId, results },
+            "bootstrap"
+          );
         });
       }
+
       system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
     });
   }
