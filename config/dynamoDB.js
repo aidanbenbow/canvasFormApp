@@ -1,9 +1,41 @@
+
 import { CreateTableCommand, DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, ScanCommand, UpdateCommand, QueryCommand, GetCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import dotenv from "dotenv";
 dotenv.config();
 
 class DynamoDB {
+        async saveSession(token, username, expiresAt = null) {
+          try {
+            const params = {
+              TableName: 'sessions_table',
+              Item: {
+                token,
+                username,
+                expiresAt: expiresAt || null
+              }
+            };
+            await this.docClient.send(new PutCommand(params));
+            return true;
+          } catch (error) {
+            console.error('Error saving session:', error);
+            throw new Error('Could not save session');
+          }
+        }
+
+        async getSession(token) {
+          try {
+            const params = {
+              TableName: 'sessions_table',
+              Key: { token }
+            };
+            const data = await this.docClient.send(new GetCommand(params));
+            return data.Item || null;
+          } catch (error) {
+            console.error('Error fetching session:', error);
+            throw new Error('Could not fetch session');
+          }
+        }
     constructor() {
         
         const client = new DynamoDBClient({
@@ -17,34 +49,20 @@ class DynamoDB {
         this.client = client;
         this.docClient = DynamoDBDocumentClient.from(client);
     }
-    async saveMessage(formId,user, inputs = [], tableName = 'faithandbelief') {
-      try {
-        const timestamp = Date.now()
-        const normalizedTableName =
-          typeof tableName === 'string' && tableName.trim()
-            ? tableName.trim()
-            : 'faithandbelief';
-    
-        const payload = {
-          id: 'msg-' + timestamp,
-         formId,
-         user,
-          inputs,
-          timestamp
-        };
-    
-        const params = {
-          TableName: normalizedTableName,
-          Item: payload
-        };
-    
-        const result = await this.docClient.send(new PutCommand(params));
-        console.log('Form saved:', result);
-        return result;
-      } catch (error) {
-        console.error('Error saving form:', error);
-        throw new Error('Could not save form');
-      }
+    // New: Save a form submission to form_results_table
+    async saveFormResult({ formId, userId, payload }) {
+      const item = {
+        formId,
+        createdAt: Date.now(),
+        userId,
+        payload
+      };
+      const params = {
+        TableName: 'form_results_table',
+        Item: item
+      };
+      await this.docClient.send(new PutCommand(params));
+      return item;
     }
   
     async getFormData(user) {
@@ -98,30 +116,180 @@ class DynamoDB {
       }
     }
 
-    async createArticle({ articleId, title, article, style = {}, photo, photoBrightness, ...rest }) {
+
+    async createArticle({
+      articleId,
+      title,
+      content,
+      excerpt,
+      slug,
+      status = "draft",
+      createdBy,
+      updatedBy,
+      publishedAt,
+      photo,
+      ...rest
+    }) {
       try {
-        if (!articleId) throw new Error('Missing articleId for articles_table');
+        if (!articleId) {
+          throw new Error("Missing articleId for articles_table");
+        }
+
+        const now = Date.now();
+
+        // Force numeric timestamps
+        const numericPublishedAt =
+          status === "published"
+            ? Number(publishedAt ?? now)
+            : undefined;
+
         const item = {
           articleId,
           title,
-          article,
-          style,
-          ...(photo ? { photo } : {}),
-          ...(Number.isFinite(photoBrightness) ? { photoBrightness } : {}),
+          content,
+          excerpt,
+          slug: slug?.toLowerCase(),
+          status,
+
+          createdAt: now,
+          updatedAt: now,
+
+          createdBy,
+          updatedBy,
+
+          ...(numericPublishedAt && { publishedAt: numericPublishedAt }),
+          ...(photo && { photo }),
+
           ...rest
         };
+
         const params = {
-          TableName: 'articles_table',
+          TableName: "articles_table",
           Item: item
         };
-        const result = await this.docClient.send(new PutCommand(params));
+
+        const result = await this.docClient.send(
+          new PutCommand(params)
+        );
+
         return { ...result, item };
+
       } catch (error) {
-        console.error('Error creating article:', error);
-        throw new Error('Could not create article');
+        console.error("Error creating article:", error);
+        throw new Error("Could not create article");
       }
     }
 
+    async updateArticle(articleId, updates = {}) {
+  try {
+    const normalizedArticleId = String(articleId || '').trim();
+    if (!normalizedArticleId) {
+      throw new Error("Missing articleId");
+    }
+
+    if (!updates || typeof updates !== "object") {
+      throw new Error("Invalid updates payload");
+    }
+
+    const IMMUTABLE_FIELDS = new Set([
+      "articleId",
+      "createdAt",
+      "createdBy"
+    ]);
+
+    const NUMERIC_FIELDS = new Set([
+      "publishedAt",
+      "updatedAt"
+    ]);
+
+    // Clone and normalize
+    const safeUpdates = { ...updates };
+
+    // System-managed timestamp
+    safeUpdates.updatedAt = Date.now();
+
+    // Remove immutable fields
+    for (const field of IMMUTABLE_FIELDS) {
+      delete safeUpdates[field];
+    }
+
+    // Normalize numeric GSI fields
+    for (const field of NUMERIC_FIELDS) {
+      if (field in safeUpdates) {
+        const v = Number(safeUpdates[field]);
+        if (Number.isFinite(v)) {
+          safeUpdates[field] = v;
+        } else {
+          delete safeUpdates[field];
+        }
+      }
+    }
+
+    const setClauses = [];
+    const removeClauses = [];
+    const expressionAttributeNames = {};
+    const expressionAttributeValues = {};
+
+    let index = 0;
+
+    for (const [key, value] of Object.entries(safeUpdates)) {
+      if (value === undefined) continue;
+
+      index++;
+
+      const nameKey = `#f${index}`;
+      expressionAttributeNames[nameKey] = key;
+
+      if (value === null) {
+        removeClauses.push(nameKey);
+      } else {
+        const valueKey = `:v${index}`;
+        setClauses.push(`${nameKey} = ${valueKey}`);
+        expressionAttributeValues[valueKey] = value;
+      }
+    }
+
+    if (setClauses.length === 0 && removeClauses.length === 0) {
+      throw new Error("No valid update fields");
+    }
+
+    let updateExpression = "";
+
+    if (setClauses.length > 0) {
+      updateExpression += "SET " + setClauses.join(", ");
+    }
+
+    if (removeClauses.length > 0) {
+      if (updateExpression) updateExpression += " ";
+      updateExpression += "REMOVE " + removeClauses.join(", ");
+    }
+
+    const params = {
+      TableName: "articles_table",
+      Key: { articleId: normalizedArticleId },
+
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues:
+        Object.keys(expressionAttributeValues).length > 0
+          ? expressionAttributeValues
+          : undefined,
+
+      ConditionExpression: "attribute_exists(articleId)",
+      ReturnValues: "ALL_NEW"
+    };
+
+    const result = await this.docClient.send(
+      new UpdateCommand(params)
+    );
+
+    return result.Attributes;
+
+  } catch (error) {
+    console.error("Error updating article:", error);
+    throw new Error("Could not update article");
+  }
+}
 
 
     async updateFormData(formId, formStructure, label = 'Untitled', resultsTable = null) {

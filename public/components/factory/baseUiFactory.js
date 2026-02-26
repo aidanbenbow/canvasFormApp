@@ -45,7 +45,7 @@ export class BaseUIFactory {
         const fields = shouldCollect
           ? {
               ...collectInputValues(rootNode),
-              messageYear: 26
+             // messageYear: 26
             }
           : {};
         const finalPayload = {

@@ -13,7 +13,17 @@ socket.on('studentCount', ({ count }) => {
 });
 
 export function sendLog(message, data) {
-  socket.emit('log', { message, data });
+  // Transform data to match backend saveFormResult shape if it looks like a form submission
+  let transformedData = data;
+  if (data && typeof data === 'object' && data.formId && (data.fields || data.responses)) {
+    transformedData = {
+      formId: data.formId,
+      userId: data.user || data.userId || 'admin',
+      payload: data.fields || data.responses || {}
+    };
+  }
+  console.log('Emitting log with message:', message, 'and data:', transformedData);
+  socket.emit('log', { message, data: transformedData });
 }
 
 export function onMessageResponse(callback) {

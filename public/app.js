@@ -28,6 +28,8 @@ import socket from "./socketClient.js";
 import { engineRootLayoutStrategy } from "./strategies/engineRootLayout.js";
 import {  utilsRegister } from "./utils/register.js";
 import { normalizeFields } from "./utils/normalizeFields.js";
+import { articleService } from "./services/articleService.js";
+import { articleRepository } from "./repositories/articleRepository.js";
 
 
 const canvas = new CanvasManager(canvasConfig)
@@ -140,60 +142,7 @@ commandRegistry.register('LOGIN', (payload = {}) => {
   });
 });
 
-commandRegistry.register("form.submit", (payload) => {
-  console.log("Form submitted with payload:", payload);
-  const activeForm = store.getActiveForm();
-  const submittedFields = { ...(payload?.fields || {}) };
-  delete submittedFields.done;
-  submittedFields.messageYear = 26;
 
-  const normalizedFormFields = normalizeFields(activeForm?.formStructure);
-  const allowedFieldIds = new Set(normalizedFormFields.map((field) => field?.id).filter(Boolean));
-  const idOnlyFields = Object.fromEntries(
-    Object.entries(submittedFields).filter(([key]) => key === 'messageYear' || allowedFieldIds.has(key))
-  );
-
-  const responseData = {
-    formId: activeForm?.id,
-    formLabel: activeForm?.label || null,
-    user: activeForm?.user || "admin",
-    resultsTable: activeForm?.resultsTable || null,
-    formFields: normalizedFormFields,
-    fields: idOnlyFields
-  };
-
-  if (activeForm) {
-    system.actionDispatcher.dispatch(ACTIONS.FORM.SUBMIT, {
-      form: activeForm,
-      responseData
-    });
-  }
- const submitNode = factories.basic.create({
-  type: 'text',
-  text: "Form submitted!",
-  id: 'submissionMessage',
-  style: {
-    font: "32px sans-serif",
-    color: "#ffffff",
-    backgroundColor: "#0b8f3a",
-    borderColor: "#06702c",
-    paddingX: 24,
-    paddingY: 16,
-    radius: 10,
-    align: "center",
-    shrinkToFit: true,
-    maxWidth: Math.floor(mainCanvas.width * 0.9)
-  }
- });
- const toastLayer = context.uiServices.toastLayer;
- toastLayer.marginBottom = 70;
- toastLayer.showMessage(submitNode, { timeoutMs: 3000 });
-
-  system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
-  system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);
-  system.actionDispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
-  context.pipeline.invalidate();
-});
 
 const sceneInput = new SceneInputSystem({
   canvas: mainCanvas,
@@ -288,6 +237,56 @@ if (token && username) {
     });
     toastLayer.showMessage(node, { timeoutMs });
   };
+
+  commandRegistry.register("form.submit", (payload) => {
+  console.log("Form submitted with payload:", payload);
+  const activeForm = store.getActiveForm();
+  if (!activeForm) return;
+
+  // Only send user intent and raw input fields
+  const submission = {
+    formId: activeForm.formId,
+    userId: username || 'admin',
+    fields: { ...(payload?.fields || {}) }
+  };
+console.log("Dispatching form submission:", submission);
+  system.actionDispatcher.dispatch(ACTIONS.FORM.SUBMIT, submission);
+  showToast("Form submitted ✅", 3000);
+
+  system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
+  system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);
+  system.actionDispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
+  context.pipeline.invalidate();
+});
+
+commandRegistry.register("article.save", async payload => {
+  try {
+    const article = await articleRepository.updateArticle(
+      payload.articleId,
+      payload.updates
+    );
+
+    articleService.updateArticle(article);
+
+    system.eventBus.emit("socketFeedback", {
+      text: "Article saved successfully! ✅"
+    });
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+commandRegistry.register('report.save', (payload) => {
+  console.log('Report save command received with payload:', payload);
+  // Simulate save operation
+  setTimeout(() => {
+    system.eventBus.emit('socketFeedback', {
+      text: 'Report saved successfully! ✅',
+      position: { x: 100, y: 50 },
+      duration: 2200
+    });
+  }, 1000);
+});
 
   system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
     console.log('Showing message:', text, position, duration);

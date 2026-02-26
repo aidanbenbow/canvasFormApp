@@ -111,3 +111,33 @@ flowchart LR
 | Copy button injection | Disabled by mode config | Enabled by mode config |
 | Submit action normalization | Not applied | Applied (`ensureSubmitActionPlugin`) |
 | Manifest target region | `regions.formContainer.children` | `regions.formContainer.children` |
+
+## Data Entry, Persistence, and Retrieval Flow
+
+### 1. Entering Information (Frontend)
+- Users fill out a form rendered on the HTML canvas.
+- The UI is generated from a manifest, which defines fields and layout.
+- When the user submits the form, only the raw input fields and formId are sent to the backend:
+  - `{ formId, fields }`
+- The frontend dispatches a minimal payload via the command registry and action dispatcher.
+
+### 2. Saving Information (Backend)
+- The backend receives the submission event.
+- It validates the payload and persists the data in DynamoDB:
+  - Each form submission is saved in a domain-partitioned table (e.g., `form_results_{formId}`).
+
+UI → articleService → articleRepository (client) → socket → server → articleRepository (server) → DynamoDB
+
+UI → formService → formRepository (client) → socket → formRepository (server) → DynamoDB
+
+dispatcher → service (pure) → store.apply(nextState) → diff → UI
+
+to do:
+A balanced recommendation
+Based on your architecture goals, your interest in pipelines, and your desire for extensibility, yes — field‑level diffs are a good idea, but only if you implement them in a way that doesn’t explode complexity.
+The sweet spot is:
+- Keep the store simple
+- Add a diff engine that can be swapped or extended
+- Emit diffs only when needed
+- Don’t force the UI to use them unless it wants to
+This gives you power without locking you into complexity.

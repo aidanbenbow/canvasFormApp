@@ -1,6 +1,84 @@
 import { Box } from "../drawables/box.js";
 import { utilsRegister } from "./register.js";
 
+function mapResponsesToLabelKeys(rawResponses = {}, formFields = []) {
+  const responseEntries = Object.entries(rawResponses || {});
+  if (!responseEntries.length) return {};
+
+  const normalizedFields = Array.isArray(formFields) ? formFields : [];
+  const fieldsById = new Map(
+    normalizedFields
+      .filter((field) => field?.id)
+      .map((field) => [field.id, field])
+  );
+
+  const boundLabelsByTargetFieldId = new Map();
+  for (const field of normalizedFields) {
+    if (!field || field.type !== 'label') continue;
+    const targetFieldId = String(field.forFieldId || '').trim();
+    if (!targetFieldId) continue;
+
+    const boundLabelText = String(field.text || field.label || '').trim();
+    if (!boundLabelText) continue;
+
+    if (!boundLabelsByTargetFieldId.has(targetFieldId)) {
+      boundLabelsByTargetFieldId.set(targetFieldId, boundLabelText);
+    }
+  }
+
+  const mapped = {};
+  const usedKeys = new Set();
+
+  for (const [responseKey, responseValue] of responseEntries) {
+    const fieldDef = fieldsById.get(responseKey);
+    if (!fieldDef) continue;
+
+    const preferredLabel = boundLabelsByTargetFieldId.get(responseKey);
+    const storageKey = buildLabeledStorageKey(fieldDef, responseKey, usedKeys, preferredLabel);
+    mapped[storageKey] = responseValue;
+  }
+
+  if (Object.keys(mapped).length > 0) return mapped;
+  return rawResponses;
+}
+
+function buildLabeledStorageKey(fieldDef, fallbackKey, usedKeys = new Set(), preferredLabel = null) {
+  const baseName = slugifyFieldName(
+    preferredLabel
+    || fieldDef?.label
+    || fieldDef?.text
+    || fieldDef?.placeholder
+    || fallbackKey
+  );
+
+  const seed = baseName;
+
+  if (!usedKeys.has(seed)) {
+    usedKeys.add(seed);
+    return seed;
+  }
+
+  let sequence = 2;
+  let candidate = `${seed}-${sequence}`;
+  while (usedKeys.has(candidate)) {
+    sequence += 1;
+    candidate = `${seed}-${sequence}`;
+  }
+
+  usedKeys.add(candidate);
+  return candidate;
+}
+
+function slugifyFieldName(value) {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+
+  const cleaned = normalized.replace(/^-+|-+$/g, '');
+  return cleaned || 'field';
+}
+
 export function generateHitHex() {
     const hex = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
     return `#${hex}`;

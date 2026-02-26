@@ -1,6 +1,6 @@
+// Persistent sessions now stored in DynamoDB
 import  express from "express";
 const app = express();
-
 
 import http from "http";
 import { Server } from "socket.io";
@@ -8,15 +8,19 @@ import { Server } from "socket.io";
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import db from './config/dynamoDB.js';
+import db from './config/dynamoDB.js'
 
 import UserAuth from './config/userAuth.js';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import crypto from 'crypto';
 
-const userAuth = new UserAuth(db.docClient);
-const sessions = new Map(); // sessionToken -> username
+import crypto from 'crypto';
+import { registerAuthHandlers } from "./config/socket/authHandlers.js";
+import { registerFormHandlers } from "./config/socket/formHandlers.js";
+import { registerFormResultsHandlers } from "./config/socket/formResultsHandlers.js";
+import { registerArticleHandlers } from "./config/socket/articleHandlers.js";
+import { docClient } from "./config/db/dynamoClient.js";
+import { formRepository } from "./config/repos/formRepo.js";
+
+const userAuth = new UserAuth(docClient);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,297 +33,28 @@ const io = new Server(server, {
   }
 });
 
-
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-io.on('connection', (socket) => {
- // console.log('A user connected:', socket.id);
+io.on("connection", (socket) => {
+  registerAuthHandlers(io, socket, { userAuth });
+  registerFormHandlers(io, socket);
+  registerFormResultsHandlers(io, socket);
+  registerArticleHandlers(io, socket);
 
-  // User registration (admin only, or seed)
-  socket.on('registerUser', async ({ username, password }) => {
-    try {
-      await userAuth.registerUser(username, password);
-      socket.emit('registerUserResponse', { success: true });
-    } catch (e) {
-      socket.emit('registerUserResponse', { success: false, error: e.message });
-    }
-  });
-
-  // User login
-  socket.on('loginUser', async ({ username, password }) => {
-    try {
-      const valid = await userAuth.authenticateUser(username, password);
-      if (valid) {
-        const token = crypto.randomBytes(32).toString('hex');
-        sessions.set(token, username);
-        socket.emit('loginUserResponse', { success: true, token });
-      } else {
-        socket.emit('loginUserResponse', { success: false, error: 'Invalid credentials' });
-      }
-    } catch (e) {
-      socket.emit('loginUserResponse', { success: false, error: e.message });
-    }
-  });
-
-  // Session validation
-  socket.on('validateSession', ({ token }) => {
-    const username = sessions.get(token);
-    socket.emit('validateSessionResponse', { valid: !!username, username });
-  });
-
- socket.on('getAllForms', async ({ user }) => {
-  
-    try {
-      const forms = await db.getFormData(user);
-   
-     socket.emit('allFormsData', {user, forms });
-    } catch (error) {
-      console.error('Error fetching all forms:', error);
-      socket.emit('allFormsData', { forms: [], error: error.message });
-    }
-  });
-
-  socket.on('getFormById', async ({ formId }) => {
-    console.log(`Fetching form by ID: ${formId}`);
-    try {
-      const formData = await db.getFormDataById(formId);
-      socket.emit('formDataById', { formId, formData });
-    } catch (error) {
-      console.error('Error fetching form by ID:', error);
-      socket.emit('formDataById', { formId, formData: null, error: error.message });
-    }
-  });
-
-  socket.on('getArticleById', async ({ articleID }) => {
-     
-    console.log(`Fetching article by ID: ${articleID}`);
-    try {
-      const articleData = await db.getArticleById(articleID);
-      socket.emit('articleDataById', { articleID, articleData });
-    } catch (error) {
-      console.error('Error fetching article by ID:', error);
-      socket.emit('articleDataById', { articleID, articleData: null, error: error.message });
-    }
-  });
-
-  socket.on('updateArticle', async ({ articleID, updates }) => {
-    try {
-      const article = await db.updateDorcasArticle(articleID, updates || {});
-      socket.emit('articleUpdatedResponse', { success: true, articleID, article });
-    } catch (error) {
-      socket.emit('articleUpdatedResponse', {
-        success: false,
-        articleID,
-        error: error.message || 'Unknown error'
-      });
-    }
-  });
-
-  socket.on('log', async ({ message, data }) => {
-    console.log(`[LOG] ${message}`);
-    console.log('Received data:', data);
- 
-    try {
-      let result = null;
-      const tableName = data?.resultsTable;
-      const isArticleSubmit =
-        (typeof tableName === 'string' && tableName.trim().toLowerCase() === 'articles_table') ||
-        (typeof data?.formLabel === 'string' && data.formLabel.trim().toLowerCase() === 'blog');
-
-      if (tableName === 'progress_reports_table') {
-        const fields = { ...(data?.fields || {}) };
-        delete fields.done;
-        const reportId = fields['input-name'] || fields.nameInput || fields.name;
-        const parsedMessageYear = Number(
-          data?.messageYear ?? fields.messageYear ?? fields.message_year ?? fields['message-year']
-        );
-        const messageYear = Number.isFinite(parsedMessageYear) ? parsedMessageYear : undefined;
-        const updates = {
-          message: fields.messageInput || fields.message || null,
-          report: fields.reportInput || fields.report || null,
-          messageYear
-        };
-        result = await db.updateProgressReport(reportId, updates);
-      } else if (isArticleSubmit) {
-        // Expect articleId, title, article, style, etc. in data.fields
-        const articleId = data?.fields?.articleId || data?.fields?.userId || data?.fields?.id || `article-${Date.now()}`;
-        result = await db.createArticle({
-          articleId,
-          ...data?.fields
-        });
-      } else {
-        const rawResponses = data?.responses || data?.fields || {};
-        const responses = mapResponsesToLabelKeys(rawResponses, data?.formFields);
-        // Always use form_results_table for results
-        result = await db.saveMessage(
-          data.formId, data.user, responses, 'form_results_table'
-        );
-      }
-  
-      socket.emit('messageResponse', { success: true, result });
-
-    } catch (error) {
-      console.error('Error saving log:', error);
-      socket.emit('messageResponse', { success: false, error: error.message });
-    }
-  });
-  
-  socket.on('saveFormStructure', async (payload) => {
-    const { id, formStructure, label, user, resultsTable } = payload;
- console.log('Saving form structure with payload:', payload);
-    try {
-      const result = await db.upsertFormData(id, formStructure, label, user, resultsTable);
-      socket.emit('formSavedResponse', { success: true, result });
-    } catch (error) {
-      socket.emit('formSavedResponse', {
-        success: false,
-        error: error.message || 'Unknown error'
-      });
-    }
-  });
-
-  socket.on('deleteTheForm', async (payload) => {
-   const {id} = payload;
-  console.log('Deleting form with ID:', payload)
-    try {
-      const result = await db.deleteFormData(id);
-      socket.emit('formDeletedResponse', { success: true, result });
-    } catch (error) {
-      socket.emit('formDeletedResponse', {
-        success: false,
-        error: error.message || 'Unknown error'
-      });
-    }
-  });
-
-  socket.on('loadFormStructure', async ({ formId }) => {
-    try {
-      const formData = await db.getFormDataById(formId);
-      socket.emit('formStructureData', { formId, formData });
-    } catch (error) {
-      socket.emit('formStructureData', { formId, formData: null, error: error.message });
-    }
-  });
-
-  socket.on('getFormResults', async ({ formId, tableName }) => {
-    try {
-      const results = await db.getFormResults(formId, tableName);
-     // console.log(`Fetched results for form ${formId} from table ${tableName}:`, results);
-      socket.emit('formResultsData', { formId, results });
-    } catch (err) {
-      socket.emit('formResultsData', { formId, results: [], error: err.message });
-    }
-  
-  });
-
-  socket.on('getAllFormResults', async ({ tableName }) => {
-    try {
-      const results = await db.getAllFormResults(tableName);
-     // console.log(`Fetched all results for table ${tableName}:`, results);
-      socket.emit('allFormResultsData', { tableName, results });
-    } catch (err) {
-      socket.emit('allFormResultsData', { tableName, results: [], error: err.message });
-    }
-  
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
 
-function mapResponsesToLabelKeys(rawResponses = {}, formFields = []) {
-  const responseEntries = Object.entries(rawResponses || {});
-  if (!responseEntries.length) return {};
-
-  const normalizedFields = Array.isArray(formFields) ? formFields : [];
-  const fieldsById = new Map(
-    normalizedFields
-      .filter((field) => field?.id)
-      .map((field) => [field.id, field])
-  );
-
-  const boundLabelsByTargetFieldId = new Map();
-  for (const field of normalizedFields) {
-    if (!field || field.type !== 'label') continue;
-    const targetFieldId = String(field.forFieldId || '').trim();
-    if (!targetFieldId) continue;
-
-    const boundLabelText = String(field.text || field.label || '').trim();
-    if (!boundLabelText) continue;
-
-    if (!boundLabelsByTargetFieldId.has(targetFieldId)) {
-      boundLabelsByTargetFieldId.set(targetFieldId, boundLabelText);
-    }
-  }
-
-  const mapped = {};
-  const usedKeys = new Set();
-
-  for (const [responseKey, responseValue] of responseEntries) {
-    const fieldDef = fieldsById.get(responseKey);
-    if (!fieldDef) continue;
-
-    const preferredLabel = boundLabelsByTargetFieldId.get(responseKey);
-    const storageKey = buildLabeledStorageKey(fieldDef, responseKey, usedKeys, preferredLabel);
-    mapped[storageKey] = responseValue;
-  }
-
-  if (Object.keys(mapped).length > 0) return mapped;
-  return rawResponses;
-}
-
-function buildLabeledStorageKey(fieldDef, fallbackKey, usedKeys = new Set(), preferredLabel = null) {
-  const baseName = slugifyFieldName(
-    preferredLabel
-    || fieldDef?.label
-    || fieldDef?.text
-    || fieldDef?.placeholder
-    || fallbackKey
-  );
-
-  const seed = baseName;
-
-  if (!usedKeys.has(seed)) {
-    usedKeys.add(seed);
-    return seed;
-  }
-
-  let sequence = 2;
-  let candidate = `${seed}-${sequence}`;
-  while (usedKeys.has(candidate)) {
-    sequence += 1;
-    candidate = `${seed}-${sequence}`;
-  }
-
-  usedKeys.add(candidate);
-  return candidate;
-}
-
-function slugifyFieldName(value) {
-  const normalized = String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-');
-
-  const cleaned = normalized.replace(/^-+|-+$/g, '');
-  return cleaned || 'field';
-}
-
-//app.use('/', indexRoutes);
 
 app.get('/', async (req, res) => {
-const data = await db.getFormData();
+const data = await formRepository.fetchAllForms(); // Fetch all forms to display on the homepage
   res.render('index', { data });
 });
-
-
 
 app.get('/form', (req, res) => {
   const formData = {
@@ -367,3 +102,205 @@ app.use(express.static('public'));
 server.listen(4500, () => {
   console.log("Server is running on port 4500");
 });
+
+
+// io.on('connection', (socket) => {
+//  // console.log('A user connected:', socket.id);
+
+//   // User registration (admin only, or seed)
+//   socket.on('registerUser', async ({ username, password }) => {
+//     try {
+//       await userAuth.registerUser(username, password);
+//       socket.emit('registerUserResponse', { success: true });
+//     } catch (e) {
+//       socket.emit('registerUserResponse', { success: false, error: e.message });
+//     }
+//   });
+
+//   // User login
+//   socket.on('loginUser', async ({ username, password }) => {
+//     try {
+//       const valid = await userAuth.authenticateUser(username, password);
+//       if (valid) {
+//         const token = crypto.randomBytes(32).toString('hex');
+//         // Save session to DynamoDB for persistence
+//         await db.saveSession(token, username);
+//         socket.emit('loginUserResponse', { success: true, token });
+//       } else {
+//         socket.emit('loginUserResponse', { success: false, error: 'Invalid credentials' });
+//       }
+//     } catch (e) {
+//       socket.emit('loginUserResponse', { success: false, error: e.message });
+//     }
+//   });
+
+//   // Session validation
+//   socket.on('validateSession', async ({ token }) => {
+//     try {
+//       const session = await db.getSession(token);
+//       const username = session?.username;
+//       socket.emit('validateSessionResponse', { valid: !!username, username });
+//     } catch (e) {
+//       socket.emit('validateSessionResponse', { valid: false, username: null });
+//     }
+//   });
+
+//  socket.on('getAllForms', async ({ user }) => {
+  
+//     try {
+//       const forms = await db.getFormData(user);
+   
+//      socket.emit('allFormsData', {user, forms });
+//     } catch (error) {
+//       console.error('Error fetching all forms:', error);
+//       socket.emit('allFormsData', { forms: [], error: error.message });
+//     }
+//   });
+
+//   socket.on('getFormById', async ({ formId }) => {
+//     console.log(`Fetching form by ID: ${formId}`);
+//     try {
+//       const formData = await db.getFormDataById(formId);
+//       socket.emit('formDataById', { formId, formData });
+//     } catch (error) {
+//       console.error('Error fetching form by ID:', error);
+//       socket.emit('formDataById', { formId, formData: null, error: error.message });
+//     }
+//   });
+
+//   socket.on('getArticleById', async ({ articleID }) => {
+     
+//     console.log(`Fetching article by ID: ${articleID}`);
+//     try {
+//       const articleData = await db.getArticleById(articleID);
+//       socket.emit('articleDataById', { articleID, articleData });
+//     } catch (error) {
+//       console.error('Error fetching article by ID:', error);
+//       socket.emit('articleDataById', { articleID, articleData: null, error: error.message });
+//     }
+//   });
+
+//   socket.on("article.update", async ({ articleId, updates }) => {
+//   try {
+//     const updated = await db.updateArticle(articleId, updates);
+//     socket.emit("article.updateResponse", { success: true, data: updated });
+//   } catch (err) {
+//     socket.emit("article.updateResponse", { success: false, error: err.message });
+//   }
+// });
+
+//   socket.on('log', async ({ message, data }) => {
+//     console.log(`[LOG] ${message}`);
+//     console.log('Received data:', data);
+
+//     try {
+//       let result = null;
+//       const tableName = data?.resultsTable;
+//       const isArticleSubmit =
+//         (typeof tableName === 'string' && tableName.trim().toLowerCase() === 'articles_table') ||
+//         (typeof data?.formLabel === 'string' && data.formLabel.trim().toLowerCase() === 'blog');
+
+//       if (tableName === 'progress_reports_table') {
+//         const fields = { ...(data?.fields || {}) };
+//         delete fields.done;
+//         const reportId = fields['input-name'] || fields.nameInput || fields.name;
+//         const parsedMessageYear = Number(
+//           data?.messageYear ?? fields.messageYear ?? fields.message_year ?? fields['message-year']
+//         );
+//         const messageYear = Number.isFinite(parsedMessageYear) ? parsedMessageYear : undefined;
+//         const updates = {
+//           message: fields.messageInput || fields.message || null,
+//           report: fields.reportInput || fields.report || null,
+//           messageYear
+//         };
+//         result = await db.updateProgressReport(reportId, updates);
+//       } else if (isArticleSubmit) {
+//         // Expect articleId, title, article, style, etc. in data.fields
+//         const articleId = data?.fields?.articleId || data?.fields?.userId || data?.fields?.id || `article-${Date.now()}`;
+//         result = await db.createArticle({
+//           articleId,
+//           ...data?.fields
+//         });
+//       } else {
+//         const rawResponses = data?.responses || data?.fields || {};
+//         const responses = mapResponsesToLabelKeys(rawResponses, data?.formFields);
+//         console.log(data.payload, responses);
+//         // Use new saveFormResult for form submissions
+//         result = await db.saveFormResult({
+//           formId: data.formId,
+//           userId: data.userId,
+//           payload: data.payload,
+//         });
+//       }
+
+//       socket.emit('messageResponse', { success: true, result });
+
+//     } catch (error) {
+//       console.error('Error saving log:', error);
+//       socket.emit('messageResponse', { success: false, error: error.message });
+//     }
+//   });
+  
+//   socket.on('saveFormStructure', async (payload) => {
+//     const { id, formStructure, label, user, resultsTable } = payload;
+//  console.log('Saving form structure with payload:', payload);
+//     try {
+//       const result = await db.upsertFormData(id, formStructure, label, user, resultsTable);
+//       socket.emit('formSavedResponse', { success: true, result });
+//     } catch (error) {
+//       socket.emit('formSavedResponse', {
+//         success: false,
+//         error: error.message || 'Unknown error'
+//       });
+//     }
+//   });
+
+//   socket.on('deleteTheForm', async (payload) => {
+//    const {id} = payload;
+//   console.log('Deleting form with ID:', payload)
+//     try {
+//       const result = await db.deleteFormData(id);
+//       socket.emit('formDeletedResponse', { success: true, result });
+//     } catch (error) {
+//       socket.emit('formDeletedResponse', {
+//         success: false,
+//         error: error.message || 'Unknown error'
+//       });
+//     }
+//   });
+
+//   socket.on('loadFormStructure', async ({ formId }) => {
+//     try {
+//       const formData = await db.getFormDataById(formId);
+//       socket.emit('formStructureData', { formId, formData });
+//     } catch (error) {
+//       socket.emit('formStructureData', { formId, formData: null, error: error.message });
+//     }
+//   });
+
+//   socket.on('getFormResults', async ({ formId, tableName }) => {
+//     try {
+//       const results = await db.getFormResults(formId, tableName);
+//      // console.log(`Fetched results for form ${formId} from table ${tableName}:`, results);
+//       socket.emit('formResultsData', { formId, results });
+//     } catch (err) {
+//       socket.emit('formResultsData', { formId, results: [], error: err.message });
+//     }
+  
+//   });
+
+//   socket.on('getAllFormResults', async ({ tableName }) => {
+//     try {
+//       const results = await db.getAllFormResults(tableName);
+//      // console.log(`Fetched all results for table ${tableName}:`, results);
+//       socket.emit('allFormResultsData', { tableName, results });
+//     } catch (err) {
+//       socket.emit('allFormResultsData', { tableName, results: [], error: err.message });
+//     }
+  
+//   });
+
+//   socket.on('disconnect', () => {
+//     console.log('User disconnected:', socket.id);
+//   });
+// })

@@ -36,6 +36,10 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
 
     dispatcher.on(ACTIONS.DASHBOARD.SHOW, (forms)=> {
       console.log('[DEBUG] ACTIONS.DASHBOARD.SHOW called with forms:', forms);
+      // Stop editing any active input or text editor to hide caret
+      if (context?.textEditorController?.activeNode) {
+        context.textEditorController.stopEditing();
+      }
       const dash = new DashBoardScreen({ context, dispatcher, eventBusManager: bus, store, factories, commandRegistry  });
       router.replace(dash);
       dispatcher.dispatch(ACTIONS.FORM.SET_LIST,forms)
@@ -153,10 +157,27 @@ export function wireSystemEvents(system, context, store ={}, router, factories, 
       router.push(editor);
     }, 'wiring');
 
-    dispatcher.on(ACTIONS.FORM.SUBMIT, async ({ form, responseData}) => {
-        sendLog(`Form ${form.id} submitted with data: ${JSON.stringify(responseData)}`, responseData);
-        showToast(`Form ${form.label} submitted successfully!`);
-    }, 'wiring');
+    dispatcher.on(ACTIONS.FORM.SUBMIT, async (payload) => {
+    const formId = payload?.formId;
+    const fields = payload?.fields || {};
+    const user = payload?.user || 'anonymous';
+
+    if (!formId) {
+        showToast('Submission failed: missing formId');
+        return;
+    }
+
+    const formResultPayload = { formId, fields, user };
+
+    console.log(`Submitting form with id: ${formId}`, formResultPayload);
+
+    sendLog(
+        `Form ${formId} submitted with data: ${JSON.stringify(formResultPayload)}`,
+        formResultPayload
+    );
+
+    showToast('Form submitted successfully!');
+}, 'wiring');
 
     dispatcher.on(ACTIONS.FORM.DELETE, async (form) => {
         dispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form);
