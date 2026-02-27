@@ -1,3 +1,8 @@
+/**
+   * Rendering-time context for the UI engine.
+   * Contains everything needed for drawing, hit-testing,
+   * selection, focus, text editing, and drag interactions.
+   */
 
 
 export class RendererContext {

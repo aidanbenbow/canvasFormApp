@@ -1,7 +1,7 @@
 // public/stores/FormStore.js
 export class FormStore {
-  constructor(eventBus) {
-    this.eventBus = eventBus;
+  constructor() {
+    this.eventBus = null
 
     this.state = Object.freeze({
       forms: {},        // map by formId
@@ -11,17 +11,32 @@ export class FormStore {
 
     this.listeners = [];
   }
+   connect(eventBus) {
+    this.eventBus = eventBus;
+  }
+
 
   getState() {
     return this.state;
   }
 
-  subscribe(id, listener) {
-    this.listeners.push({ id, listener });
-    return () => {
-      this.listeners = this.listeners.filter(l => l.id !== id);
-    };
-  }
+  getActiveForm() {
+  const state = this.state;
+  return state.activeFormId
+    ? state.forms[state.activeFormId] ?? null
+    : null;
+}
+
+ subscribe(id, listener) {
+  this.listeners.push({ id, listener });
+
+  // Immediately send current state
+  listener({ state: this.state, diff: null });
+
+  return () => {
+    this.listeners = this.listeners.filter(l => l.id !== id);
+  };
+}
 
   apply(nextState) {
     const prev = this.state;

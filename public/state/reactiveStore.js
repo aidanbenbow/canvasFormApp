@@ -61,20 +61,24 @@ export class ReactiveStore {
     }
   }
 
-  export function bindList({
-    store,
-    key,
-    container,
-    factory,
-    mapItem
-  }) {
-    return store.subscribe(key, value => {
-      // ✅ With normalized shape, value is always an object
-      // For 'forms', value = { forms: [...] }
-      const items = Array.isArray(value.forms) ? value.forms : [];
-  
-      container.setChildren(
-        items.map(item => mapItem(item, factory))
-      );
-    });
-  }
+ export function bindList({
+  store,
+  key,
+  container,
+  factory,
+  mapItem
+}) {
+  return store.subscribe(key, ({ state }) => {
+    const raw = state[key];
+
+    const items = Array.isArray(raw)
+      ? raw
+      : raw
+        ? Object.values(raw)
+        : [];
+
+    container.setChildren(
+      items.map(item => mapItem(item, factory))
+    );
+  });
+}

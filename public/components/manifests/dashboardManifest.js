@@ -14,27 +14,22 @@ export const dashboardUIManifest = defineManifest({
   style: {
     background: '#ffffff'
   },
-  commands: {
-    FORM_VIEW: {
-      action: ACTIONS.FORM.VIEW,
-      needsActive: true
-    },
-    FORM_RESULTS: {
-      action: ACTIONS.FORM.RESULTS,
-      needsActive: true
-    },
-    FORM_CREATE: {
-      action: ACTIONS.FORM.CREATE,
-      needsActive: false
-    },
-    FORM_EDIT: {
-      action: ACTIONS.FORM.EDIT,
-      needsActive: true
-    },
-    FORM_DELETE: {
-      action: ACTIONS.FORM.DELETE,
-      needsActive: true
-    }
+ commands: {
+  FORM_VIEW: {
+    command: "form.view"
+  },
+  FORM_RESULTS: {
+    command: "form.results"
+  },
+  FORM_CREATE: {
+    command: "form.create"
+  },
+  FORM_EDIT: {
+    command: "form.edit"
+  },
+  FORM_DELETE: {
+    command: "form.delete"
+  }
   },
   regions: {
     toolbar: containerRegion({

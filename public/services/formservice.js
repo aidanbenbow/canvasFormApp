@@ -1,5 +1,5 @@
 // public/services/formService.js
-import { formStore } from "./storeInstance.js";
+import { formStore } from "../stores/storeInstance.js";
 
 export const formService = {
   setForms(formsArray) {

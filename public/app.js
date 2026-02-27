@@ -23,7 +23,7 @@ import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
 import { UIEngine } from "./setUp/uiEngine.js";
 import { wireSystemEvents } from "./setUp/wireSystemEvents.js";
-import { LoginScreen } from "./components/loginScreen.js";
+
 import socket from "./socketClient.js";
 import { engineRootLayoutStrategy } from "./strategies/engineRootLayout.js";
 import {  utilsRegister } from "./utils/register.js";
@@ -34,6 +34,15 @@ import { formRepository } from "./repositories/formRepository.js";
 import { formResultsRepository } from "./repositories/formResultsRepository.js";
 // ⭐ NEW: command loader
 import { registerAllCommands } from "./commands/index.js";
+import { formStore } from "./stores/storeInstance.js";
+
+import { screenRegistry } from "./registries/screenRegistry.js";
+import { DashBoardScreen } from "./components/dashBoard.js";
+import { FormViewScreen } from "./components/viewForm.js";
+import { UIFormResults } from "./components/formResults.js";
+import { CreateForm } from "./components/createForm.js";
+import { EditForm } from "./components/editForm.js";
+import { LoginScreen } from "./components/loginScreen.js";
 
 
 // ------------------------------------------------------------
@@ -50,9 +59,11 @@ const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
 
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 export const eventBus = system.eventBus;
+formStore.connect(eventBus); // Connect FormStore to the event bus
+
 export const dispatcher = system.actionDispatcher;
   
-const store = new FormStore(system.actionDispatcher,system.eventBusManager);
+//const store = new FormStore(system.actionDispatcher,system.eventBusManager);
 
   const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry, layoutManager, layoutRenderer)
   const context = renderBuild.createRendererContext()
@@ -106,6 +117,18 @@ const factories = {
 };
 context.factories = factories;
 
+
+function registerScreens() {
+  screenRegistry.register("dashboard", DashBoardScreen);
+  screenRegistry.register("formView", FormViewScreen);
+  screenRegistry.register("formResults", UIFormResults);
+  screenRegistry.register("formCreate", CreateForm);
+  screenRegistry.register("formEdit", EditForm);
+  screenRegistry.register("login", LoginScreen);
+}
+
+registerScreens();
+
 // ------------------------------------------------------------
 // LOGIN SCREEN
 // ------------------------------------------------------------
@@ -130,7 +153,7 @@ const sceneInput = new SceneInputSystem({
 // ------------------------------------------------------------
 // WIRE SYSTEM EVENTS
 // ------------------------------------------------------------
-wireSystemEvents(system, context, store, screenRouter, factories, commandRegistry);
+wireSystemEvents(system, context, screenRouter, factories, commandRegistry);
 
 // ------------------------------------------------------------
 // MAIN APP BOOTSTRAP LOGIC
@@ -148,43 +171,63 @@ context.pipeline.start({
 // Session check and main app logic
 const token = localStorage.getItem('sessionToken');
 const username = localStorage.getItem('username');
-function runMainApp() {
-  console.log('[DEBUG] runMainApp called');
-  if (formId) {
-    fetchFormById(formId).then(form => {
-      const tableName = resolveResultsTableName(form);
-      fetchFormResults(form.formId, tableName).then(results => {
-        system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
-        system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
-        system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: form.formId, results }, 'bootstrap');
-        system.actionDispatcher.dispatch(ACTIONS.FORM.VIEW, form, 'bootstrap');
-      });
-    });
-  } else if(articleID){
-    fetchArticleById(articleID).then(article => {
-      if (mode === 'edit') {
-        system.actionDispatcher.dispatch(ACTIONS.ARTICLE.EDIT, article, 'bootstrap');
-      } else {
-        system.actionDispatcher.dispatch(ACTIONS.ARTICLE.VIEW, article, 'bootstrap');
-      }
-    });
-  }
-  else{
-    formRepository.fetchAllForms().then((forms) => {
-      for (const f of forms) {
-        formResultsRepository.fetchResults(f.formId).then((results) => {
-          system.actionDispatcher.dispatch(
-            ACTIONS.FORM.RESULTS_SET,
-            { formId: f.formId, results },
-            "bootstrap"
-          );
-        });
-      }
 
-      system.actionDispatcher.dispatch(ACTIONS.DASHBOARD.SHOW, forms, 'bootstrap');
-    });
+async function runMainApp() {
+  try {
+    if (formId) {
+      return commandRegistry.execute("app.openForm", { formId });
+    }
+
+    if (articleID) {
+      return commandRegistry.execute("app.openArticle", {
+        articleId: articleID,
+        mode
+      });
+    }
+
+    return commandRegistry.execute("app.bootstrap");
+  } catch (err) {
+    console.error(err);
   }
 }
+
+// function runMainApp() {
+//   console.log('[DEBUG] runMainApp called');
+//   if (formId) {
+//     fetchFormById(formId).then(form => {
+//       const tableName = resolveResultsTableName(form);
+//       fetchFormResults(form.formId, tableName).then(results => {
+//         system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
+//         system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
+//         system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: form.formId, results }, 'bootstrap');
+//         screenRouter.replace('formView', { form, results, mode: 'view' });
+//       });
+//     });
+//   } else if(articleID){
+//     fetchArticleById(articleID).then(article => {
+//       if (mode === 'edit') {
+//         screenRouter.replace('formEdit', { article, mode: 'edit' });
+//       } else {
+//        screenRouter.replace('formView', { article, mode: 'view' });
+//       }
+//     });
+//   }
+//   else{
+//     formRepository.fetchAllForms().then((forms) => {
+//       for (const f of forms) {
+//         formResultsRepository.fetchResults(f.formId).then((results) => {
+//           system.actionDispatcher.dispatch(
+//             ACTIONS.FORM.RESULTS_SET,
+//             { formId: f.formId, results },
+//             "bootstrap"
+//           );
+//         });
+//       }
+
+//       screenRouter.replace('dashboard', { forms });
+//     });
+//   }
+// }
 
 // ------------------------------------------------------------
 // SESSION VALIDATION
@@ -235,7 +278,7 @@ if (token && username) {
 registerAllCommands({
   commandRegistry,
   context,
-  store,
+  formStore,
   system,
   socket,
   showToast
