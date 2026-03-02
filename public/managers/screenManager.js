@@ -3,7 +3,10 @@ export class ScreenManager {
       this.engineRoot = engineRoot;
       this.currentScreenRoot = null;
     }
-  
+  setContext(context) {
+    this.context = context;
+  }
+
     loadScreen(screenRoot) {
       if (this.currentScreenRoot) {
         this.engineRoot.remove(this.currentScreenRoot);

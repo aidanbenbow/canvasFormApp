@@ -48,7 +48,10 @@ export class FormStore {
       listener({ state: this.state, diff });
     }
 
-    this.eventBus.emit("formStore:changed", { state: this.state, diff });
+    const storeChangedListeners = this.eventBus?.listeners?.get?.("formStore:changed") || [];
+    if (storeChangedListeners.length > 0) {
+      this.eventBus.emit("formStore:changed", { state: this.state, diff });
+    }
   }
 
   computeDiff(prev, next) {

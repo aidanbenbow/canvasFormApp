@@ -26,6 +26,11 @@ export class UIEngine {
  
       this.screenManager = new ScreenManager(this.root);
     }
+
+    setContext(context) {
+      this.context = context;
+      this.screenManager.setContext(context);
+    }
   
     mountScene(sceneRoot) {
       this.screenManager.loadScreen(sceneRoot);

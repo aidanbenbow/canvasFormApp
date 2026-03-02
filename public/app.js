@@ -5,11 +5,10 @@ import { FormsUIFactory } from "./components/factory/formsUiFactory.js";
 import { ResultsUIFactory } from "./components/factory/resultsUiFactory.js";
 import { canvasConfig, } from "./constants.js";
 
-import { fetchAllFormResults, fetchAllForms, fetchArticleById, fetchFormById, fetchFormResults,   } from "./controllers/socketController.js";
 import { TextEditorController } from "./controllers/textEditor.js";
 import { UIStateStore } from "./events/UiStateStore.js";
 import { ACTIONS } from "./events/actions.js";
-import { FormStore } from "./events/formStore.js";
+
 import { SceneInputSystem } from "./events/sceneInputSystem.js";
 import { CanvasManager } from "./managers/canvas.js";
 import { FocusManager } from "./managers/focusManager.js";
@@ -32,10 +31,8 @@ import { articleService } from "./services/articleService.js";
 import { articleRepository } from "./repositories/articleRepository.js";
 import { formRepository } from "./repositories/formRepository.js";
 import { formResultsRepository } from "./repositories/formResultsRepository.js";
-// ⭐ NEW: command loader
-import { registerAllCommands } from "./commands/index.js";
 import { formStore } from "./stores/storeInstance.js";
-
+// ⭐ NEW: command loader
 import { screenRegistry } from "./registries/screenRegistry.js";
 import { DashBoardScreen } from "./components/dashBoard.js";
 import { FormViewScreen } from "./components/viewForm.js";
@@ -43,7 +40,10 @@ import { UIFormResults } from "./components/formResults.js";
 import { CreateForm } from "./components/createForm.js";
 import { EditForm } from "./components/editForm.js";
 import { LoginScreen } from "./components/loginScreen.js";
-
+import { createLegacyAppContext } from "./setUp/appContext.js";
+import { Container } from "./core/di/Container.js";
+import { TOKENS } from "./core/di/tokens.js";
+import { bootstrapApp } from "./bootStrapStuff.js";
 
 // ------------------------------------------------------------
 // ENGINE + CONTEXT SETUP
@@ -59,7 +59,7 @@ const layoutRenderer = new LayoutRenderer(layoutManager, mainCanvas);
 
 const system = canvasBuilder.createEventBus().createRendererRegistry().build()
 export const eventBus = system.eventBus;
-formStore.connect(eventBus); // Connect FormStore to the event bus
+
 
 export const dispatcher = system.actionDispatcher;
   
@@ -104,8 +104,13 @@ context.fieldRegistry = new Map();
 
 
 
-const screenRouter = new ScreenRouter({ context,uiEngine: uiengine });
+const screenRouter = new ScreenRouter({ context, uiEngine: uiengine, screenRegistry });
 const commandRegistry = new CommandRegistry();
+const appContainer = new Container();
+context.commandRegistry = commandRegistry;
+context.store = formStore;
+
+context.eventBusManager = system.eventBusManager;
 
 
 
@@ -154,6 +159,109 @@ const sceneInput = new SceneInputSystem({
 // WIRE SYSTEM EVENTS
 // ------------------------------------------------------------
 wireSystemEvents(system, context, screenRouter, factories, commandRegistry);
+
+// ------------------------------------------------------------
+// TOASTS
+// ------------------------------------------------------------
+  const toastLayer = context.uiServices.toastLayer;
+  const showToast = (text, timeoutMs = 2500) => {
+    if (!toastLayer) return;
+    const node = factories.basic.create({
+      type: 'text',
+      text,
+      id: `toast-${Date.now()}`,
+      style: {
+        font: "30px sans-serif",
+        color: "#ffffff",
+        backgroundColor: "#0b8f3a",
+        borderColor: "#06702c",
+        paddingX: 22,
+        paddingY: 14,
+        radius: 10,
+        align: "center",
+        shrinkToFit: true
+      }
+    });
+    toastLayer.showMessage(node, { timeoutMs });
+  };
+
+// ------------------------------------------------------------
+//app context setup
+// ------------------------------------------------------------
+const repositories = {
+  formRepository,
+  formResultsRepository,
+  articleRepository,
+};
+
+const services = {
+  articleService,
+  
+};
+
+const hideKeyboard = () => system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
+const hidePopup = () => system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);
+const hideDropdown = () => system.actionDispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
+
+const uiServices = {
+  showToast,
+  hideKeyboard,
+  hidePopup,
+  hideDropdown,
+};
+
+const input = {
+  dragController: context.dragController,
+  textEditorController: textEditor,
+  selectionController: context.selectionController,
+  focusManager,
+};
+
+appContainer
+  .instance(TOKENS.commandRegistry, commandRegistry)
+  .instance(TOKENS.screenRouter, screenRouter)
+  .instance(TOKENS.uiEngine, uiengine)
+  .instance(TOKENS.rendererContext, context)
+  .instance(TOKENS.repositories, repositories)
+  .instance(TOKENS.services, services);
+
+export { appContainer };
+
+export const appContext = createLegacyAppContext({
+  container: appContainer,
+  tokens: TOKENS,
+  screenRegistry,
+  repositories,
+  services,
+  uiServices,
+  input,
+  state: {
+    uiState,
+  },
+});
+
+
+
+  // ------------------------------------------------------------
+// ⭐ REGISTER ALL COMMANDS (clean, modular)
+// ------------------------------------------------------------
+bootstrapApp({
+  commandRegistry,
+  context,
+  system,
+  socket,
+  showToast,  screenRouter
+});
+// registerAllCommands({
+//   commandRegistry,
+//   context,
+//   formStore,
+//   formService,
+//   system,
+//   socket,
+//   showToast,
+//   screenRouter
+// });
 
 // ------------------------------------------------------------
 // MAIN APP BOOTSTRAP LOGIC
@@ -247,42 +355,7 @@ if (token && username) {
   showLoginScreen();
 }
 
-// ------------------------------------------------------------
-// TOASTS
-// ------------------------------------------------------------
-  const toastLayer = context.uiServices.toastLayer;
-  const showToast = (text, timeoutMs = 2500) => {
-    if (!toastLayer) return;
-    const node = factories.basic.create({
-      type: 'text',
-      text,
-      id: `toast-${Date.now()}`,
-      style: {
-        font: "30px sans-serif",
-        color: "#ffffff",
-        backgroundColor: "#0b8f3a",
-        borderColor: "#06702c",
-        paddingX: 22,
-        paddingY: 14,
-        radius: 10,
-        align: "center",
-        shrinkToFit: true
-      }
-    });
-    toastLayer.showMessage(node, { timeoutMs });
-  };
 
-  // ------------------------------------------------------------
-// ⭐ REGISTER ALL COMMANDS (clean, modular)
-// ------------------------------------------------------------
-registerAllCommands({
-  commandRegistry,
-  context,
-  formStore,
-  system,
-  socket,
-  showToast
-});
 
 
 //   commandRegistry.register("form.submit", (payload) => {

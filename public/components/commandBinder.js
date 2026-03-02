@@ -5,17 +5,20 @@ export function bindCommands({ manifest, commandRegistry }) {
     const target = def.command;
     const staticPayload = def.payload || {};
 
-    const namespaced = `ui.${uiCommandName}`;
+    const aliases = [uiCommandName, `ui.${uiCommandName}`];
+    const bridgeHandler = (uiPayload = {}) => {
+      const merged = {
+        ...staticPayload,
+        ...uiPayload
+      };
 
-    if (!commandRegistry.has(namespaced)) {
-      commandRegistry.register(namespaced, (uiPayload = {}) => {
-        const merged = {
-          ...staticPayload,
-          ...uiPayload
-        };
+      commandRegistry.execute(target, merged);
+    };
 
-        commandRegistry.execute(target, merged);
-      });
-    }
+    aliases.forEach((alias) => {
+      if (!commandRegistry.has(alias)) {
+        commandRegistry.register(alias, bridgeHandler);
+      }
+    });
   });
 }

@@ -4,9 +4,12 @@ import { formRepository } from "../../repositories/formRepository.js";
 import { formResultsRepository } from "../../repositories/formResultsRepository.js";
 import { articleRepository } from "../../repositories/articleRepository.js";
 import { formService } from "../../services/formservice.js";
-import { ScreenRouter } from "../../routes/screenRouter.js";
 
-export function registerAppCommands(commandRegistry, context) {
+export function registerAppCommands(commandRegistry, context, { screenRouter } = {}) {
+  const router = screenRouter || context?.screenRouter;
+  if (!router || typeof router.replace !== "function") {
+    throw new Error("registerAppCommands requires a screenRouter instance with replace().");
+  }
 
   // --------------------------------------------------
   // Default App Bootstrap
@@ -20,7 +23,7 @@ export function registerAppCommands(commandRegistry, context) {
       formService.setResults(f.formId, results || []);
     }
 
-    ScreenRouter.replace("dashboard");
+    router.replace("dashboard");
   });
 
 
@@ -37,7 +40,7 @@ export function registerAppCommands(commandRegistry, context) {
     formService.setResults(formId, results || []);
     formService.setActiveForm(formId);
 
-    ScreenRouter.replace("formView", { formId });
+    router.replace("formView", { formId });
   });
 
 
@@ -47,7 +50,7 @@ export function registerAppCommands(commandRegistry, context) {
   commandRegistry.register("app.openArticle", async ({ articleId, mode }) => {
     const article = await articleRepository.fetchArticleById(articleId);
 
-    ScreenRouter.replace(
+    router.replace(
       mode === "edit" ? "formEdit" : "formView",
       { article, mode }
     );

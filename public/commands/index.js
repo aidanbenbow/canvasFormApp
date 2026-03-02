@@ -8,13 +8,15 @@ export function registerAllCommands({
   commandRegistry,
   context,
   store,
+  formService,
   system,
   socket,
-  showToast
+  showToast,
+  screenRouter
 }) {
   registerAuthCommands(commandRegistry, context, socket);
-  registerFormCommands(commandRegistry, context, store, showToast);
+  registerFormCommands(commandRegistry, context, store, formService, showToast);
   registerArticleCommands(commandRegistry, system);
   registerReportCommands(commandRegistry, system);
-  registerAppCommands(commandRegistry, context);
+  registerAppCommands(commandRegistry, context, { screenRouter });
 }

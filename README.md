@@ -593,3 +593,73 @@ If you want to make this engine bulletproof, say:
 show race-safe runtime kernel pattern
 
 and I will show the protection design used in real UI runtimes.
+
+src/
+│
+├── core/                     # Pure infrastructure (DI, tokens, utilities)
+│   └── di/
+│       ├── container.js
+│       └── tokens.js
+│
+├── engine/                   # Reusable UI runtime (independent of your app)
+│   ├── rendering/
+│   │   ├── rendererContext.js
+│   │   ├── pipeline.js
+│   │   ├── hit/
+│   │   │   ├── hitManager.js
+│   │   │   └── hitRegistry.js
+│   │   └── layout/
+│   │       ├── flexLayout.js
+│   │       └── gridLayout.js
+│   │
+│   ├── ui/
+│   │   ├── UIEngine.js
+│   │   ├── controllers/
+│   │   │   ├── textEditorController.js
+│   │   │   ├── selectionController.js
+│   │   │   ├── focusManager.js
+│   │   │   └── dragController.js
+│   │   ├── managers/
+│   │   │   ├── screenManager.js
+│   │   │   └── overlayManager.js
+│   │   ├── registries/
+│   │   │   └── nodeRegistry.js
+│   │   ├── state/
+│   │   │   └── uiState.js
+│   │   └── nodes/            # ← SceneNodes live here
+│   │       ├── SceneNode.js
+│   │       ├── RootSceneNode.js
+│   │       ├── ContainerNode.js
+│   │       ├── TextNode.js
+│   │       ├── ImageNode.js
+│   │       ├── ButtonNode.js
+│   │       ├── ScrollNode.js
+│   │       └── OverlayNode.js
+│   │
+│   └── modules/              # Optional: plugin modules for the engine
+│
+├── app/                      # Your actual application
+│   ├── application/
+│   │   ├── commands/
+│   │   ├── services/
+│   │   └── createServices.js
+│   │
+│   ├── infrastructure/
+│   │   ├── repositories/
+│   │   └── createRepositories.js
+│   │
+│   ├── routing/
+│   │   ├── ScreenRouter.js
+│   │   └── ScreenRegistry.js
+│   │
+│   ├── screens/              # Screens composed of SceneNodes
+│   │   ├── DashboardScreen.js
+│   │   ├── FormViewScreen.js
+│   │   ├── FormEditScreen.js
+│   │   └── ResultsScreen.js
+│   │
+│   └── bootstrap/
+│       ├── buildContainer.js
+│       └── bootstrap.js
+│
+└── index.js

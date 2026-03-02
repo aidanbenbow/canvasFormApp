@@ -23,6 +23,9 @@ export class CommandRegistry {
         this.unregister(name);
       }
     }
+    has(name) {
+      return this.commands.has(name);
+    }
   
     async execute(name, payload) {
       const entry = this.commands.get(name);

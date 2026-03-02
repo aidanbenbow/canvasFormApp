@@ -1,5 +1,9 @@
 // public/services/formService.js
-import { formStore } from "../stores/storeInstance.js";
+let storeInstance = null;
+
+export function setFormStore(store) {
+  storeInstance = store;
+}
 
 export const formService = {
   setForms(formsArray) {
@@ -9,24 +13,24 @@ export const formService = {
     }
 
     const nextState = {
-      ...formStore.getState(),
+      ...storeInstance.getState(),
       forms: nextForms
     };
 
-    formStore.apply(nextState);
+    storeInstance.apply(nextState);
   },
 
   setActiveForm(formId) {
     const nextState = {
-      ...formStore.getState(),
+      ...storeInstance.getState(),
       activeFormId: formId
     };
 
-    formStore.apply(nextState);
+    storeInstance.apply(nextState);
   },
 
   updateForm(form) {
-    const prev = formStore.getState();
+    const prev = storeInstance.getState();
     const nextForms = { ...prev.forms, [form.formId]: form };
 
     const nextState = {
@@ -34,11 +38,11 @@ export const formService = {
       forms: nextForms
     };
 
-    formStore.apply(nextState);
+    storeInstance.apply(nextState);
   },
 
   removeForm(formId) {
-    const prev = formStore.getState();
+    const prev = storeInstance.getState();
     const nextForms = { ...prev.forms };
     delete nextForms[formId];
 
@@ -48,11 +52,11 @@ export const formService = {
       activeFormId: prev.activeFormId === formId ? null : prev.activeFormId
     };
 
-    formStore.apply(nextState);
+    storeInstance.apply(nextState);
   },
 
   setResults(formId, results) {
-    const prev = formStore.getState();
+    const prev = storeInstance.getState();
     const nextResults = { ...prev.results, [formId]: [...results] };
 
     const nextState = {
@@ -60,11 +64,11 @@ export const formService = {
       results: nextResults
     };
 
-    formStore.apply(nextState);
+    storeInstance.apply(nextState);
   },
 
   addResults(formId, newResults) {
-    const prev = formStore.getState();
+    const prev = storeInstance.getState();
     const existing = prev.results[formId] || [];
     const nextResults = {
       ...prev.results,
@@ -76,6 +80,6 @@ export const formService = {
       results: nextResults
     };
 
-    formStore.apply(nextState);
+    storeInstance.apply(nextState);
   }
 };

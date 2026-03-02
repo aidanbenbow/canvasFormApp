@@ -9,6 +9,9 @@ export class ScreenRouter {
 
     this.lock = false;
   }
+  setContext(context) {
+    this.context = context;
+  }
 
   // --------------------------------------------------
   // Screen Factory
@@ -24,6 +27,11 @@ export class ScreenRouter {
 
     return new ScreenClass({
       context: this.context,
+      dispatcher: this.context?.dispatcher,
+      eventBusManager: this.context?.eventBusManager,
+      store: this.context?.store,
+      factories: this.context?.factories,
+      commandRegistry: this.context?.commandRegistry,
       ...params
     });
   }
