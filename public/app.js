@@ -18,6 +18,7 @@ import { CommandRegistry } from "./registries/commandRegistry.js";
 import { containerRenderer } from "./renderers/containerRenderer.js";
 import { LayoutRenderer } from "./renderers/layOutRenderer.js";
 import { ScreenRouter } from "./routes/screenRouter.js";
+import { ROUTES } from "./routes/routeNames.js";
 import { CanvasSystemBuilder } from "./setUp/canvasSystemBuilder.js";
 import { RenderSystemBuilder } from "./setUp/renderSystemBuilder.js";
 import { UIEngine } from "./setUp/uiEngine.js";
@@ -39,6 +40,7 @@ import { FormViewScreen } from "./components/viewForm.js";
 import { UIFormResults } from "./components/formResults.js";
 import { CreateForm } from "./components/createForm.js";
 import { EditForm } from "./components/editForm.js";
+import { articleViewScreen } from "./components/articleView.js";
 import { LoginScreen } from "./components/loginScreen.js";
 import { createLegacyAppContext } from "./setUp/appContext.js";
 import { Container } from "./core/di/Container.js";
@@ -62,9 +64,7 @@ export const eventBus = system.eventBus;
 
 
 export const dispatcher = system.actionDispatcher;
-  
-//const store = new FormStore(system.actionDispatcher,system.eventBusManager);
-
+ 
   const renderBuild = new RenderSystemBuilder(canvas, system.eventBus, system.rendererRegistry, layoutManager, layoutRenderer)
   const context = renderBuild.createRendererContext()
   context.canvasManager = canvas; // ✅ Attach canvasManager to context
@@ -108,6 +108,7 @@ const screenRouter = new ScreenRouter({ context, uiEngine: uiengine, screenRegis
 const commandRegistry = new CommandRegistry();
 const appContainer = new Container();
 context.commandRegistry = commandRegistry;
+context.screenRouter = screenRouter;
 context.store = formStore;
 
 context.eventBusManager = system.eventBusManager;
@@ -124,12 +125,14 @@ context.factories = factories;
 
 
 function registerScreens() {
-  screenRegistry.register("dashboard", DashBoardScreen);
-  screenRegistry.register("formView", FormViewScreen);
-  screenRegistry.register("formResults", UIFormResults);
-  screenRegistry.register("formCreate", CreateForm);
-  screenRegistry.register("formEdit", EditForm);
-  screenRegistry.register("login", LoginScreen);
+  screenRegistry.register(ROUTES.dashboard, DashBoardScreen);
+  screenRegistry.register(ROUTES.formView, FormViewScreen);
+  screenRegistry.register(ROUTES.formResults, UIFormResults);
+  screenRegistry.register(ROUTES.formCreate, CreateForm);
+  screenRegistry.register(ROUTES.formEdit, EditForm);
+  screenRegistry.register(ROUTES.articleView, articleViewScreen);
+  screenRegistry.register(ROUTES.articleEdit, articleViewScreen);
+  screenRegistry.register(ROUTES.login, LoginScreen);
 }
 
 registerScreens();
@@ -299,44 +302,6 @@ async function runMainApp() {
   }
 }
 
-// function runMainApp() {
-//   console.log('[DEBUG] runMainApp called');
-//   if (formId) {
-//     fetchFormById(formId).then(form => {
-//       const tableName = resolveResultsTableName(form);
-//       fetchFormResults(form.formId, tableName).then(results => {
-//         system.actionDispatcher.dispatch(ACTIONS.FORM.SET_LIST, [form], 'bootstrap');
-//         system.actionDispatcher.dispatch(ACTIONS.FORM.SET_ACTIVE, form, 'bootstrap');
-//         system.actionDispatcher.dispatch(ACTIONS.FORM.RESULTS_SET, { formId: form.formId, results }, 'bootstrap');
-//         screenRouter.replace('formView', { form, results, mode: 'view' });
-//       });
-//     });
-//   } else if(articleID){
-//     fetchArticleById(articleID).then(article => {
-//       if (mode === 'edit') {
-//         screenRouter.replace('formEdit', { article, mode: 'edit' });
-//       } else {
-//        screenRouter.replace('formView', { article, mode: 'view' });
-//       }
-//     });
-//   }
-//   else{
-//     formRepository.fetchAllForms().then((forms) => {
-//       for (const f of forms) {
-//         formResultsRepository.fetchResults(f.formId).then((results) => {
-//           system.actionDispatcher.dispatch(
-//             ACTIONS.FORM.RESULTS_SET,
-//             { formId: f.formId, results },
-//             "bootstrap"
-//           );
-//         });
-//       }
-
-//       screenRouter.replace('dashboard', { forms });
-//     });
-//   }
-// }
-
 // ------------------------------------------------------------
 // SESSION VALIDATION
 // ------------------------------------------------------------
@@ -355,99 +320,6 @@ if (token && username) {
   showLoginScreen();
 }
 
-
-
-
-//   commandRegistry.register("form.submit", (payload) => {
-//   console.log("Form submitted with payload:", payload);
-//   const activeForm = store.getActiveForm();
-//   if (!activeForm) return;
-
-//   // Only send user intent and raw input fields
-//   const submission = {
-//     formId: activeForm.formId,
-//     userId: username || 'admin',
-//     fields: { ...(payload?.fields || {}) }
-//   };
-// console.log("Dispatching form submission:", submission);
-//   system.actionDispatcher.dispatch(ACTIONS.FORM.SUBMIT, submission);
-//   showToast("Form submitted ✅", 3000);
-
-//   system.actionDispatcher.dispatch(ACTIONS.KEYBOARD.HIDE);
-//   system.actionDispatcher.dispatch(ACTIONS.POPUP.HIDE);
-//   system.actionDispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
-//   context.pipeline.invalidate();
-// });
-
-// commandRegistry.register("article.save", async payload => {
-//   try {
-//     const article = await articleRepository.updateArticle(
-//       payload.articleId,
-//       payload.updates
-//     );
-
-//     articleService.updateArticle(article);
-
-//     system.eventBus.emit("socketFeedback", {
-//       text: "Article saved successfully! ✅"
-//     });
-//   } catch (err) {
-//     console.error(err);
-//   }
-// });
-
-// commandRegistry.register('report.save', (payload) => {
-//   console.log('Report save command received with payload:', payload);
-//   // Simulate save operation
-//   setTimeout(() => {
-//     system.eventBus.emit('socketFeedback', {
-//       text: 'Report saved successfully! ✅',
-//       position: { x: 100, y: 50 },
-//       duration: 2200
-//     });
-//   }, 1000);
-// });
-
-// // Register LOGIN command for login screen
-// commandRegistry.register('LOGIN', (payload = {}) => {
-//   // Find the login screen's rootNode and extract input values
-//   const loginScreen = context.uiState?.currentScreen;
-//   const rootNode = loginScreen?.rootNode;
-//   console.log('[DEBUG] LOGIN rootNode:', rootNode);
-//   const usernameNode = rootNode?.findById?.("login-username");
-//   const passwordNode = rootNode?.findById?.("login-password");
-//   console.log('[DEBUG] usernameNode:', usernameNode);
-//   const username = usernameNode?.getValue?.() || '';
-//   const password = passwordNode?.getValue?.() || '';
-//   console.log('[DEBUG] LOGIN command executed', { username, password });
-//   if (!username || !password) {
-//     loginScreen?.showError?.('Enter username and password');
-//     return;
-//   }
-//   socket.emit('loginUser', { username, password });
-//   socket.once('loginUserResponse', (resp) => {
-//     console.log('[DEBUG] loginUserResponse', resp);
-//     if (resp.success && resp.token) {
-//       localStorage.setItem('sessionToken', resp.token);
-//       localStorage.setItem('username', username);
-//       // Show dashboard after login
-//       runMainApp();
-//     } else {
-//       // Find login screen and show error
-//       loginScreen?.showError?.(resp.error || 'Login failed');
-//     }
-//   });
-// });
-
-//   system.eventBus.on('socketFeedback', ({ text, position, duration }) => {
-//     console.log('Showing message:', text, position, duration);
-//     showToast(text, duration);
-//   });
-
-
-//   system.eventBus.on('formResultsUpdated', () => {
-//     context.pipeline.invalidate();
-//   });
 
 function resolveResultsTableName(form) {
   const explicitTable = typeof form?.resultsTable === 'string' ? form.resultsTable.trim() : '';

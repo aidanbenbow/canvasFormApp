@@ -11,12 +11,14 @@ import { compileUIManifest } from "./uiManifestCompiler.js";
 
 
 export class FormViewScreen extends BaseScreen {
-  constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit, results, formId }) {
+  constructor({ context, dispatcher, eventBusManager, store, factories, commandRegistry, onSubmit, results, formId, router }) {
     super({ id: "form-view", context, dispatcher, eventBusManager });
     this.context = context;
     this.store = store;
-    this.formId = formId ?? this.store.getActiveForm()?.id ?? null;
-    this.formStructure = this.store.getActiveForm()?.formStructure || {};
+    this.router = router || this.context?.screenRouter;
+    const activeForm = this.store.getActiveForm?.() || null;
+    this.formId = formId ?? activeForm?.formId ?? activeForm?.id ?? null;
+    this.formStructure = activeForm?.formStructure || activeForm?.fields || {};
     this.fields = normalizeFields(this.formStructure);
     this.commandRegistry = commandRegistry;
     this.captureBindings = new WeakMap();
@@ -26,12 +28,18 @@ export class FormViewScreen extends BaseScreen {
       getFieldById: (fieldId) => this.getFieldById(fieldId)
     });
     this.saveBrightnessCommand = `${this.id}.saveBrightness`;
+    this.closeCommand = `${this.id}.close`;
     this.commandRegistry.register(this.saveBrightnessCommand, ({ fieldId } = {}) => {
       this.photoPreviewController.commitBrightness(fieldId);
     });
 
+    this.commandRegistry.register(this.closeCommand, () => {
+      this.router?.pop?.();
+    });
+
     this.manifest = buildViewFormManifest({
       fields: this.fields,
+      closeCommand: this.closeCommand,
       shouldAddCopyButton: (field) => this.shouldAddCopyButton(field),
       ensureCopyCommand: (fieldId) => this.ensureCopyCommand(fieldId),
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
@@ -40,7 +48,9 @@ export class FormViewScreen extends BaseScreen {
     });
     this.factories = factories;
     this.onSubmit = onSubmit;
-    this.results = results ?? (this.formId ? this.store.getFormResults(this.formId) : []);
+    this.results = Array.isArray(results)
+      ? results
+      : (this.formId ? this.store.getFormResults(this.formId) : []);
   }
 
   getPhotoSource(field) {
@@ -66,7 +76,9 @@ export class FormViewScreen extends BaseScreen {
 
   createRoot() {
     this.manifest.regions.formContainer.viewport = getResponsiveViewport();
-    const effectiveResults = this.results ?? (this.formId ? this.store.getFormResults(this.formId) : []);
+    const effectiveResults = Array.isArray(this.results)
+      ? this.results
+      : (this.formId ? this.store.getFormResults(this.formId) : []);
     const { rootNode, regions } = compileUIManifest(
       this.manifest,
       this.factories,
@@ -103,7 +115,8 @@ export class FormViewScreen extends BaseScreen {
   }
 
   onExit() {
-    // If you later bind store subscriptions here, clean them up.
+    this.commandRegistry?.unregister?.(this.saveBrightnessCommand);
+    this.commandRegistry?.unregister?.(this.closeCommand);
   }
 
   bindPhotoPreviewHandlers() {

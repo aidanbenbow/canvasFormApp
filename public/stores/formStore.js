@@ -15,6 +15,9 @@ export class FormStore {
     this.eventBus = eventBus;
   }
 
+  getFormResults(formId) {
+    return this.state.results[formId] || [];
+  }
 
   getState() {
     return this.state;

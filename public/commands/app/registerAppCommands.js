@@ -3,6 +3,7 @@
 import { formRepository } from "../../repositories/formRepository.js";
 import { formResultsRepository } from "../../repositories/formResultsRepository.js";
 import { articleRepository } from "../../repositories/articleRepository.js";
+import { ROUTES } from "../../routes/routeNames.js";
 import { formService } from "../../services/formservice.js";
 
 export function registerAppCommands(commandRegistry, context, { screenRouter } = {}) {
@@ -23,7 +24,7 @@ export function registerAppCommands(commandRegistry, context, { screenRouter } =
       formService.setResults(f.formId, results || []);
     }
 
-    router.replace("dashboard");
+    router.replace(ROUTES.dashboard);
   });
 
 
@@ -40,7 +41,7 @@ export function registerAppCommands(commandRegistry, context, { screenRouter } =
     formService.setResults(formId, results || []);
     formService.setActiveForm(formId);
 
-    router.replace("formView", { formId });
+    router.replace(ROUTES.formView, { formId });
   });
 
 
@@ -51,7 +52,7 @@ export function registerAppCommands(commandRegistry, context, { screenRouter } =
     const article = await articleRepository.fetchArticleById(articleId);
 
     router.replace(
-      mode === "edit" ? "formEdit" : "formView",
+      mode === "edit" ? ROUTES.formEdit : ROUTES.formView,
       { article, mode }
     );
   });

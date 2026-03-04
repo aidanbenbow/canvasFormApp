@@ -1,11 +1,5 @@
-import { articleViewScreen } from "../components/articleView.js";
-import { CreateForm } from "../components/createForm.js";
-import { DashBoardScreen } from "../components/dashBoard.js";
-import { EditForm } from "../components/editForm.js";
-import { UIFormResults } from "../components/formResults.js";
-import { FormViewScreen } from "../components/viewForm.js";
-
 import { ACTIONS } from "../events/actions.js";
+import { ROUTES } from "../routes/routeNames.js";
 
 import { formService } from "../services/formservice.js";
 
@@ -44,35 +38,16 @@ export function wireSystemEvents(system, context, router, factories, commandRegi
     }
 
     formService.setForms(forms);
-
-    const dash = new DashBoardScreen({
-      context,
-      dispatcher,
-      eventBusManager: bus,
-      store: storeRef,
-      factories,
-      commandRegistry
-    });
-
-    router.replace(dash);
+    router.replace(ROUTES.dashboard);
   }, "wiring");
 
   // VIEW FORM
   dispatcher.on(ACTIONS.FORM.VIEW, (form) => {
     formService.setActiveForm(form.formId);
-
-    const view = new FormViewScreen({
-      context,
-      dispatcher,
-      eventBusManager: bus,
-      store: storeRef,
-      factories,
-      commandRegistry,
+    router.push(ROUTES.formView, {
       formId: form.formId,
       results: storeRef.getFormResults(form.formId)
     });
-
-    router.push(view);
   }, "wiring");
 
   // ACTIVE FORM
@@ -84,33 +59,15 @@ export function wireSystemEvents(system, context, router, factories, commandRegi
 
   // VIEW ARTICLE
   dispatcher.on(ACTIONS.ARTICLE.VIEW, (article) => {
-    const view = new articleViewScreen({
-      context,
-      dispatcher,
-      eventBusManager: bus,
-      store: storeRef,
-      factories,
-      commandRegistry,
-      article
-    });
-
-    router.push(view);
+    router.push(ROUTES.articleView, { article });
   }, "wiring");
 
   // EDIT ARTICLE
   dispatcher.on(ACTIONS.ARTICLE.EDIT, (article) => {
-    const editor = new articleViewScreen({
-      context,
-      dispatcher,
-      eventBusManager: bus,
-      store: storeRef,
-      factories,
-      commandRegistry,
+    router.push(ROUTES.articleEdit, {
       article,
       mode: "edit"
     });
-
-    router.push(editor);
   }, "wiring");
 
   // FORM RESULTS
@@ -118,52 +75,27 @@ export function wireSystemEvents(system, context, router, factories, commandRegi
     formService.setActiveForm(form.formId);
 
     const results = storeRef.getFormResults(form.formId);
-
-    const resultView = new UIFormResults({
+    router.push(ROUTES.formResults, {
       id: "formResultsScreen",
-      context,
-      dispatcher,
-      eventBusManager: bus,
-      store: storeRef,
-      factories,
-      commandRegistry,
       router,
       results
     });
-
-    router.push(resultView);
   }, "wiring");
 
   // CREATE FORM
   dispatcher.on(ACTIONS.FORM.CREATE, () => {
-    const creator = new CreateForm({
-      id: "createFormScreen",
-      context,
-      dispatcher,
-      eventBusManager: bus,
-      store: storeRef,
-      factories,
-      commandRegistry
+    router.push(ROUTES.formCreate, {
+      id: "createFormScreen"
     });
-
-    router.push(creator);
   }, "wiring");
 
   // EDIT FORM
   dispatcher.on(ACTIONS.FORM.EDIT, (form) => {
     formService.setActiveForm(form.formId);
-
-    const editor = new EditForm({
+    router.push(ROUTES.formEdit, {
       id: "editFormScreen",
-      context,
-      dispatcher,
-      eventBusManager: bus,
-      store: storeRef,
-      factories,
-      commandRegistry
+      formId: form.formId
     });
-
-    router.push(editor);
   }, "wiring");
 
   // DELETE FORM

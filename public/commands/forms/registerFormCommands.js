@@ -69,4 +69,17 @@ export function registerFormCommands(commandRegistry, context, store, formServic
     context.dispatcher.dispatch(ACTIONS.DROPDOWN.HIDE);
     context.pipeline.invalidate();
   });
+
+  commandRegistry.register("form.update", async (payload) => {
+    const activeForm = resolveActiveForm(payload);
+    if (!activeForm) return;
+
+    const formId = activeForm.formId || activeForm.id;
+    if (!formId) return;
+    await formRepository.updateForm(formId, payload.fields);
+    formService.updateForm(formId, payload.fields);
+    showToast?.("Form updated", 2500);
+    context.pipeline.invalidate();
+  });
+
 }

@@ -55,7 +55,7 @@ console.log('Root Node:', rootNode);
 
 function preprocessManifest(manifest, results) {
   const clone = structuredClone(manifest);
-  const beneficiaries = Array.isArray(results) ? results : [];
+  const beneficiaries = toBeneficiaryArray(results);
   beneficiaries.sort((a, b) => {
     const nameA = (a?.name ?? "").toString();
     const nameB = (b?.name ?? "").toString();
@@ -119,6 +119,24 @@ function preprocessManifest(manifest, results) {
 
   return clone;
 }
+
+function toBeneficiaryArray(results) {
+  if (Array.isArray(results)) return results;
+  if (!results || typeof results !== "object") return [];
+
+  const directCollections = [results.results, results.items, results.data, results.rows];
+  for (const collection of directCollections) {
+    if (Array.isArray(collection)) return collection;
+  }
+
+  const values = Object.values(results);
+  for (const value of values) {
+    if (Array.isArray(value)) return value;
+  }
+
+  return [];
+}
+
 export function walkDefs(manifest, visitor) {
   if (!manifest?.regions) return;
 
