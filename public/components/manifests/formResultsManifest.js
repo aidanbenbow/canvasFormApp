@@ -48,12 +48,8 @@ export function buildResultsManifest({ form, closeCommand, rows }) {
   });
 }
 
-export function buildResultRows(results = [], form = null, { getArticleOpenCommand, getArticleEditCommand } = {}) {
+export function buildDefaultResultRows(results = [], form = null) {
   const normalizedResults = Array.isArray(results) ? results : [];
-
-  if (String(form?.resultsTable || '').trim().toLowerCase() === 'dorcasusers') {
-    return buildArticleTitleRows(normalizedResults, { getArticleOpenCommand, getArticleEditCommand });
-  }
 
   if (!normalizedResults.length) {
     return [
@@ -86,104 +82,6 @@ export function buildResultRows(results = [], form = null, { getArticleOpenComma
   });
 
   return rows;
-}
-
-function buildArticleTitleRows(results = [], { getArticleOpenCommand, getArticleEditCommand } = {}) {
-  const normalizedResults = Array.isArray(results) ? results : [];
-
-  if (!normalizedResults.length) {
-    return [
-      textNode({
-        id: 'results-empty-articles',
-        text: 'No articles found.',
-        style: { font: '20px sans-serif', color: '#6b7280' }
-      })
-    ];
-  }
-
-  const rows = [
-    textNode({
-      id: 'results-articles-count',
-      text: `Total articles: ${normalizedResults.length}`,
-      style: { font: '18px sans-serif', color: '#4b5563' }
-    })
-  ];
-
-  normalizedResults.forEach((article, index) => {
-    const openCommand =
-      typeof getArticleOpenCommand === 'function'
-        ? getArticleOpenCommand(article, index)
-        : null;
-    const editCommand =
-      typeof getArticleEditCommand === 'function'
-        ? getArticleEditCommand(article, index)
-        : null;
-
-    if (!openCommand) {
-      rows.push(
-        textNode({
-          id: `article-title-${index}`,
-          text: `${index + 1}. ${resolveArticleTitle(article, index)}`,
-          style: { font: '18px sans-serif', color: '#2563eb' }
-        })
-      );
-      return;
-    }
-
-    rows.push(
-      buttonNode({
-        id: `article-title-${index}`,
-        label: `${index + 1}. ${resolveArticleTitle(article, index)}`,
-        action: openCommand,
-        style: {
-          fillWidth: false,
-          font: '18px sans-serif',
-          color: '#2563eb',
-          paddingX: 0,
-          paddingY: 4
-        },
-        skipCollect: true,
-        skipClear: true
-      })
-    );
-
-    if (editCommand) {
-      rows.push(
-        buttonNode({
-          id: `article-edit-${index}`,
-          label: `Edit ${index + 1}`,
-          action: editCommand,
-          style: {
-            fillWidth: false,
-            font: '16px sans-serif',
-            color: '#4b5563',
-            paddingX: 0,
-            paddingY: 2
-          },
-          skipCollect: true,
-          skipClear: true
-        })
-      );
-    }
-  });
-
-  return rows;
-}
-
-function resolveArticleTitle(article, index) {
-  const candidates = [
-    article?.title,
-    article?.headline,
-    article?.name,
-    article?.userId
-  ];
-
-  for (const value of candidates) {
-    const normalized = String(value || '').trim();
-    if (normalized) return normalized;
-  }
-
-  return `Untitled article ${index + 1}`;
 }
 
 function buildResultBlockText(result, index) {
