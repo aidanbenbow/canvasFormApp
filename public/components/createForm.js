@@ -70,8 +70,6 @@ export class CreateForm extends BaseScreen {
         }),
       form
     });
-
-    this.engine.registerCommands();
   }
 
   createRoot() {

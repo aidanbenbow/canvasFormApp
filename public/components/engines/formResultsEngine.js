@@ -2,8 +2,10 @@ import { compileUIManifest } from '../uiManifestCompiler.js';
 import { buildDefaultResultRows, buildResultsManifest } from '../manifests/formResultsManifest.js';
 import { dorcasArticleBehavior, noopArticleBehavior } from './behaviors/articleBehavior.js';
 import { tableAwareResultRowsBehavior } from './behaviors/resultRowsBehavior.js';
+import { CommandLifecycleFeature } from './features/commandLifecycleFeature.js';
+import { BaseScreenEngine } from './baseScreenEngine.js';
 
-export class FormResultsEngine {
+export class FormResultsEngine extends BaseScreenEngine {
   constructor({
     id = 'formResults',
     context,
@@ -15,8 +17,7 @@ export class FormResultsEngine {
     articleBehavior,
     resultRowsBehavior
   }) {
-    this.id = id;
-    this.context = context;
+    super({ id, context });
     this.store = store;
     this.factories = factories;
     this.commandRegistry = commandRegistry;
@@ -30,17 +31,28 @@ export class FormResultsEngine {
 
     this.closeCommand = `${this.id}.close`;
     this.openArticleCommand = `${this.id}.openArticle`;
+
+    this.commandLifecycleFeature = new CommandLifecycleFeature({
+      onAttach: () => {
+        this.commandRegistry.register(this.closeCommand, () => {
+          this.router?.pop?.();
+        });
+
+        if (this.articleBehavior?.shouldHandle?.(this.form)) {
+          this.articleBehavior.registerCommands(this, this.results);
+        }
+      },
+      onDetach: () => {
+        this.commandRegistry?.unregister?.(this.closeCommand);
+        this.articleBehavior?.unregisterCommands?.(this);
+      }
+    });
+
+    this.modules = [this.commandLifecycleFeature];
+    this.lifecycleModules = [this.commandLifecycleFeature];
   }
 
   mount() {
-    this.commandRegistry.register(this.closeCommand, () => {
-      this.router?.pop?.();
-    });
-
-    if (this.articleBehavior?.shouldHandle?.(this.form)) {
-      this.articleBehavior.registerCommands(this, this.results);
-    }
-
     const manifest = buildResultsManifest({
       form: this.form,
       closeCommand: this.closeCommand,
@@ -59,11 +71,6 @@ export class FormResultsEngine {
     this.rootNode = rootNode;
     this.regions = regions;
 
-    return rootNode;
-  }
-
-  destroy() {
-    this.commandRegistry?.unregister?.(this.closeCommand);
-    this.articleBehavior?.unregisterCommands?.(this);
+    return super.mount();
   }
 }

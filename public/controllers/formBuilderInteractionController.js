@@ -8,8 +8,7 @@ export class FormBuilderInteractionController {
     getDragHandlePresentation,
     isSmallScreen,
     stopActiveEditing,
-    refreshFormContainer,
-    onPhotoPreviewSelected
+    refreshFormContainer
   }) {
     this.context = context;
     this.editorState = editorState;
@@ -20,7 +19,6 @@ export class FormBuilderInteractionController {
     this.isSmallScreen = isSmallScreen;
     this.stopActiveEditing = stopActiveEditing;
     this.refreshFormContainer = refreshFormContainer;
-    this.onPhotoPreviewSelected = onPhotoPreviewSelected;
 
     this.editorStateSnapshot = this.editorState?.getSnapshot?.() || {
       mode: 'create',
@@ -74,14 +72,7 @@ export class FormBuilderInteractionController {
         });
         if (!fieldId) return false;
 
-        const targetId = event?.target?.id;
-        const isPhotoPreviewNode =
-          typeof targetId === 'string' && targetId.startsWith('photo-preview-');
-
         this.setSelectedField(fieldId);
-        if (isPhotoPreviewNode) {
-          this.onPhotoPreviewSelected?.(fieldId);
-        }
         return false;
       };
 
