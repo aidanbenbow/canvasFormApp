@@ -17,6 +17,7 @@ import { registerAuthHandlers } from "./config/socket/authHandlers.js";
 import { registerFormHandlers } from "./config/socket/formHandlers.js";
 import { registerFormResultsHandlers } from "./config/socket/formResultsHandlers.js";
 import { registerArticleHandlers } from "./config/socket/articleHandlers.js";
+import { registerReportHandlers } from "./config/socket/reportHandlers.js";
 import { docClient } from "./config/db/dynamoClient.js";
 import { formRepository } from "./config/repos/formRepo.js";
 
@@ -44,6 +45,7 @@ io.on("connection", (socket) => {
   registerFormHandlers(io, socket);
   registerFormResultsHandlers(io, socket);
   registerArticleHandlers(io, socket);
+  registerReportHandlers(io, socket);
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
