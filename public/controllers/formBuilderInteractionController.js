@@ -1,3 +1,5 @@
+import { EventCapturePipeline } from '../events/eventCapturePipeline.js';
+
 export class FormBuilderInteractionController {
   constructor({
     context,
@@ -33,7 +35,8 @@ export class FormBuilderInteractionController {
     this.dragHandleNodes = new Map();
     this.fieldNodes = new Map();
     this.fieldBaseStyles = new Map();
-    this.containerCaptureBindings = new WeakMap();
+    this.selectionCaptureDisposers = new WeakMap();
+    this.activeSelectionDisposers = new Set();
   }
 
   getSelectedFieldId() {
@@ -50,42 +53,27 @@ export class FormBuilderInteractionController {
 
   bindSelectionHandlers(container) {
     if (!container) return;
+    if (this.selectionCaptureDisposers.has(container)) return;
 
-    let captureBinding = this.containerCaptureBindings.get(container);
-    if (!captureBinding) {
-      captureBinding = {
-        previousCapture: container.onEventCapture?.bind(container) ?? null,
-        wrappedCapture: null
-      };
+    const pipeline = EventCapturePipeline.forContainer(container);
+    if (!pipeline) return;
 
-      captureBinding.wrappedCapture = (event) => {
-        const handledByPrevious = captureBinding.previousCapture?.(event);
-        if (handledByPrevious) return true;
+    const disposeCapture = pipeline.use((event) => {
+      const fieldId = this.resolveFieldIdFromNode?.(event.target, {
+        allowDeleteNode: true,
+        allowHandleNode: true
+      });
+      if (!fieldId) return false;
 
-        if (event.type !== 'mousedown' && event.type !== 'click') {
-          return false;
-        }
+      this.setSelectedField(fieldId);
+      return false;
+    }, {
+      types: ['mousedown', 'click'],
+      priority: 10
+    });
 
-        const fieldId = this.resolveFieldIdFromNode?.(event.target, {
-          allowDeleteNode: true,
-          allowHandleNode: true
-        });
-        if (!fieldId) return false;
-
-        this.setSelectedField(fieldId);
-        return false;
-      };
-
-      this.containerCaptureBindings.set(container, captureBinding);
-      container.onEventCapture = captureBinding.wrappedCapture;
-      return;
-    }
-
-    if (container.onEventCapture !== captureBinding.wrappedCapture) {
-      captureBinding.previousCapture = container.onEventCapture?.bind(container) ?? captureBinding.previousCapture;
-    }
-
-    container.onEventCapture = captureBinding.wrappedCapture;
+    this.selectionCaptureDisposers.set(container, disposeCapture);
+    this.activeSelectionDisposers.add(disposeCapture);
   }
 
   /**
@@ -113,6 +101,12 @@ export class FormBuilderInteractionController {
   }
 
   dispose() {
+    for (const disposeCapture of this.activeSelectionDisposers) {
+      disposeCapture?.();
+    }
+    this.activeSelectionDisposers.clear();
+    this.selectionCaptureDisposers = new WeakMap();
+
     this.unsubscribeEditorState?.();
     this.unsubscribeEditorState = null;
   }

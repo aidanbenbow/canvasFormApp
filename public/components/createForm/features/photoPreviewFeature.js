@@ -1,3 +1,5 @@
+import { EventCapturePipeline } from '../../../events/eventCapturePipeline.js';
+
 export class PhotoPreviewFeature {
   constructor({ getContainer, getFields, getFieldById, interactionController, photoAdjustmentFeature }) {
     this.getContainer = getContainer;
@@ -5,7 +7,7 @@ export class PhotoPreviewFeature {
     this.getFieldById = getFieldById;
     this.interactionController = interactionController;
     this.photoAdjustmentFeature = photoAdjustmentFeature;
-    this.captureBindings = new WeakMap();
+    this.captureDisposers = new WeakMap();
   }
 
   attach() {
@@ -14,51 +16,33 @@ export class PhotoPreviewFeature {
 
     const container = this.getContainer?.();
     if (!container) return;
+    if (this.captureDisposers.has(container)) return;
 
-    let captureBinding = this.captureBindings.get(container);
-    if (!captureBinding) {
-      captureBinding = {
-        previousCapture: container.onEventCapture?.bind(container) ?? null,
-        wrappedCapture: null
-      };
+    const pipeline = EventCapturePipeline.forContainer(container);
+    if (!pipeline) return;
 
-      captureBinding.wrappedCapture = (event) => {
-        const handledByPrevious = captureBinding.previousCapture?.(event);
-        if (handledByPrevious) return true;
+    const disposeCapture = pipeline.use((event) => {
+      const fieldId = this.resolvePhotoFieldIdFromNode(event.target);
+      if (!fieldId) return false;
 
-        if (event.type !== 'mousedown' && event.type !== 'click') {
-          return false;
-        }
+      this.interactionController?.setSelectedField?.(fieldId);
+      this.photoAdjustmentFeature?.onPhotoPreviewSelected?.(fieldId);
+      return false;
+    }, {
+      types: ['mousedown', 'click'],
+      priority: 20
+    });
 
-        const fieldId = this.resolvePhotoFieldIdFromNode(event.target);
-        if (!fieldId) return false;
-
-        this.interactionController?.setSelectedField?.(fieldId);
-        this.photoAdjustmentFeature?.onPhotoPreviewSelected?.(fieldId);
-        return false;
-      };
-
-      this.captureBindings.set(container, captureBinding);
-      container.onEventCapture = captureBinding.wrappedCapture;
-      return;
-    }
-
-    if (container.onEventCapture !== captureBinding.wrappedCapture) {
-      captureBinding.previousCapture = container.onEventCapture?.bind(container) ?? captureBinding.previousCapture;
-    }
-
-    container.onEventCapture = captureBinding.wrappedCapture;
+    this.captureDisposers.set(container, disposeCapture);
   }
 
   detach() {
     const container = this.getContainer?.();
     if (!container) return;
 
-    const captureBinding = this.captureBindings.get(container);
-    if (!captureBinding) return;
-
-    container.onEventCapture = captureBinding.previousCapture;
-    this.captureBindings.delete(container);
+    const disposeCapture = this.captureDisposers.get(container);
+    disposeCapture?.();
+    this.captureDisposers.delete(container);
   }
 
   resolvePhotoFieldIdFromNode(node) {

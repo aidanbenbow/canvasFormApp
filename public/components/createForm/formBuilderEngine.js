@@ -8,6 +8,7 @@ import {
   focusCreateFormFieldInputForEditing,
   stopCreateFormActiveEditing
 } from './createFormEditorInteraction.js';
+import { FORM_BUILDER_ENGINE_EVENTS } from './formBuilderEngineEvents.js';
 import { PhotoAdjustmentFeature } from './photoAdjustmentFeature.js';
 import { ReorderFeature } from './reorderFeature.js';
 import {
@@ -46,7 +47,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
     form,
     onEngineEvent
   }) {
-    super({ id, context });
+    super({ id, context, onEngineEvent });
     this.dispatcher = dispatcher;
     this.eventBusManager = eventBusManager;
     this.store = store;
@@ -67,13 +68,11 @@ export class FormBuilderEngine extends BaseScreenEngine {
 
     this.assertRequiredStrategies();
     this.onSubmit = onSubmit;
-    this.onEngineEvent = onEngineEvent;
-    this.eventListeners = new Map();
     this.plugins = [];
     this.editorState = new EditorState({ mode: form ? 'edit' : 'create' });
     this.mode = this.editorState.getMode();
     this.unsubscribeEditorState = this.editorState.subscribe((nextState, previousState, changedKeys) => {
-      this.emit('editor:state', {
+      this.emit(FORM_BUILDER_ENGINE_EVENTS.editorState, {
         nextState,
         previousState,
         changedKeys
@@ -133,6 +132,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.reorderFeature = new ReorderFeature({
       context: this.context,
       dragThreshold: 8,
+      getContainer: () => this.regions?.formContainer,
       editorState: this.editorState,
       getRootNode: () => this.rootNode,
       resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
@@ -183,29 +183,6 @@ export class FormBuilderEngine extends BaseScreenEngine {
       this.interactionBindingFeature,
       this.photoPreviewFeature
     ];
-  }
-
-  on(eventName, handler) {
-    if (!eventName || typeof handler !== 'function') return () => {};
-    const listeners = this.eventListeners.get(eventName) || new Set();
-    listeners.add(handler);
-    this.eventListeners.set(eventName, listeners);
-    return () => this.off(eventName, handler);
-  }
-
-  off(eventName, handler) {
-    const listeners = this.eventListeners.get(eventName);
-    if (!listeners) return;
-    listeners.delete(handler);
-    if (!listeners.size) this.eventListeners.delete(eventName);
-  }
-
-  emit(eventName, payload) {
-    const listeners = this.eventListeners.get(eventName);
-    if (!listeners?.size) return;
-    for (const handler of listeners) {
-      handler(payload);
-    }
   }
 
   assertRequiredStrategies() {
@@ -282,14 +259,10 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.commandLifecycleFeature.detach();
   }
 
-  emitEngineEvent(type, payload) {
-    this.onEngineEvent?.({ type, payload });
-  }
-
   requestSave() {
+    console.log("Save requested");
     const normalizedForm = this.modelAdapter.normalize();
-    this.emit('form:save', normalizedForm);
-    this.emitEngineEvent('saveRequested', { form: normalizedForm });
+    this.emit(FORM_BUILDER_ENGINE_EVENTS.saveRequested, { form: normalizedForm });
     const hasPersistenceAdapter = typeof this.persistenceAdapter?.onSave === 'function';
     this.persistenceAdapter?.onSave?.(normalizedForm, {
       mode: this.editorState.getMode(),
@@ -306,8 +279,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
 
   requestBrightnessPersist(fieldId) {
     const normalizedForm = this.modelAdapter.normalize();
-    this.emit('form:update', normalizedForm);
-    this.emitEngineEvent('brightnessPersistRequested', { fieldId, form: normalizedForm });
+    this.emit(FORM_BUILDER_ENGINE_EVENTS.brightnessPersistRequested, { fieldId, form: normalizedForm });
     const hasPersistenceAdapter = typeof this.persistenceAdapter?.onUpdate === 'function';
     this.persistenceAdapter?.onUpdate?.(normalizedForm, {
       mode: this.editorState.getMode(),

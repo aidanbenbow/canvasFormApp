@@ -1,4 +1,5 @@
 import { PhotoPreviewController } from '../../../controllers/photoPreviewController.js';
+import { EventCapturePipeline } from '../../../events/eventCapturePipeline.js';
 import { getPhotoSource, isPhotoLikeField } from '../../../utils/fieldGuards.js';
 import { InputNode } from '../../nodes/inputNode.js';
 
@@ -7,7 +8,7 @@ export class PhotoPreviewFeature {
     this.engine = engine;
     this.context = context;
     this.fields = fields;
-    this.captureBindings = new WeakMap();
+    this.captureDisposers = new WeakMap();
 
     this.controller = new PhotoPreviewController({
       context: this.context,
@@ -24,11 +25,9 @@ export class PhotoPreviewFeature {
     const container = this.engine?.regions?.formContainer;
     if (!container) return;
 
-    const captureBinding = this.captureBindings.get(container);
-    if (!captureBinding) return;
-
-    container.onEventCapture = captureBinding.previousCapture;
-    this.captureBindings.delete(container);
+    const disposeCapture = this.captureDisposers.get(container);
+    disposeCapture?.();
+    this.captureDisposers.delete(container);
   }
 
   isPhotoLikeField(field) {
@@ -60,40 +59,24 @@ export class PhotoPreviewFeature {
   bindPhotoPreviewSelectionHandlers() {
     const container = this.engine?.regions?.formContainer;
     if (!container) return;
+    if (this.captureDisposers.has(container)) return;
 
-    let captureBinding = this.captureBindings.get(container);
-    if (!captureBinding) {
-      captureBinding = {
-        previousCapture: container.onEventCapture?.bind(container) ?? null,
-        wrappedCapture: null
-      };
+    const pipeline = EventCapturePipeline.forContainer(container);
+    if (!pipeline) return;
 
-      captureBinding.wrappedCapture = (event) => {
-        const handledByPrevious = captureBinding.previousCapture?.(event);
-        if (handledByPrevious) return true;
+    const disposeCapture = pipeline.use((event) => {
+      const fieldId = this.resolvePhotoFieldIdFromNode(event.target);
+      if (!fieldId) return false;
 
-        if (event.type !== 'mousedown' && event.type !== 'click') {
-          return false;
-        }
+      this.controller.showBrightnessControl(fieldId);
+      this.focusFieldInputForEditing(fieldId);
+      return false;
+    }, {
+      types: ['mousedown', 'click'],
+      priority: 20
+    });
 
-        const fieldId = this.resolvePhotoFieldIdFromNode(event.target);
-        if (!fieldId) return false;
-
-        this.controller.showBrightnessControl(fieldId);
-        this.focusFieldInputForEditing(fieldId);
-        return false;
-      };
-
-      this.captureBindings.set(container, captureBinding);
-      container.onEventCapture = captureBinding.wrappedCapture;
-      return;
-    }
-
-    if (container.onEventCapture !== captureBinding.wrappedCapture) {
-      captureBinding.previousCapture = container.onEventCapture?.bind(container) ?? captureBinding.previousCapture;
-    }
-
-    container.onEventCapture = captureBinding.wrappedCapture;
+    this.captureDisposers.set(container, disposeCapture);
   }
 
   resolvePhotoFieldIdFromNode(node) {

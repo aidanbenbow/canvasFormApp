@@ -1,8 +1,10 @@
 import { SceneHitTestSystem } from '../events/sceneHitTestSystem.js';
+import { EventCapturePipeline } from '../events/eventCapturePipeline.js';
 
 export class FormReorderController {
-  constructor({ context, getRootNode, resolveFieldIdFromNode, onReorder, onPreviewTargetChange, onDragStateChange, dragThreshold = 8 }) {
+  constructor({ context, getContainer, getRootNode, resolveFieldIdFromNode, onReorder, onPreviewTargetChange, onDragStateChange, dragThreshold = 8 }) {
     this.context = context;
+    this.getContainer = getContainer;
     this.getRootNode = getRootNode;
     this.resolveFieldIdFromNode = resolveFieldIdFromNode;
     this.onReorder = onReorder;
@@ -38,6 +40,7 @@ export class FormReorderController {
 
     this.pointerDownAttached = false;
     this.dragListenersAttached = false;
+    this.captureDispose = null;
   }
 
   getCanvas() {
@@ -45,7 +48,20 @@ export class FormReorderController {
   }
 
   attach() {
-    if (this.pointerDownAttached) return;
+    if (this.captureDispose || this.pointerDownAttached) return;
+
+    const container = this.getContainer?.();
+    const eventCapturePipeline = EventCapturePipeline.forContainer(container);
+    if (eventCapturePipeline) {
+      this.captureDispose = eventCapturePipeline.use((sceneEvent) => {
+        return this.handleCapturePointerDown(sceneEvent);
+      }, {
+        types: ['mousedown'],
+        priority: 40
+      });
+      return;
+    }
+
     const canvas = this.getCanvas();
     if (!canvas) return;
     canvas.addEventListener('pointerdown', this.boundPointerDown, this.listenerOptions);
@@ -54,6 +70,9 @@ export class FormReorderController {
 
   detach() {
     this.detachDragListeners();
+
+    this.captureDispose?.();
+    this.captureDispose = null;
 
     if (!this.pointerDownAttached) {
       this.resetState();
@@ -67,6 +86,67 @@ export class FormReorderController {
 
     this.pointerDownAttached = false;
     this.resetState();
+  }
+
+  handleCapturePointerDown(sceneEvent) {
+    const originalEvent = sceneEvent?.originalEvent;
+    const clientPoint = this.getClientPointFromOriginalEvent(originalEvent);
+    if (!clientPoint) return false;
+
+    const sourceFieldId = this.getDragHandleFieldIdFromNode(sceneEvent?.target);
+    if (!sourceFieldId) return false;
+
+    this.startPendingDrag({
+      sourceFieldId,
+      clientX: clientPoint.clientX,
+      clientY: clientPoint.clientY,
+      pointerId: originalEvent?.pointerId ?? null,
+      pointerType: originalEvent?.pointerType || 'mouse'
+    });
+
+    originalEvent?.preventDefault?.();
+    sceneEvent?.stopPropagation?.();
+    return true;
+  }
+
+  getClientPointFromOriginalEvent(originalEvent) {
+    if (!originalEvent) return null;
+
+    if (Number.isFinite(originalEvent.clientX) && Number.isFinite(originalEvent.clientY)) {
+      return { clientX: originalEvent.clientX, clientY: originalEvent.clientY };
+    }
+
+    const touch = originalEvent.touches?.[0] || originalEvent.changedTouches?.[0];
+    if (touch && Number.isFinite(touch.clientX) && Number.isFinite(touch.clientY)) {
+      return { clientX: touch.clientX, clientY: touch.clientY };
+    }
+
+    return null;
+  }
+
+  startPendingDrag({ sourceFieldId, clientX, clientY, pointerId, pointerType = 'mouse' }) {
+    if (!sourceFieldId) return;
+
+    this.state = {
+      phase: 'pending',
+      startClientX: clientX,
+      startClientY: clientY,
+      lastPreviewClientX: clientX,
+      lastPreviewClientY: clientY,
+      previewFieldId: null,
+      sourceFieldId,
+      pointerId: pointerId ?? null
+    };
+    this.activePointerType = pointerType;
+
+    this.notifyDragState({
+      active: false,
+      phase: 'pending',
+      sourceFieldId,
+      pointerId: pointerId ?? null
+    });
+
+    this.attachDragListeners(pointerId ?? null);
   }
 
   attachDragListeners(pointerId) {
@@ -167,21 +247,13 @@ export class FormReorderController {
     const sourceFieldId = this.getDragHandleFieldIdAtClientPosition(event.clientX, event.clientY);
     if (!sourceFieldId) return;
 
-    this.state = {
-      phase: 'pending',
-      startClientX: event.clientX,
-      startClientY: event.clientY,
-      lastPreviewClientX: event.clientX,
-      lastPreviewClientY: event.clientY,
-      previewFieldId: null,
+    this.startPendingDrag({
       sourceFieldId,
-      pointerId: event.pointerId
-    };
-    this.activePointerType = event.pointerType || 'mouse';
-
-    this.notifyDragState({ active: false, phase: 'pending', sourceFieldId, pointerId: event.pointerId });
-
-    this.attachDragListeners(event.pointerId);
+      clientX: event.clientX,
+      clientY: event.clientY,
+      pointerId: event.pointerId,
+      pointerType: event.pointerType || 'mouse'
+    });
     event.preventDefault();
   }
 
@@ -298,7 +370,11 @@ export class FormReorderController {
 
   getDragHandleFieldIdAtClientPosition(clientX, clientY) {
     const hitNode = this.getHitNodeAtClientPosition(clientX, clientY);
-    let current = hitNode;
+    return this.getDragHandleFieldIdFromNode(hitNode);
+  }
+
+  getDragHandleFieldIdFromNode(node) {
+    let current = node;
 
     while (current) {
       const id = current.id;

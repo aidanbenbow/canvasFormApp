@@ -4,6 +4,7 @@ export class ReorderFeature {
   constructor({
     context,
     dragThreshold = 8,
+    getContainer,
     editorState,
     getRootNode,
     resolveFieldIdFromNode,
@@ -20,6 +21,7 @@ export class ReorderFeature {
 
     this.controller = new FormReorderController({
       context,
+      getContainer,
       dragThreshold,
       getRootNode,
       resolveFieldIdFromNode,
