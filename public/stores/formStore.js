@@ -8,7 +8,7 @@ export class FormStore {
       activeFormId: null,
       results: {}       // map: formId → array of results
     });
-
+console.log("FormStore initialized with state:", this.state);
     this.listeners = [];
   }
    connect(eventBus) {

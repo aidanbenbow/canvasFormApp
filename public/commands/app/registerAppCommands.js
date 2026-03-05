@@ -20,8 +20,13 @@ export function registerAppCommands(commandRegistry, context, { screenRouter } =
     formService.setForms(forms);
 
     for (const f of forms) {
-      const results = await formResultsRepository.fetchResults(f.formId);
-      formService.setResults(f.formId, results || []);
+      if(f.tableName){
+        const results = await formResultsRepository.fetchAllResults(f.tableName);
+        formService.setResults(f.formId, results || []);
+      }else{
+        const results = await formResultsRepository.fetchResults(f.formId);
+        formService.setResults(f.formId, results || []);
+      }
     }
 
     router.replace(ROUTES.dashboard);

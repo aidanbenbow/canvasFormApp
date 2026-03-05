@@ -19,6 +19,7 @@ this.context = context;
     this.value = value;
     this.placeholder = placeholder;
     this.options = options;
+    console.log("DropdownInputNode options:", options);
     this.filteredOptions = [...this.options];
     this.menuNode = null; // reference to dropdown menu instance
 
