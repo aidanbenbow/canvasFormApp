@@ -25,7 +25,7 @@ export const ACTIONS = {
         SET_LIST: 'form:set_list',
         RESULTS_SET: 'form:results_set',
         ADD_RESULTS: 'form:add_results',
-        UPDATE: 'form:update',
+        UPDATE: 'form.update',
         ADD: 'form:add',
     },
     STORE: {

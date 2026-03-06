@@ -1,8 +1,8 @@
 import { BaseEngine } from './baseEngine.js';
 
 export class BaseScreenEngine extends BaseEngine {
-  constructor({ id, context } = {}) {
-    super({ id, context });
+  constructor({ id, context, onEngineEvent } = {}) {
+    super({ id, context, onEngineEvent });
     this.rootNode = null;
     this.regions = null;
   }

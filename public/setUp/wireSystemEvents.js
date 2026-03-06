@@ -70,6 +70,15 @@ export function wireSystemEvents(system, context, router, factories, commandRegi
     });
   }, "wiring");
 
+  dispatcher.on(ACTIONS.FORM.UPDATE, (form) => {
+  const formId = form?.formId || form?.id;
+  if (!formId) return;
+
+  formService.updateForm(formId, form);
+
+  showToast?.(`Form "${form.label || formId}" updated.`);
+}, "wiring");
+
   // FORM RESULTS
   dispatcher.on(ACTIONS.FORM.RESULTS, (form) => {
     formService.setActiveForm(form.formId);

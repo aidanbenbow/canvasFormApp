@@ -5,6 +5,7 @@ export class BaseEngine {
     this.id = id;
     this.context = context;
     this.onEngineEvent = onEngineEvent;
+    console.log(this.onEngineEvent);
     this.modules = [];
     this.lifecycleModules = [];
     this.eventListeners = new Map();

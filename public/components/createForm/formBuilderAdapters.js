@@ -23,6 +23,8 @@ export function createCommandRegistryAdapter(commandRegistry) {
   return {
     getCommandRegistry: () => commandRegistry,
     registerCommands({ commands, handlers }) {
+      console.log("Registering create form commands with handlers:", handlers);
+      console.log(commands);
       registerCreateFormCommands({
         commandRegistry,
         commands,

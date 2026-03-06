@@ -1,5 +1,5 @@
 export const FORM_BUILDER_ENGINE_EVENTS = Object.freeze({
   editorState: 'editor:state',
-  saveRequested: 'saveRequested',
+  saveRequested: 'form.update',
   brightnessPersistRequested: 'brightnessPersistRequested'
 });
