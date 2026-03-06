@@ -29,9 +29,31 @@ export const formService = {
     storeInstance.apply(nextState);
   },
 
-  updateForm(form) {
+  updateForm(formOrId, updates) {
+    const isIdCall = typeof formOrId === 'string';
+    const formId = isIdCall
+      ? formOrId
+      : (formOrId?.formId || formOrId?.id);
+
+    if (!formId) return;
+
     const prev = storeInstance.getState();
-    const nextForms = { ...prev.forms, [form.formId]: form };
+    const existing = prev.forms?.[formId] || {};
+    const incoming = isIdCall
+      ? (updates || {})
+      : (formOrId || {});
+
+    const nextForm = {
+      ...existing,
+      ...incoming,
+      formId
+    };
+
+    if (existing.id && !nextForm.id) {
+      nextForm.id = existing.id;
+    }
+
+    const nextForms = { ...prev.forms, [formId]: nextForm };
 
     const nextState = {
       ...prev,

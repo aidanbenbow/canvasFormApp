@@ -82,4 +82,24 @@ export function registerFormCommands(commandRegistry, context, store, formServic
     context.pipeline.invalidate();
   });
 
+  commandRegistry.register("form.state.setList", (payload = {}) => {
+    const forms = Array.isArray(payload)
+      ? payload
+      : (Array.isArray(payload?.forms) ? payload.forms : []);
+    formService.setForms(forms);
+  });
+
+  commandRegistry.register("form.state.setActive", (payload = {}) => {
+    const formId = payload?.formId || payload?.id;
+    if (!formId) return;
+    formService.setActiveForm(formId);
+  });
+
+  commandRegistry.register("form.state.update", (payload = {}) => {
+    const form = payload?.form || payload;
+    const formId = form?.formId || form?.id || payload?.formId || payload?.id;
+    if (!formId) return;
+    formService.updateForm(formId, form);
+  });
+
 }
