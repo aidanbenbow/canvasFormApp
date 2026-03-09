@@ -5,7 +5,7 @@ import { rectHitTestStrategy } from "../../strategies/rectHitTest.js";
 import { SceneNode } from "./sceneNode.js";
 
 export class TextNode extends SceneNode {
-    constructor({ id, text, runs = null, editable = false, onChange, style = {} }) {
+  constructor({ id, text, runs = null, editable = false, onChange, style = {}, metadata = null }) {
       super({
         id,
         layoutStrategy: layoutRegistry["text"]() || new TextLayoutStrategy(),
@@ -15,6 +15,7 @@ export class TextNode extends SceneNode {
   
       this.text = text;
       this.runs = runs;
+      this.metadata = metadata;
       this.editable = editable;
       this.onChange = onChange;
   

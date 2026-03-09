@@ -1,9 +1,19 @@
 import { buttonNode, textNode } from '../../manifests/manifestDsl.js';
-import { buildDefaultResultRows } from '../../manifests/formResultsManifest.js';
+import { buildDefaultResultRows, buildDiffAwareResultRows } from '../../manifests/formResultsManifest.js';
 
 export const defaultResultRowsBehavior = {
   buildRows(engine, results, form) {
-    return buildDefaultResultRows(results, form);
+    return buildDefaultResultRows(results, form, {
+      openResultCommand: engine?.openResultCommand
+    });
+  }
+};
+
+export const diffAwareResultRowsBehavior = {
+  buildRows(engine, results, form) {
+    return buildDiffAwareResultRows(results, form, {
+      openResultCommand: engine?.openResultCommand
+    });
   }
 };
 
@@ -97,7 +107,7 @@ export const tableAwareResultRowsBehavior = {
       return dorcasResultRowsBehavior.buildRows(engine, results, form);
     }
 
-    return defaultResultRowsBehavior.buildRows(engine, results, form);
+    return diffAwareResultRowsBehavior.buildRows(engine, results, form);
   }
 };
 

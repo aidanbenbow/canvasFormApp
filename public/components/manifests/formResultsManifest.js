@@ -1,6 +1,12 @@
 import { buttonNode, containerRegion, defineManifest, textNode } from './manifestDsl.js';
 
 const toolbarButtonStyle = { fillWidth: false, font: '20px sans-serif', paddingX: 14, paddingY: 8 };
+const diffStatusStyles = {
+  unchanged: { color: '#6b7280', label: ' (unchanged)' },
+  changed: { color: '#ca8a04', label: ' (changed)' },
+  added: { color: '#16a34a', label: ' (+ added)' },
+  removed: { color: '#dc2626', label: ' (- removed)' }
+};
 
 export function buildResultsManifest({ form, closeCommand, rows }) {
   const title = `Results: ${form?.label || 'Form'}`;
@@ -48,8 +54,13 @@ export function buildResultsManifest({ form, closeCommand, rows }) {
   });
 }
 
-export function buildDefaultResultRows(results = [], form = null) {
+export function buildDefaultResultRows(results = [], form = null, options = {}) {
+  return buildDiffAwareResultRows(results, form, options);
+}
+
+export function buildDiffAwareResultRows(results = [], form = null, options = {}) {
   const normalizedResults = Array.isArray(results) ? results : [];
+  const openResultCommand = options?.openResultCommand || null;
 
   if (!normalizedResults.length) {
     return [
@@ -72,37 +83,168 @@ export function buildDefaultResultRows(results = [], form = null) {
   );
 
   normalizedResults.forEach((result, index) => {
-    rows.push(
-      textNode({
-        id: `result-block-${index}`,
-        text: buildResultBlockText(result, index),
-        style: { font: '18px sans-serif', color: '#1f2937' }
-      })
-    );
+    const previousResult = index > 0 ? normalizedResults[index - 1] : null;
+    const resultId = resolveResultId(result, index);
+
+    if (openResultCommand) {
+      rows.push(
+        buttonNode({
+          id: `result-heading-${index}`,
+          label: buildResultHeadingText(result, index),
+          action: openResultCommand,
+          payload: { resultIndex: index, resultId },
+          style: {
+            fillWidth: false,
+            font: '18px sans-serif',
+            color: '#1f2937',
+            paddingX: 0,
+            paddingY: 2
+          },
+          skipCollect: true,
+          skipClear: true
+        })
+      );
+    } else {
+      rows.push(
+        textNode({
+          id: `result-heading-${index}`,
+          text: buildResultHeadingText(result, index),
+          style: { font: '18px sans-serif', color: '#1f2937' }
+        })
+      );
+    }
+
+    const fieldRows = buildDiffFieldRows(result, previousResult, index);
+    rows.push(...fieldRows);
   });
 
   return rows;
 }
 
-function buildResultBlockText(result, index) {
+function buildResultHeadingText(result, index) {
   const user = result?.user ? ` • ${result.user}` : '';
   const timestamp = formatTimestamp(result?.timestamp || result?.createdAt || null);
-  const heading = `#${index + 1}${timestamp ? ` • ${timestamp}` : ''}${user}`;
-  const inputEntries = Object.entries(extractInputMap(result));
+  return `#${index + 1}${timestamp ? ` • ${timestamp}` : ''}${user}`;
+}
 
-  if (!inputEntries.length) {
-    return `${heading}\n  (no input values)`;
+function buildDiffFieldRows(currentResult, previousResult, index) {
+  const currentInputs = extractInputMap(currentResult);
+  const previousInputs = extractInputMap(previousResult);
+  const entries = buildDiffEntries(currentInputs, previousInputs);
+
+  if (!entries.length) {
+    return [
+      textNode({
+        id: `result-empty-${index}`,
+        text: '  (no input values)',
+        style: { font: '18px sans-serif', color: '#6b7280' },
+        metadata: {
+          kind: 'result-field',
+          status: 'unchanged',
+          key: null,
+          hasValues: false,
+          resultIndex: index
+        }
+      })
+    ];
   }
 
-  const body = inputEntries
-    .map(([key, value]) => `  ${key}: ${formatValue(value)}`)
-    .join('\n');
+  return entries.map((entry) => buildDiffFieldNode(entry, index));
+}
 
-  return `${heading}\n${body}`;
+function buildDiffEntries(currentInputs, previousInputs) {
+  const keys = new Set([
+    ...Object.keys(previousInputs || {}),
+    ...Object.keys(currentInputs || {})
+  ]);
+
+  return [...keys]
+    .sort((left, right) => left.localeCompare(right))
+    .map((key) => {
+      const hasCurrent = Object.prototype.hasOwnProperty.call(currentInputs, key);
+      const hasPrevious = Object.prototype.hasOwnProperty.call(previousInputs, key);
+      const currentValue = hasCurrent ? currentInputs[key] : undefined;
+      const previousValue = hasPrevious ? previousInputs[key] : undefined;
+
+      let status = 'unchanged';
+      if (hasCurrent && !hasPrevious) {
+        status = 'added';
+      } else if (!hasCurrent && hasPrevious) {
+        status = 'removed';
+      } else if (!areValuesEqual(currentValue, previousValue)) {
+        status = 'changed';
+      }
+
+      return {
+        key,
+        status,
+        value: status === 'removed' ? previousValue : currentValue,
+        previousValue,
+        currentValue
+      };
+    });
+}
+
+function buildDiffFieldNode(entry, resultIndex) {
+  const statusStyle = diffStatusStyles[entry.status] || diffStatusStyles.unchanged;
+  const valueLabel = formatValue(entry.value);
+  const prefix = `  ${entry.key}: ${valueLabel}`;
+
+  return textNode({
+    id: `result-field-${resultIndex}-${sanitizeKey(entry.key)}`,
+    runs: [
+      { text: prefix, color: '#1f2937' },
+      { text: statusStyle.label, color: statusStyle.color }
+    ],
+    style: { font: '18px sans-serif', color: '#1f2937' },
+    metadata: {
+      kind: 'result-field',
+      status: entry.status,
+      key: entry.key,
+      previousValue: entry.previousValue,
+      currentValue: entry.currentValue,
+      resultIndex
+    }
+  });
+}
+
+function sanitizeKey(key) {
+  return String(key || 'field').replace(/[^a-zA-Z0-9_-]/g, '-');
+}
+
+function resolveResultId(result, index) {
+  const idCandidates = [
+    result?.id,
+    result?.resultId,
+    result?.submissionId,
+    result?.userId,
+    result?.pk
+  ];
+
+  for (const candidate of idCandidates) {
+    const normalized = String(candidate ?? '').trim();
+    if (normalized) return normalized;
+  }
+
+  return `result-${index}`;
+}
+
+function areValuesEqual(left, right) {
+  if (left === right) return true;
+
+  try {
+    return JSON.stringify(left) === JSON.stringify(right);
+  } catch {
+    return String(left) === String(right);
+  }
 }
 
 function extractInputMap(result) {
   if (!result || typeof result !== 'object') return {};
+
+  if (result.payload && typeof result.payload === 'object' && !Array.isArray(result.payload)) {
+    return result.payload;
+  }
 
   if (result.inputs && typeof result.inputs === 'object' && !Array.isArray(result.inputs)) {
     return result.inputs;

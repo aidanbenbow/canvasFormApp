@@ -38,6 +38,7 @@ import { screenRegistry } from "./registries/screenRegistry.js";
 import { DashBoardScreen } from "./components/dashBoard.js";
 import { FormViewScreen } from "./components/viewForm.js";
 import { UIFormResults } from "./components/formResults.js";
+import { FormResultEditorScreen } from "./components/formResultEditor.js";
 import { CreateForm } from "./components/createForm.js";
 import { EditForm } from "./components/editForm.js";
 import { articleViewScreen } from "./components/articleView.js";
@@ -128,6 +129,7 @@ function registerScreens() {
   screenRegistry.register(ROUTES.dashboard, DashBoardScreen);
   screenRegistry.register(ROUTES.formView, FormViewScreen);
   screenRegistry.register(ROUTES.formResults, UIFormResults);
+  screenRegistry.register(ROUTES.formResultEditor, FormResultEditorScreen);
   screenRegistry.register(ROUTES.formCreate, CreateForm);
   screenRegistry.register(ROUTES.formEdit, EditForm);
   screenRegistry.register(ROUTES.articleView, articleViewScreen);

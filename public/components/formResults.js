@@ -4,6 +4,7 @@ import { FormResultsEngine } from './engines/formResultsEngine.js';
 export class UIFormResults extends BaseScreen {
     constructor(deps) {
         super(deps);
+        console.log(deps);
         this.engine = new FormResultsEngine(deps);
     }
 

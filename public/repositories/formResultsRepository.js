@@ -30,5 +30,15 @@ export const formResultsRepository = {
         resp.success ? resolve(resp.data) : reject(resp.error);
       });
     });
+  },
+
+  updateResult({ formId, createdAt, payload }) {
+    return new Promise((resolve, reject) => {
+      socket.emit("formResults.update", { formId, createdAt, payload });
+
+      socket.once("formResults.updateResponse", (resp) => {
+        resp.success ? resolve(resp.data) : reject(resp.error);
+      });
+    });
   }
 };

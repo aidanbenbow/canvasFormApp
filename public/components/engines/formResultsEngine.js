@@ -4,6 +4,7 @@ import { dorcasArticleBehavior, noopArticleBehavior } from './behaviors/articleB
 import { tableAwareResultRowsBehavior } from './behaviors/resultRowsBehavior.js';
 import { CommandLifecycleFeature } from './features/commandLifecycleFeature.js';
 import { BaseScreenEngine } from './baseScreenEngine.js';
+import { ROUTES } from '../../routes/routeNames.js';
 
 export class FormResultsEngine extends BaseScreenEngine {
   constructor({
@@ -31,11 +32,30 @@ export class FormResultsEngine extends BaseScreenEngine {
 
     this.closeCommand = `${this.id}.close`;
     this.openArticleCommand = `${this.id}.openArticle`;
+    this.openResultCommand = `${this.id}.openResult`;
 
     this.commandLifecycleFeature = new CommandLifecycleFeature({
       onAttach: () => {
         this.commandRegistry.register(this.closeCommand, () => {
           this.router?.pop?.();
+        });
+
+        this.commandRegistry.register(this.openResultCommand, (payload = {}) => {
+          const resultIndex = Number(payload?.resultIndex);
+          const result = Number.isInteger(resultIndex) ? this.results?.[resultIndex] : null;
+
+          if (!result) {
+            return;
+          }
+
+          this.router?.push?.(ROUTES.formResultEditor, {
+            id: `formResultEditor-${resultIndex}`,
+            router: this.router,
+            form: this.form,
+            result,
+            resultIndex,
+            resultId: payload?.resultId
+          });
         });
 
         if (this.articleBehavior?.shouldHandle?.(this.form)) {
@@ -44,6 +64,7 @@ export class FormResultsEngine extends BaseScreenEngine {
       },
       onDetach: () => {
         this.commandRegistry?.unregister?.(this.closeCommand);
+        this.commandRegistry?.unregister?.(this.openResultCommand);
         this.articleBehavior?.unregisterCommands?.(this);
       }
     });
@@ -53,12 +74,20 @@ export class FormResultsEngine extends BaseScreenEngine {
   }
 
   mount() {
+    this.form = this.store.getActiveForm?.() || this.form;
+    const activeFormId = this.form?.formId || this.form?.id;
+    if (activeFormId) {
+      this.results = this.store.getFormResults(activeFormId);
+    }
+
     const manifest = buildResultsManifest({
       form: this.form,
       closeCommand: this.closeCommand,
       rows:
         this.resultRowsBehavior?.buildRows?.(this, this.results, this.form) ??
-        buildDefaultResultRows(this.results, this.form)
+        buildDefaultResultRows(this.results, this.form, {
+          openResultCommand: this.openResultCommand
+        })
     });
 
     const { rootNode, regions } = compileUIManifest(

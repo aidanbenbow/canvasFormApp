@@ -70,12 +70,13 @@ export function buttonNode({
   };
 }
 
-export function textNode({ id, text, runs, style } = {}) {
+export function textNode({ id, text, runs, style, metadata } = {}) {
   return {
     type: 'text',
     ...(id ? { id } : {}),
     ...(text !== undefined ? { text } : {}),
     ...(runs ? { runs } : {}),
-    ...(style ? { style } : {})
+    ...(style ? { style } : {}),
+    ...(metadata ? { metadata } : {})
   };
 }

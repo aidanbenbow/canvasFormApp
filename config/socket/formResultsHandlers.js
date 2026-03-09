@@ -29,4 +29,13 @@ export function registerFormResultsHandlers(io, socket) {
       socket.emit("formResults.saveResponse", { success: false, error: err.message });
     }
   });
+
+  socket.on("formResults.update", async ({ formId, createdAt, payload }) => {
+    try {
+      const updated = await formResultsRepository.updateResult({ formId, createdAt, payload });
+      socket.emit("formResults.updateResponse", { success: true, data: updated });
+    } catch (err) {
+      socket.emit("formResults.updateResponse", { success: false, error: err.message });
+    }
+  });
 }
