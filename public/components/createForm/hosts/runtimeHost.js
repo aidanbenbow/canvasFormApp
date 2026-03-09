@@ -19,7 +19,7 @@ export class RuntimeHost {
     getContainer,
     getFields,
     getFieldById,
-    resolveFieldIdFromNode,
+    fieldResolver,
     dragHandlePresentation,
     isPhotoLikeField,
     getPhotoSource,
@@ -31,6 +31,8 @@ export class RuntimeHost {
   } = {}) {
     this.context = context;
     this.getRootNode = getRootNode;
+    this.getFields = getFields;
+    this.fieldResolver = fieldResolver;
     this.featureRegistry = new FeatureRegistry();
 
     this.photoAdjustmentFeature = new PhotoAdjustmentFeature({
@@ -57,7 +59,7 @@ export class RuntimeHost {
       editorState,
       getRootNode,
       getFieldIds: () => getFields().map((field) => field.id),
-      resolveFieldIdFromNode,
+      resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
       getDragHandlePresentation: (fieldId, options) =>
         dragHandlePresentation({
           fieldId,
@@ -76,7 +78,7 @@ export class RuntimeHost {
       getContainer,
       getFields,
       getFieldById,
-      resolveFieldIdFromNode,
+      resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
       reorderFields,
       dragHandlePresentation,
       isPhotoLikeField,
@@ -145,6 +147,15 @@ export class RuntimeHost {
 
   getAllFeatures() {
     return this.featureRegistry.getFeatures();
+  }
+
+  resolveFieldIdFromNode(node, { allowDeleteNode = false, allowHandleNode = true } = {}) {
+    return this.fieldResolver?.({
+      node,
+      fields: this.getFields?.() || [],
+      allowDeleteNode,
+      allowHandleNode
+    });
   }
 
   dispose() {
