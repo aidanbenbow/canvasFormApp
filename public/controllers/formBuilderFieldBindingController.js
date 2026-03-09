@@ -51,7 +51,10 @@ export class FormBuilderFieldBindingController {
                 this.onPhotoPreviewCreated?.(activeField.id);
               }
             }
-            if (activeField.label !== undefined) {
+            if (activeField.type === 'dropDown') {
+              activeField.value = value;
+            }
+            if (activeField.type !== 'dropDown' && activeField.label !== undefined) {
               activeField.label = value;
             }
 

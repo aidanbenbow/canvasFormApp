@@ -69,6 +69,7 @@ this.dropdownVisible = false;
   }
   updateText(text, { openDropdown = true } = {}) {
     this.value = text;
+    this.onChange?.(text);
 
     // open dropdown automatically while typing
     if (openDropdown && !this.dropdownVisible) {
@@ -159,6 +160,7 @@ this.dropdownVisible = false;
 
     this.value = opt.label ?? opt.value;
     this.selectedValue = opt.value;
+    this.onChange?.(this.value);
 
     this.emit("select", {
       value: opt.value,
@@ -213,6 +215,7 @@ this.dropdownVisible = false;
         this.value = option.label ?? option.value;
         this.selectedValue = option.value;
         this.selectedIndex = index;
+        this.onChange?.(this.value);
         this.emit("select", {value:option.value,option, index, source: this});
         this.closeDropdown();
       }

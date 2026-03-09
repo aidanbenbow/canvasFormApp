@@ -28,14 +28,27 @@ export class RendererHost {
     this.screenManifest = null;
   }
 
-  buildScreenManifest({ mode,closeCommand, saveCommand, addTextCommand, addLabelCommand, addInputCommand, addPhotoCommand, displayFields }) {
+  buildScreenManifest({
+    mode,
+    closeCommand,
+    saveCommand,
+    addTextCommand,
+    addLabelCommand,
+    addInputCommand,
+    addDropDownCommand,
+    addDropDownOptionCommand,
+    addPhotoCommand,
+    displayFields
+  }) {
     return this.manifestBuilder({
       mode,
-        closeCommand,
+      closeCommand,
       saveCommand,
       addTextCommand,
       addLabelCommand,
       addInputCommand,
+      addDropDownCommand,
+      addDropDownOptionCommand,
       addPhotoCommand,
       displayFields
     });

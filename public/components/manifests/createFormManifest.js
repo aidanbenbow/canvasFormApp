@@ -43,6 +43,8 @@ export function buildCreateFormManifest({
   addTextCommand,
   addLabelCommand,
   addInputCommand,
+  addDropDownCommand,
+  addDropDownOptionCommand,
   addPhotoCommand,
   closeCommand,
   displayFields,
@@ -57,6 +59,8 @@ export function buildCreateFormManifest({
       { id: 'save', label: mode === 'edit' ? 'Update Form' : 'Save Form', action: saveCommand },
       { id: 'addText', label: 'Add Text', action: addTextCommand },
       { id: 'addInput', label: 'Add Input', action: addInputCommand },
+      { id: 'addDropDown', label: 'Add Dropdown', action: addDropDownCommand },
+      { id: 'addDropDownOption', label: 'Add Option', action: addDropDownOptionCommand },
       { id: 'addPhoto', label: 'Add Photo', action: addPhotoCommand }
     ],
     toolbarPluginButtons

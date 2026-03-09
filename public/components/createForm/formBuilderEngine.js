@@ -100,6 +100,8 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.saveCommand = this.commands.saveCommand;
     this.addTextCommand = this.commands.addTextCommand;
     this.addInputCommand = this.commands.addInputCommand;
+    this.addDropDownCommand = this.commands.addDropDownCommand;
+    this.addDropDownOptionCommand = this.commands.addDropDownOptionCommand;
     this.addLabelCommand = this.commands.addLabelCommand;
     this.addPhotoCommand = this.commands.addPhotoCommand;
     this.deleteFieldCommand = this.commands.deleteFieldCommand;
@@ -245,6 +247,8 @@ export class FormBuilderEngine extends BaseScreenEngine {
             addTextCommand: this.addTextCommand,
             addLabelCommand: this.addLabelCommand,
             addInputCommand: this.addInputCommand,
+            addDropDownCommand: this.addDropDownCommand,
+            addDropDownOptionCommand: this.addDropDownOptionCommand,
             addPhotoCommand: this.addPhotoCommand,
             closeCommand: this.commands.closeCommand,
             displayFields
@@ -348,6 +352,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
       onSave: () => this.requestSave(),
       onSaveBrightness: (fieldId) => this.runtimeHost.handleSaveBrightness(fieldId),
       onAddComponent: (type) => this.fieldUseCases.add(type),
+      onAddDropDownOption: () => this.addOptionToSelectedDropDown(),
       onDeleteField: (fieldId) => this.fieldUseCases.delete(fieldId)
     };
   }
@@ -361,6 +366,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
   }
 
   requestSave() {
+    this.promoteTypedDropDownValuesToOptions();
     this.saveFormUseCase.execute();
   }
 
@@ -406,6 +412,8 @@ export class FormBuilderEngine extends BaseScreenEngine {
       addTextCommand: this.addTextCommand,
       addLabelCommand: this.addLabelCommand,
       addInputCommand: this.addInputCommand,
+      addDropDownCommand: this.addDropDownCommand,
+      addDropDownOptionCommand: this.addDropDownOptionCommand,
       addPhotoCommand: this.addPhotoCommand,
       closeCommand: this.commands.closeCommand,
       displayFields: this.rendererHost.getDisplayFields({ fields, plugins, editorState })
@@ -451,6 +459,57 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.fieldUseCases.delete(fieldId);
   }
 
+  promoteTypedDropDownValuesToOptions() {
+    const fields = this.getNormalizedFields();
+    let changed = false;
+
+    const nextFields = fields.map((field) => {
+      if (field?.type !== 'dropDown') return field;
+
+      const typedValue = String(field?.value ?? field?.text ?? '').trim();
+      if (!typedValue) return field;
+
+      changed = true;
+
+      const options = Array.isArray(field?.options) ? field.options : [];
+      const hasMatch = options.some((option) => {
+        const label = String(option?.label || '').trim().toLowerCase();
+        const value = String(option?.value || '').trim().toLowerCase();
+        const normalizedTyped = typedValue.toLowerCase();
+        return label === normalizedTyped || value === normalizedTyped;
+      });
+
+      if (hasMatch) {
+        return {
+          ...field,
+          value: typedValue,
+          text: typedValue
+        };
+      }
+
+      return appendTypedDropDownOption(field, typedValue);
+    });
+
+    if (!changed) return;
+    this.setNormalizedFields(nextFields);
+    this.refresh();
+  }
+
+  addOptionToSelectedDropDown() {
+    const selectedFieldId = this.interactionController?.getSelectedFieldId?.();
+    if (!selectedFieldId) return;
+
+    const fields = this.getNormalizedFields();
+    const nextFields = fields.map((field) => {
+      if (field?.id !== selectedFieldId) return field;
+      if (field?.type !== 'dropDown') return field;
+      return appendDropDownOption(field);
+    });
+
+    this.setNormalizedFields(nextFields);
+    this.refresh();
+  }
+
   destroy() {
     this.stopActiveEditing();
     this.runtimeHost.dispose();
@@ -458,4 +517,89 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.unsubscribeEditorState = null;
     super.destroy();
   }
+}
+
+function appendDropDownOption(field) {
+  const existingOptions = Array.isArray(field?.options) ? field.options : [];
+  const nonOtherOptions = existingOptions.filter((option) => !isOtherOption(option));
+  const typedValue = String(field?.value ?? field?.text ?? '').trim();
+  const nextIndex = nonOtherOptions.length + 1;
+  const nextLabel = typedValue || `Option ${nextIndex}`;
+  const normalizedNextLabel = nextLabel.toLowerCase();
+
+  const hasMatch = nonOtherOptions.some((option) => {
+    const label = String(option?.label || '').trim().toLowerCase();
+    const value = String(option?.value || '').trim().toLowerCase();
+    return label === normalizedNextLabel || value === normalizedNextLabel;
+  });
+
+  if (hasMatch) {
+    return {
+      ...field,
+      value: nextLabel,
+      text: nextLabel,
+      options: [
+        ...nonOtherOptions,
+        {
+          label: 'Other',
+          value: 'other'
+        }
+      ]
+    };
+  }
+
+  return {
+    ...field,
+    value: nextLabel,
+    text: nextLabel,
+    options: [
+      ...nonOtherOptions,
+      {
+        label: nextLabel,
+        value: toOptionValue(nextLabel)
+      },
+      {
+        label: 'Other',
+        value: 'other'
+      }
+    ]
+  };
+}
+
+function appendTypedDropDownOption(field, typedValue) {
+  const existingOptions = Array.isArray(field?.options) ? field.options : [];
+  const nonOtherOptions = existingOptions.filter((option) => !isOtherOption(option));
+
+  return {
+    ...field,
+    value: typedValue,
+    text: typedValue,
+    options: [
+      ...nonOtherOptions,
+      {
+        label: typedValue,
+        value: toOptionValue(typedValue)
+      },
+      {
+        label: 'Other',
+        value: 'other'
+      }
+    ]
+  };
+}
+
+function isOtherOption(option) {
+  const label = String(option?.label || '').trim().toLowerCase();
+  const value = String(option?.value || '').trim().toLowerCase();
+  return label === 'other' || value === 'other';
+}
+
+function toOptionValue(label) {
+  const normalized = String(label || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return normalized || `option_${Date.now()}`;
 }
