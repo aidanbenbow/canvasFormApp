@@ -61,4 +61,12 @@ export class PhotoPreviewFeature {
 
     return null;
   }
+
+  onRender() {
+    return true;
+  }
+
+  onRuntime() {
+    return false;
+  }
 }

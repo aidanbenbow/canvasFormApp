@@ -14,4 +14,12 @@ export class InteractionBindingFeature {
   }
 
   detach() {}
+
+  onRender() {
+    return true;
+  }
+
+  onRuntime() {
+    return false;
+  }
 }

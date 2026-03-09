@@ -11,4 +11,12 @@ export class FieldBindingFeature {
   }
 
   detach() {}
+
+  onRender() {
+    return true;
+  }
+
+  onRuntime() {
+    return false;
+  }
 }

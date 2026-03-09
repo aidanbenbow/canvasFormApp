@@ -1,28 +1,22 @@
-import { FormBuilderFieldBindingController } from '../../controllers/formBuilderFieldBindingController.js';
-import { FormBuilderInteractionController } from '../../controllers/formBuilderInteractionController.js';
 import { getPhotoSource, isPhotoLikeField } from '../../utils/fieldGuards.js';
-import {
-  buildCreateFormCommandNames
-} from './createFormCommands.js';
-import {
-  focusCreateFormFieldInputForEditing,
-  stopCreateFormActiveEditing
-} from './createFormEditorInteraction.js';
 import { FORM_BUILDER_ENGINE_EVENTS } from './formBuilderEngineEvents.js';
-import { PhotoAdjustmentFeature } from './photoAdjustmentFeature.js';
-import { ReorderFeature } from './reorderFeature.js';
 import {
   createCommandRegistryAdapter,
   createFormModelAdapter,
   createCanvasUiRendererAdapter
 } from './formBuilderAdapters.js';
 import { BaseScreenEngine } from '../engines/baseScreenEngine.js';
-import { CommandLifecycleFeature } from './features/commandLifecycleFeature.js';
-import { FieldBindingFeature } from './features/fieldBindingFeature.js';
-import { InteractionBindingFeature } from './features/interactionBindingFeature.js';
-import { PhotoPreviewFeature } from './features/photoPreviewFeature.js';
 import { EditorState } from './editorState.js';
 import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
+import { CommandHost } from './hosts/commandHost.js';
+import { PluginHost } from './hosts/pluginHost.js';
+import { RendererHost } from './hosts/rendererHost.js';
+import { ModelHost } from './hosts/modelHost.js';
+import { RuntimeHost, createDefaultRuntimeFeatureFactories } from './hosts/runtimeHost.js';
+import { SaveFormUseCase } from './useCases/saveFormUseCase.js';
+import { AddFieldUseCase } from './useCases/addFieldUseCase.js';
+import { DeleteFieldUseCase } from './useCases/deleteFieldUseCase.js';
+import { ScreenPipeline } from './screenPipeline.js';
 
 export class FormBuilderEngine extends BaseScreenEngine {
   constructor({
@@ -43,6 +37,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
     fieldFactory,
     fieldResolver,
     dragHandlePresentation,
+    runtimeFeatureFactories,
     onSubmit,
     form,
     onEngineEvent
@@ -65,10 +60,20 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.fieldFactory = fieldFactory;
     this.fieldResolver = fieldResolver;
     this.dragHandlePresentation = dragHandlePresentation;
+    this.runtimeFeatureFactories = Array.isArray(runtimeFeatureFactories)
+      ? runtimeFeatureFactories
+      : createDefaultRuntimeFeatureFactories();
 
     this.assertRequiredStrategies();
     this.onSubmit = onSubmit;
-    this.plugins = [];
+    this.initializeEditorState(form);
+    this.initializeHosts();
+    this.initializeUseCases();
+    this.initializeModules();
+    this.initializeScreenPipeline();
+  }
+
+  initializeEditorState(form) {
     this.editorState = new EditorState({ mode: form ? 'edit' : 'create' });
     this.mode = this.editorState.getMode();
     this.unsubscribeEditorState = this.editorState.subscribe((nextState, previousState, changedKeys) => {
@@ -78,8 +83,19 @@ export class FormBuilderEngine extends BaseScreenEngine {
         changedKeys
       });
     });
+  }
 
-    this.commands = buildCreateFormCommandNames(this.id);
+  initializeHosts() {
+    this.pluginHost = new PluginHost();
+
+    this.commandHost = new CommandHost({
+      id: this.id,
+      commandAdapter: this.commandAdapter,
+      engine: this,
+      getCommandHandlers: () => this.getCommandHandlers()
+    });
+
+    this.commands = this.commandHost.getCommands();
     this.saveCommand = this.commands.saveCommand;
     this.addTextCommand = this.commands.addTextCommand;
     this.addInputCommand = this.commands.addInputCommand;
@@ -87,102 +103,158 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.addPhotoCommand = this.commands.addPhotoCommand;
     this.deleteFieldCommand = this.commands.deleteFieldCommand;
 
-    this.registerPlugins(
+    this.pluginHost.registerPlugins(
       getFieldPlugins(this.editorState.getMode(), {
         saveBrightnessAction: this.commands.saveBrightnessCommand
       })
     );
 
-    this.photoAdjustmentFeature = new PhotoAdjustmentFeature({
-      context: this.context,
-      getFieldById: (fieldId) => this.getFieldById(fieldId),
-      onBrightnessCommitted: (fieldId) => this.requestBrightnessPersist(fieldId),
-      onSelectField: (fieldId) => this.interactionController.setSelectedField(fieldId),
-      onFocusField: (fieldId) => this.focusFieldInputForEditing(fieldId),
-      isPhotoLikeField: (field) => this.isPhotoLikeField(field),
-      getPhotoSource: (field) => this.getPhotoSource(field),
-      saveBrightnessAction: this.commands.saveBrightnessCommand
+    this.modelHost = new ModelHost({
+      modelAdapter: this.modelAdapter,
+      persistenceAdapter: this.persistenceAdapter,
+      onSubmit: this.onSubmit,
+      emit: (eventName, payload) => this.emit(eventName, payload),
+      getMode: () => this.editorState.getMode(),
+      getEngine: () => this
     });
 
-    this.fieldBindingController = new FormBuilderFieldBindingController({
-      getFields: () => this.getNormalizedFields(),
-      isPhotoLikeField: (field) => this.isPhotoLikeField(field),
-      getPhotoSource: (field) => this.getPhotoSource(field),
-      updatePhotoPreview: (fieldId, source) => this.photoAdjustmentFeature.updatePreviewForField(fieldId, source),
-      onPhotoPreviewCreated: (fieldId) => this.photoAdjustmentFeature.onPhotoPreviewCreated(fieldId)
+    this.rendererHost = new RendererHost({
+      manifestBuilder: this.manifestBuilder,
+      displayBuilder: this.displayBuilder,
+      uiRendererAdapter: this.uiRendererAdapter
     });
 
-    this.interactionController = new FormBuilderInteractionController({
+    this.runtimeHost = new RuntimeHost({
       context: this.context,
       editorState: this.editorState,
       getRootNode: () => this.rootNode,
-      getFieldIds: () => this.getNormalizedFields().map((field) => field.id),
+      getContainer: () => this.regions?.formContainer,
+      getFields: () => this.getNormalizedFields(),
+      getFieldById: (fieldId) => this.getFieldById(fieldId),
       resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
-      getDragHandlePresentation: (fieldId, options) =>
+      dragHandlePresentation: ({ fieldId, smallScreen, previewInsertionBeforeFieldId }) =>
         this.dragHandlePresentation({
           fieldId,
-          smallScreen: options?.smallScreen,
-          previewInsertionBeforeFieldId: this.interactionController.getPreviewInsertionBeforeFieldId()
+          smallScreen,
+          previewInsertionBeforeFieldId
         }),
-      isSmallScreen: () => typeof window !== 'undefined' && window.innerWidth < 1024,
-      stopActiveEditing: () => this.stopActiveEditing(),
+      isPhotoLikeField: (field) => this.isPhotoLikeField(field),
+      getPhotoSource: (field) => this.getPhotoSource(field),
+      saveBrightnessAction: this.commands.saveBrightnessCommand,
+      requestBrightnessPersist: (fieldId) => this.requestBrightnessPersist(fieldId),
+      refreshFormContainer: () => this.refreshFormContainer(),
+      reorderFields: (sourceFieldId, targetFieldId) => this.modelHost.reorderField(sourceFieldId, targetFieldId),
+      featureFactories: this.runtimeFeatureFactories
+    });
+
+    this.interactionController = this.runtimeHost.interactionController;
+    this.photoAdjustmentFeature = this.runtimeHost.photoAdjustmentFeature;
+    this.reorderFeature = this.runtimeHost.reorderFeature;
+    this.fieldBindingFeature = this.runtimeHost.fieldBindingFeature;
+    this.interactionBindingFeature = this.runtimeHost.interactionBindingFeature;
+    this.photoPreviewFeature = this.runtimeHost.photoPreviewFeature;
+    this.commandLifecycleFeature = this.commandHost.getLifecycleFeature();
+  }
+
+  initializeUseCases() {
+    this.saveFormUseCase = new SaveFormUseCase({
+      requestSave: () => this.modelHost.requestSave()
+    });
+
+    this.addFieldUseCase = new AddFieldUseCase({
+      fieldFactory: (type) => this.fieldFactory(type),
+      getSelectedFieldId: () => this.interactionController.getSelectedFieldId(),
+      getFieldById: (fieldId) => this.getFieldById(fieldId),
+      addField: (field) => this.modelHost.addField(field),
+      selectField: (fieldId) => this.interactionController.setSelectedField(fieldId)
+    });
+
+    this.deleteFieldUseCase = new DeleteFieldUseCase({
+      deleteField: (fieldId) => this.modelHost.deleteField(fieldId),
+      getFields: () => this.getNormalizedFields(),
+      getSelectedFieldId: () => this.interactionController.getSelectedFieldId(),
+      selectField: (fieldId) => this.interactionController.setSelectedField(fieldId),
       refreshFormContainer: () => this.refreshFormContainer()
     });
+  }
 
-    this.reorderFeature = new ReorderFeature({
-      context: this.context,
-      dragThreshold: 8,
-      getContainer: () => this.regions?.formContainer,
-      editorState: this.editorState,
-      getRootNode: () => this.rootNode,
-      resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
-      reorderFields: (sourceFieldId, targetFieldId) => this.modelAdapter.reorderField(sourceFieldId, targetFieldId),
-      stopActiveEditing: () => this.stopActiveEditing(),
-      applyPreviewVisuals: () => this.interactionController.applyPreviewVisuals(),
-      refreshFormContainer: () => this.refreshFormContainer(),
-    });
-
-    this.fieldBindingFeature = new FieldBindingFeature({
-      getContainer: () => this.regions?.formContainer,
-      fieldBindingController: this.fieldBindingController
-    });
-
-    this.interactionBindingFeature = new InteractionBindingFeature({
-      getContainer: () => this.regions?.formContainer,
-      interactionController: this.interactionController
-    });
-
-    this.photoPreviewFeature = new PhotoPreviewFeature({
-      getContainer: () => this.regions?.formContainer,
-      getFields: () => this.getNormalizedFields(),
-      getFieldById: (fieldId) => this.getFieldById(fieldId),
-      interactionController: this.interactionController,
-      photoAdjustmentFeature: this.photoAdjustmentFeature
-    });
-
-    this.commandLifecycleFeature = new CommandLifecycleFeature({
-      commandAdapter: this.commandAdapter,
-      getCommands: () => this.getCommands(),
-      getCommandHandlers: () => this.getCommandHandlers(),
-      engine: this
-    });
-
+  initializeModules() {
     this.modules = [
       this.commandLifecycleFeature,
-      this.reorderFeature,
-      this.fieldBindingFeature,
-      this.interactionBindingFeature,
-      this.photoPreviewFeature
+      ...this.runtimeHost.getAllFeatures()
     ];
 
     this.lifecycleModules = [this.commandLifecycleFeature];
-    this.runtimeModules = [this.reorderFeature];
+    this.runtimeModules = this.runtimeHost.runtimeModules;
+    this.renderModules = this.runtimeHost.renderModules;
+  }
 
-    this.renderModules = [
-      this.fieldBindingFeature,
-      this.interactionBindingFeature,
-      this.photoPreviewFeature
-    ];
+  initializeScreenPipeline() {
+    this.screenPipeline = new ScreenPipeline({
+      enableTiming: this.shouldEnablePipelineTiming(),
+      name: `${this.id}.ScreenPipeline`,
+      stages: {
+        buildManifest: (state) => {
+          const editorState = this.editorState.getSnapshot();
+          const fields = Array.isArray(state?.fields) ? state.fields : this.modelHost.getFields();
+          const plugins = Array.isArray(state?.plugins) ? state.plugins : this.pluginHost.getPlugins();
+          const displayFields = this.getDisplayFields({ fields, plugins, editorState });
+          const manifest = this.rendererHost.buildScreenManifest({
+            mode: this.editorState.getMode(),
+            saveCommand: this.saveCommand,
+            addTextCommand: this.addTextCommand,
+            addLabelCommand: this.addLabelCommand,
+            addInputCommand: this.addInputCommand,
+            addPhotoCommand: this.addPhotoCommand,
+            displayFields
+          });
+
+          return { editorState, fields, plugins, displayFields, manifest };
+        },
+        render: (state) => {
+          const rendered = this.rendererHost.renderScreen(state.manifest);
+          const rootNode = rendered?.rootNode || this.rendererHost.getRootNode();
+          const regions = rendered?.regions || this.rendererHost.getRegions();
+
+          this.rootNode = rootNode;
+          this.regions = regions;
+
+          return { rendered, rootNode, regions };
+        },
+        attachModules: () => {
+          super.mount();
+          return {};
+        },
+        bindInteractions: () => {
+          this.attachRenderModules();
+          this.runtimeHost.attachRuntimeModules((modules) => this.attachModules(modules));
+          return {};
+        },
+        finalize: (state) => {
+          const screen = {
+            manifest: state.manifest,
+            rootNode: this.rootNode,
+            regions: this.regions,
+            displayFields: state.displayFields,
+            editorState: state.editorState
+          };
+
+          this.screen = screen;
+          this.screenManifest = state.manifest;
+          return screen;
+        }
+      }
+    });
+  }
+
+  shouldEnablePipelineTiming() {
+    if (typeof window === 'undefined') return false;
+
+    const params = new URLSearchParams(window.location?.search || '');
+    if (params.get('screenPipelineTiming') === '1') return true;
+
+    const host = String(window.location?.hostname || '').toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1';
   }
 
   assertRequiredStrategies() {
@@ -202,40 +274,27 @@ export class FormBuilderEngine extends BaseScreenEngine {
   }
 
   getCommands() {
-    return { ...this.commands };
+    return this.commandHost.getCommands();
   }
 
   registerPlugin(plugin) {
-    if (!plugin || typeof plugin !== 'object') return;
-    if (!plugin.name || typeof plugin.name !== 'string') return;
-    if (typeof plugin.transform !== 'function' && typeof plugin.transformFields !== 'function') return;
-
-    const existingIndex = this.plugins.findIndex((entry) => entry?.name === plugin.name);
-    if (existingIndex >= 0) {
-      this.plugins[existingIndex] = plugin;
-      return;
-    }
-
-    this.plugins.push(plugin);
+    this.pluginHost.registerPlugin(plugin);
   }
 
   registerPlugins(plugins = []) {
-    for (const plugin of plugins) {
-      this.registerPlugin(plugin);
-    }
+    this.pluginHost.registerPlugins(plugins);
   }
 
   unregisterPlugin(pluginName) {
-    if (!pluginName) return;
-    this.plugins = this.plugins.filter((plugin) => plugin?.name !== pluginName);
+    this.pluginHost.unregisterPlugin(pluginName);
   }
 
   clearPlugins() {
-    this.plugins = [];
+    this.pluginHost.clearPlugins();
   }
 
   getRegisteredPlugins() {
-    return [...this.plugins];
+    return this.pluginHost.getRegisteredPlugins();
   }
 
   getEditorState() {
@@ -245,32 +304,22 @@ export class FormBuilderEngine extends BaseScreenEngine {
   getCommandHandlers() {
     return {
       onSave: () => this.requestSave(),
-      onSaveBrightness: (fieldId) => this.photoAdjustmentFeature.handleSaveBrightness(fieldId),
+      onSaveBrightness: (fieldId) => this.runtimeHost.handleSaveBrightness(fieldId),
       onAddComponent: (type) => this.addComponent(type),
       onDeleteField: (fieldId) => this.deleteComponent(fieldId)
     };
   }
 
   registerCommands() {
-    this.commandLifecycleFeature.attach();
+    this.commandHost.attach();
   }
 
   unregisterCommands() {
-    this.commandLifecycleFeature.detach();
+    this.commandHost.detach();
   }
 
   requestSave() {
-    console.log("Save requested");
-    const normalizedForm = this.modelAdapter.normalize();
-    this.emit(FORM_BUILDER_ENGINE_EVENTS.saveRequested, { form: normalizedForm });
-    const hasPersistenceAdapter = typeof this.persistenceAdapter?.onSave === 'function';
-    this.persistenceAdapter?.onSave?.(normalizedForm, {
-      mode: this.editorState.getMode(),
-      engine: this
-    });
-    if (!hasPersistenceAdapter) {
-      this.handleSaveRequest(normalizedForm);
-    }
+    this.saveFormUseCase.execute();
   }
 
   handleSaveRequest(normalizedForm) {
@@ -278,31 +327,17 @@ export class FormBuilderEngine extends BaseScreenEngine {
   }
 
   requestBrightnessPersist(fieldId) {
-    const normalizedForm = this.modelAdapter.normalize();
-    this.emit(FORM_BUILDER_ENGINE_EVENTS.brightnessPersistRequested, { fieldId, form: normalizedForm });
-    const hasPersistenceAdapter = typeof this.persistenceAdapter?.onUpdate === 'function';
-    this.persistenceAdapter?.onUpdate?.(normalizedForm, {
-      mode: this.editorState.getMode(),
-      reason: 'brightness',
-      fieldId,
-      engine: this
-    });
-    if (!hasPersistenceAdapter) {
-      this.handleBrightnessPersistRequest({ fieldId, normalizedForm });
-    }
+    this.modelHost.requestBrightnessPersist(fieldId);
   }
 
   handleBrightnessPersistRequest() {}
 
   mount() {
-    this.screenManifest = this.buildScreenManifest();
-    const rendered = this.uiRendererAdapter.renderManifest(this.screenManifest);
-
-    this.rootNode = rendered?.rootNode || this.uiRendererAdapter.getRootNode?.() || null;
-    this.regions = rendered?.regions || this.uiRendererAdapter.getRegions?.() || null;
-    super.mount();
-    this.attachRenderModules();
-    this.attachModules(this.runtimeModules);
+    this.screen = this.screenPipeline.run({
+      form: this.modelHost.getForm(),
+      fields: this.modelHost.getFields(),
+      plugins: this.pluginHost.getPlugins()
+    });
 
     return this.rootNode;
   }
@@ -311,24 +346,26 @@ export class FormBuilderEngine extends BaseScreenEngine {
     this.refreshFormContainer();
   }
 
-  buildScreenManifest() {
-    return this.manifestBuilder({
-      mode: this.editorState.getMode(),
+  buildScreenManifest({ fields, plugins, editorState } = {}) {
+    return this.rendererHost.buildScreenManifest({
+      mode: editorState?.mode || this.editorState.getMode(),
       saveCommand: this.saveCommand,
       addTextCommand: this.addTextCommand,
       addLabelCommand: this.addLabelCommand,
       addInputCommand: this.addInputCommand,
       addPhotoCommand: this.addPhotoCommand,
-      displayFields: this.getDisplayFields()
+      displayFields: this.getDisplayFields({ fields, plugins, editorState })
     });
   }
 
-  getDisplayFields() {
-    const editorState = this.editorState.getSnapshot();
+  getDisplayFields({ fields, plugins, editorState } = {}) {
+    const resolvedEditorState = editorState || this.editorState.getSnapshot();
+    const resolvedFields = Array.isArray(fields) ? fields : this.getNormalizedFields();
+    const resolvedPlugins = Array.isArray(plugins) ? plugins : this.getRegisteredPlugins();
     const pluginContext = {
-      mode: editorState.mode,
-      selectedFieldId: editorState.selectedFieldId,
-      draggingFieldId: editorState.draggingFieldId,
+      mode: resolvedEditorState.mode,
+      selectedFieldId: resolvedEditorState.selectedFieldId,
+      draggingFieldId: resolvedEditorState.draggingFieldId,
       deleteFieldCommand: this.deleteFieldCommand,
       getDragHandlePresentation: (fieldId, options) =>
         this.dragHandlePresentation({
@@ -338,13 +375,13 @@ export class FormBuilderEngine extends BaseScreenEngine {
         }),
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
       getPhotoSource: (field) => this.getPhotoSource(field),
-      saveBrightnessAction: this.photoAdjustmentFeature.getSaveBrightnessAction()
+      saveBrightnessAction: this.runtimeHost.getSaveBrightnessAction()
     };
 
-    return this.displayBuilder({
-      fields: this.getNormalizedFields(),
-      editorState,
-      plugins: this.getRegisteredPlugins(),
+    return this.rendererHost.buildDisplayFields({
+      fields: resolvedFields,
+      editorState: resolvedEditorState,
+      plugins: resolvedPlugins,
       pluginContext,
       deleteFieldCommand: this.deleteFieldCommand,
       getDragHandlePresentation: (fieldId, options) =>
@@ -355,17 +392,19 @@ export class FormBuilderEngine extends BaseScreenEngine {
         }),
       isPhotoLikeField: (field) => this.isPhotoLikeField(field),
       getPhotoSource: (field) => this.getPhotoSource(field),
-      saveBrightnessAction: this.photoAdjustmentFeature.getSaveBrightnessAction()
+      saveBrightnessAction: this.runtimeHost.getSaveBrightnessAction()
     });
   }
 
   refreshFormContainer() {
-    if (!this.regions?.formContainer) return;
-    this.stopActiveEditing();
-    this.uiRendererAdapter.updateRegion('formContainer', this.getDisplayFields());
-    this.regions = this.uiRendererAdapter.getRegions?.() || this.regions;
-    this.attachRenderModules();
-    this.uiRendererAdapter.invalidate();
+    this.rendererHost.refreshFormContainer({
+      stopActiveEditing: () => this.stopActiveEditing(),
+      displayFields: this.getDisplayFields(),
+      onRenderModulesAttached: () => {
+        this.regions = this.rendererHost.getRegions() || this.regions;
+        this.attachRenderModules();
+      }
+    });
   }
 
   getPhotoSource(field) {
@@ -377,35 +416,27 @@ export class FormBuilderEngine extends BaseScreenEngine {
   }
 
   attachRenderModules() {
-    this.attachModules(this.renderModules);
+    this.runtimeHost.attachRenderModules((modules) => this.attachModules(modules));
   }
 
   getNormalizedFields() {
-    return this.modelAdapter.getFields();
+    return this.modelHost.getNormalizedFields();
   }
 
   setNormalizedFields(fields) {
-    this.modelAdapter.setFields(fields);
+    this.modelHost.setNormalizedFields(fields);
   }
 
   getFieldById(fieldId) {
-    if (!fieldId) return null;
-    if (typeof this.modelAdapter.getFieldById === 'function') {
-      return this.modelAdapter.getFieldById(fieldId);
-    }
-    return this.getNormalizedFields().find((field) => field?.id === fieldId) ?? null;
+    return this.modelHost.getFieldById(fieldId);
   }
 
   stopActiveEditing() {
-    stopCreateFormActiveEditing(this.context);
+    this.runtimeHost.stopActiveEditing();
   }
 
   focusFieldInputForEditing(fieldId) {
-    focusCreateFormFieldInputForEditing({
-      context: this.context,
-      rootNode: this.rootNode,
-      fieldId
-    });
+    this.runtimeHost.focusFieldInputForEditing(fieldId);
   }
 
   resolveFieldIdFromNode(node, { allowDeleteNode = false, allowHandleNode = true } = {}) {
@@ -418,47 +449,18 @@ export class FormBuilderEngine extends BaseScreenEngine {
   }
 
   addComponent(type) {
-    const newField = this.fieldFactory(type);
-
-    if (newField?.type === 'label') {
-      const selectedFieldId = this.interactionController.getSelectedFieldId();
-      const selectedField = this.getFieldById(selectedFieldId);
-      if (isLabelBindingTarget(selectedField)) {
-        newField.forFieldId = selectedField.id;
-        const seedLabel = String(selectedField.label || selectedField.text || '').trim();
-        if (seedLabel) {
-          newField.label = seedLabel;
-          newField.text = seedLabel;
-        }
-      }
-    }
-
-    this.modelAdapter.addField(newField);
-    this.interactionController.setSelectedField(newField.id);
+    this.addFieldUseCase.execute(type);
   }
 
   deleteComponent(fieldId) {
-    if (!fieldId) return;
-    this.modelAdapter.deleteField(fieldId);
-    const fields = this.getNormalizedFields();
-    if (this.interactionController.getSelectedFieldId() === fieldId) {
-      this.interactionController.setSelectedField(fields[0]?.id ?? null);
-      return;
-    }
-    this.refreshFormContainer();
+    this.deleteFieldUseCase.execute(fieldId);
   }
 
   destroy() {
     this.stopActiveEditing();
-    this.interactionController.resetAllState();
-    this.interactionController.dispose?.();
+    this.runtimeHost.dispose();
     this.unsubscribeEditorState?.();
     this.unsubscribeEditorState = null;
     super.destroy();
   }
-}
-
-function isLabelBindingTarget(field) {
-  if (!field || typeof field !== 'object') return false;
-  return field.type === 'input' || field.type === 'photo' || field.type === 'dropDown';
 }

@@ -73,4 +73,12 @@ export class ReorderFeature {
   detach() {
     this.controller.detach();
   }
+
+  onRender() {
+    return false;
+  }
+
+  onRuntime() {
+    return true;
+  }
 }

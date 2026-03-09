@@ -54,4 +54,16 @@ export class PhotoAdjustmentFeature {
       getPhotoSource: (field) => this.getPhotoSource?.(field)
     });
   }
+
+  attach() {}
+
+  detach() {}
+
+  onRender() {
+    return false;
+  }
+
+  onRuntime() {
+    return false;
+  }
 }
