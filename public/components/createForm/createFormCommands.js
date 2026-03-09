@@ -1,5 +1,6 @@
 export function buildCreateFormCommandNames(screenId) {
   return {
+    closeCommand: `${screenId}.close`,
     saveCommand: `${screenId}.save`,
     saveBrightnessCommand: `${screenId}.saveBrightness`,
     addTextCommand: `${screenId}.addText`,
@@ -12,6 +13,8 @@ export function buildCreateFormCommandNames(screenId) {
 
 export function registerCreateFormCommands({ commandRegistry, commands, handlers }) {
   if (!commandRegistry || !commands || !handlers) return;
+
+commandRegistry.register(commands.closeCommand, () => handlers.onClose?.());
 
   commandRegistry.register(commands.saveCommand, () => handlers.onSave?.());
   commandRegistry.register(

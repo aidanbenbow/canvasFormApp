@@ -28,17 +28,10 @@ export class CreateForm extends BaseScreen {
       },
       onUpdate: (normalizedForm) => {
         dispatcher.dispatch(ACTIONS.FORM.UPDATE, normalizedForm);
-        // saveFormStructure({
-        //   id: normalizedForm.id,
-        //   formStructure: normalizedForm.formStructure,
-        //   label: normalizedForm.label,
-        //   user: normalizedForm.user,
-        //   resultsTable: normalizedForm.resultsTable
-        // });
       }
     });
     const persistence = persistenceAdapter || defaultPersistence;
-    console.log(persistence);
+    
     const commands = createCommandRegistryAdapter(commandRegistry);
     const uiRenderer = createCanvasUiRendererAdapter({
       factories,
@@ -71,7 +64,6 @@ export class CreateForm extends BaseScreen {
         }),
       form,
       onEngineEvent: (event) => {
-        defaultPersistence.onUpdate?.(model.getForm());
         this.eventBusManager.emit('formBuilder:engineEvent', event);
       }
     });

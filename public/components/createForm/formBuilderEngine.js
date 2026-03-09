@@ -192,7 +192,9 @@ export class FormBuilderEngine extends BaseScreenEngine {
       getSelectedFieldId: () => this.interactionController.getSelectedFieldId(),
       getFieldById: (fieldId) => this.getFieldById(fieldId),
       addField: (field) => this.modelHost.addField(field),
-      selectField: (fieldId) => this.interactionController.setSelectedField(fieldId)
+      selectField: (fieldId) => this.interactionController.setSelectedField(fieldId),
+      getFields: () => this.getNormalizedFields(),
+      setFields: (fields) => this.setNormalizedFields(fields)
     });
 
     this.deleteFieldUseCase = new DeleteFieldUseCase({
@@ -244,6 +246,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
             addLabelCommand: this.addLabelCommand,
             addInputCommand: this.addInputCommand,
             addPhotoCommand: this.addPhotoCommand,
+            closeCommand: this.commands.closeCommand,
             displayFields
           });
 
@@ -341,6 +344,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
 
   getCommandHandlers() {
     return {
+      onClose: () => this.requestClose(),
       onSave: () => this.requestSave(),
       onSaveBrightness: (fieldId) => this.runtimeHost.handleSaveBrightness(fieldId),
       onAddComponent: (type) => this.fieldUseCases.add(type),
@@ -358,6 +362,10 @@ export class FormBuilderEngine extends BaseScreenEngine {
 
   requestSave() {
     this.saveFormUseCase.execute();
+  }
+
+  requestClose() {
+    this.context?.screenRouter?.pop?.();
   }
 
   handleSaveRequest(normalizedForm) {
@@ -399,6 +407,7 @@ export class FormBuilderEngine extends BaseScreenEngine {
       addLabelCommand: this.addLabelCommand,
       addInputCommand: this.addInputCommand,
       addPhotoCommand: this.addPhotoCommand,
+      closeCommand: this.commands.closeCommand,
       displayFields: this.rendererHost.getDisplayFields({ fields, plugins, editorState })
     });
   }

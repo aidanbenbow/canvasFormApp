@@ -4,10 +4,10 @@ import {
   getResponsiveViewport
 } from './screenManifestUtils.js';
 import {
-  buttonNode,
   containerRegion,
   defineManifest
 } from './manifestDsl.js';
+import { buildToolbar } from './toolbarBuilder.js';
 import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
 import { runFieldPlugins } from '../fieldPlugins/runFieldPlugins.js';
 
@@ -44,23 +44,18 @@ export function buildViewFormManifest({
   ensureCopyCommand,
   isPhotoLikeField,
   getPhotoSource,
-  saveBrightnessAction
+  saveBrightnessAction,
+  toolbarPluginButtons = []
 }) {
   const manifest = structuredClone(formViewUIManifest);
   manifest.regions.formContainer.viewport = getResponsiveViewport();
 
-  if (closeCommand) {
-    manifest.regions.toolbar.children = [
-      buttonNode({
-        id: 'form-view-close',
-        label: 'Close',
-        action: closeCommand,
-        style: { fillWidth: false, font: '20px sans-serif', paddingX: 14, paddingY: 8 },
-        skipCollect: true,
-        skipClear: true
-      })
-    ];
-  }
+  manifest.regions.toolbar.children = buildToolbar(
+    [
+      closeCommand && { id: 'form-view-close', label: 'Close', action: closeCommand }
+    ],
+    toolbarPluginButtons
+  );
 
   const compactSubmitStyle = getCompactSubmitStyle();
   const copyButtonStyle = getCopyButtonStyle();

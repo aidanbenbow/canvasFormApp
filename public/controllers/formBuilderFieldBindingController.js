@@ -38,6 +38,8 @@ export class FormBuilderFieldBindingController {
             const activeField = onChangeBinding.field;
             if (!activeField) return;
 
+            const normalizedText = String(value ?? '').trim();
+
             const previousSource = String(this.getPhotoSource?.(activeField) ?? '').trim();
             activeField.text = value;
             if (this.isPhotoLikeField?.(activeField)) {
@@ -51,6 +53,17 @@ export class FormBuilderFieldBindingController {
             }
             if (activeField.label !== undefined) {
               activeField.label = value;
+            }
+
+            if (activeField.type === 'label' && typeof activeField.forFieldId === 'string') {
+              const targetFieldId = activeField.forFieldId.trim();
+              if (targetFieldId) {
+                const targetField = fieldMap.get(targetFieldId);
+                if (targetField) {
+                  targetField.label = normalizedText || targetField.label;
+                  targetField.name = toInputName(normalizedText);
+                }
+              }
             }
           };
 
@@ -67,4 +80,14 @@ export class FormBuilderFieldBindingController {
 
     walk(container);
   }
+}
+
+function toInputName(value) {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return normalized || 'field';
 }

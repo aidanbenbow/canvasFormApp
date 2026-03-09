@@ -28,9 +28,10 @@ export class RendererHost {
     this.screenManifest = null;
   }
 
-  buildScreenManifest({ mode, saveCommand, addTextCommand, addLabelCommand, addInputCommand, addPhotoCommand, displayFields }) {
+  buildScreenManifest({ mode,closeCommand, saveCommand, addTextCommand, addLabelCommand, addInputCommand, addPhotoCommand, displayFields }) {
     return this.manifestBuilder({
       mode,
+        closeCommand,
       saveCommand,
       addTextCommand,
       addLabelCommand,

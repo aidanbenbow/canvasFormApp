@@ -59,7 +59,8 @@ export class FormModel {
     if (!this.form.formStructure || typeof this.form.formStructure !== 'object') {
       this.form.formStructure = { fields: [] };
     }
-    this.form.formStructure.fields = Array.isArray(fields) ? fields : [];
+    const normalizedFields = Array.isArray(fields) ? fields : [];
+    this.form.formStructure.fields = moveSubmitFieldsToEnd(normalizedFields);
   }
 
   addField(field) {
@@ -101,4 +102,35 @@ function buildAutoResultsTableName(formId) {
 
   if (trimmed.length >= minLength) return trimmed;
   return `frm_${Date.now()}`;
+}
+
+function moveSubmitFieldsToEnd(fields) {
+  const primary = [];
+  const trailingSubmit = [];
+
+  for (const field of fields) {
+    if (isSubmitField(field)) {
+      trailingSubmit.push(field);
+      continue;
+    }
+
+    primary.push(field);
+  }
+
+  return [...primary, ...trailingSubmit];
+}
+
+function isSubmitField(field) {
+  if (!field || typeof field !== 'object') return false;
+  if (field.type !== 'button') return false;
+
+  const label = String(field.label || field.text || '').trim().toLowerCase();
+  const action = String(field.action || field.command || '').trim().toLowerCase();
+  const id = String(field.id || '').trim().toLowerCase();
+
+  if (label === 'submit') return true;
+  if (action === 'form.submit') return true;
+  if (id.startsWith('submit-')) return true;
+
+  return false;
 }

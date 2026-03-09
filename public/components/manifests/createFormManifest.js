@@ -1,13 +1,12 @@
 import {
-  getCompactToolbarButtonStyle,
   getDeleteButtonStyle,
   isSmallScreen
 } from './screenManifestUtils.js';
 import {
-  buttonNode,
   containerRegion,
   defineManifest
 } from './manifestDsl.js';
+import { buildToolbar } from './toolbarBuilder.js';
 import { normalizeEditorFields } from './editor/fieldNormalization.js';
 import { getFieldPlugins } from '../fieldPlugins/fieldPluginRegistry.js';
 import { runFieldPlugins } from '../fieldPlugins/runFieldPlugins.js';
@@ -16,7 +15,7 @@ export const createFormUIManifest = defineManifest({
   layout: 'vertical',
   id: 'create-form-root',
   style: {
-    background: '#ffffff'
+    background: '#e35e5e'
   },
   regions: {
     toolbar: containerRegion({
@@ -28,6 +27,9 @@ export const createFormUIManifest = defineManifest({
       children: []
     }),
     formContainer: containerRegion({
+      style: {
+        background: '#ffffff'
+      },
       scrollable: true,
       viewport: 600,
       children: []
@@ -42,54 +44,23 @@ export function buildCreateFormManifest({
   addLabelCommand,
   addInputCommand,
   addPhotoCommand,
-  displayFields
+  closeCommand,
+  displayFields,
+  toolbarPluginButtons = []
 }) {
   const manifest = structuredClone(createFormUIManifest);
   manifest.id = mode === 'edit' ? 'edit-form-root' : 'create-form-root';
 
-  const compactButtonStyle = getCompactToolbarButtonStyle();
-  manifest.regions.toolbar.children = [
-    buttonNode({
-      id: 'save',
-      label: mode === 'edit' ? 'Update Form' : 'Save Form',
-      action: saveCommand,
-      style: compactButtonStyle,
-      skipCollect: true,
-      skipClear: true
-    }),
-    buttonNode({
-      id: 'addText',
-      label: 'Add Text',
-      action: addTextCommand,
-      style: compactButtonStyle,
-      skipCollect: true,
-      skipClear: true
-    }),
-    buttonNode({
-      id: 'addLabel',
-      label: 'Add Label',
-      action: addLabelCommand,
-      style: compactButtonStyle,
-      skipCollect: true,
-      skipClear: true
-    }),
-    buttonNode({
-      id: 'addInput',
-      label: 'Add Input',
-      action: addInputCommand,
-      style: compactButtonStyle,
-      skipCollect: true,
-      skipClear: true
-    }),
-    buttonNode({
-      id: 'addPhoto',
-      label: 'Add Photo',
-      action: addPhotoCommand,
-      style: compactButtonStyle,
-      skipCollect: true,
-      skipClear: true
-    })
-  ];
+  manifest.regions.toolbar.children = buildToolbar(
+    [
+      closeCommand && { id: 'close', label: 'Close', action: closeCommand },
+      { id: 'save', label: mode === 'edit' ? 'Update Form' : 'Save Form', action: saveCommand },
+      { id: 'addText', label: 'Add Text', action: addTextCommand },
+      { id: 'addInput', label: 'Add Input', action: addInputCommand },
+      { id: 'addPhoto', label: 'Add Photo', action: addPhotoCommand }
+    ],
+    toolbarPluginButtons
+  );
 
   manifest.regions.formContainer.children = displayFields;
   return manifest;
