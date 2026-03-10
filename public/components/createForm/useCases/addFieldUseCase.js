@@ -14,26 +14,26 @@ export class AddFieldUseCase {
     if (!newField) return;
 
     if (shouldAutoAttachLabel(newField)) {
-      const autoLabel = buildAutoLabelForField(newField);
+      const fieldGroup = buildAutoFieldGroupForField(newField);
       const currentFields = this.getFields?.();
 
       if (Array.isArray(currentFields) && typeof this.setFields === 'function') {
-        this.setFields([...currentFields, autoLabel, newField]);
+        this.setFields([...currentFields, fieldGroup]);
       } else {
-        this.addField?.(autoLabel);
-        this.addField?.(newField);
+        this.addField?.(fieldGroup);
       }
 
-      this.selectField?.(autoLabel.id);
+      this.selectField?.(fieldGroup.id);
       return;
     }
 
     if (newField?.type === 'label') {
       const selectedFieldId = this.getSelectedFieldId?.();
       const selectedField = this.getFieldById?.(selectedFieldId);
-      if (isLabelBindingTarget(selectedField)) {
-        newField.forFieldId = selectedField.id;
-        const seedLabel = String(selectedField.label || selectedField.text || '').trim();
+      const bindingTarget = resolveLabelBindingTarget(selectedField);
+      if (isLabelBindingTarget(bindingTarget)) {
+        newField.forFieldId = bindingTarget.id;
+        const seedLabel = String(bindingTarget.label || bindingTarget.text || '').trim();
         if (seedLabel) {
           newField.label = seedLabel;
           newField.text = seedLabel;
@@ -55,19 +55,33 @@ function shouldAutoAttachLabel(field) {
   return isLabelBindingTarget(field);
 }
 
-function buildAutoLabelForField(field) {
+function buildAutoFieldGroupForField(field) {
   const fieldId = String(field?.id || '').trim();
   const labelText = String(field?.label || field?.text || field?.placeholder || 'New Field').trim() || 'New Field';
   field.label = labelText;
   field.name = toInputName(labelText);
 
-  return {
+  const label = {
     id: `label-${fieldId}`,
     type: 'label',
     text: labelText,
     label: labelText,
     forFieldId: fieldId
   };
+
+  return {
+    id: `group-${fieldId}`,
+    type: 'fieldGroup',
+    children: [label, field]
+  };
+}
+
+function resolveLabelBindingTarget(field) {
+  if (!field || typeof field !== 'object') return null;
+  if (isLabelBindingTarget(field)) return field;
+  if (field.type !== 'fieldGroup' || !Array.isArray(field.children)) return null;
+
+  return field.children.find((child) => isLabelBindingTarget(child)) ?? null;
 }
 
 function toInputName(labelText) {

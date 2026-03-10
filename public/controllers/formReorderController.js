@@ -2,11 +2,25 @@ import { SceneHitTestSystem } from '../events/sceneHitTestSystem.js';
 import { EventCapturePipeline } from '../events/eventCapturePipeline.js';
 
 export class FormReorderController {
-  constructor({ context, getContainer, getRootNode, resolveFieldIdFromNode, onReorder, onPreviewTargetChange, onDragStateChange, dragThreshold = 8 }) {
+  constructor({
+    context,
+    getContainer,
+    getRootNode,
+    resolveFieldGroupIdFromNode,
+    getSelectedFieldId,
+    onSelectField,
+    hitTestSystem,
+    onReorder,
+    onPreviewTargetChange,
+    onDragStateChange,
+    dragThreshold = 8
+  }) {
     this.context = context;
     this.getContainer = getContainer;
     this.getRootNode = getRootNode;
-    this.resolveFieldIdFromNode = resolveFieldIdFromNode;
+    this.resolveFieldGroupIdFromNode = resolveFieldGroupIdFromNode;
+    this.getSelectedFieldId = getSelectedFieldId;
+    this.onSelectField = onSelectField;
     this.onReorder = onReorder;
     this.onPreviewTargetChange = onPreviewTargetChange;
     this.onDragStateChange = onDragStateChange;
@@ -21,7 +35,7 @@ export class FormReorderController {
     this.pendingMovePoint = null;
     this.dragCanvas = null;
 
-    this.hitTestSystem = new SceneHitTestSystem();
+    this.hitTestSystem = hitTestSystem || new SceneHitTestSystem();
     this.state = {
       phase: 'idle',
       startClientX: 0,
@@ -93,8 +107,14 @@ export class FormReorderController {
     const clientPoint = this.getClientPointFromOriginalEvent(originalEvent);
     if (!clientPoint) return false;
 
-    const sourceFieldId = this.getDragHandleFieldIdFromNode(sceneEvent?.target);
+    const sourceFieldId = this.resolveFieldGroupIdFromNode?.(sceneEvent?.target) ?? null;
     if (!sourceFieldId) return false;
+
+    const selectedFieldId = this.getSelectedFieldId?.() ?? null;
+    if (sourceFieldId !== selectedFieldId) {
+      this.onSelectField?.(sourceFieldId);
+      return false;
+    }
 
     this.startPendingDrag({
       sourceFieldId,
@@ -244,8 +264,14 @@ export class FormReorderController {
   handlePointerDown(event) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
-    const sourceFieldId = this.getDragHandleFieldIdAtClientPosition(event.clientX, event.clientY);
+    const sourceFieldId = this.getFieldGroupIdAtClientPosition(event.clientX, event.clientY);
     if (!sourceFieldId) return;
+
+    const selectedFieldId = this.getSelectedFieldId?.() ?? null;
+    if (sourceFieldId !== selectedFieldId) {
+      this.onSelectField?.(sourceFieldId);
+      return;
+    }
 
     this.startPendingDrag({
       sourceFieldId,
@@ -266,6 +292,10 @@ export class FormReorderController {
     const distancePx = Math.hypot(deltaX, deltaY);
     if (this.state.phase === 'pending' && distancePx >= this.getDragThreshold()) {
       this.state.phase = 'dragging';
+      this.state.previewFieldId = null;
+      this.state.lastPreviewClientX = event.clientX;
+      this.state.lastPreviewClientY = event.clientY;
+      this.updatePreviewTarget(null);
       this.notifyDragState({ active: true, phase: 'dragging', sourceFieldId: this.state.sourceFieldId, pointerId: this.state.pointerId });
     }
 
@@ -289,7 +319,7 @@ export class FormReorderController {
     if (!movePoint) return;
     this.pendingMovePoint = null;
 
-      const previewFieldId = this.getFieldIdAtClientPosition(movePoint.clientX, movePoint.clientY);
+      const previewFieldId = this.getFieldGroupIdAtClientPosition(movePoint.clientX, movePoint.clientY);
       const nextPreviewFieldId = previewFieldId ?? null;
       const targetChanged = nextPreviewFieldId !== this.state.previewFieldId;
       if (!targetChanged) return;
@@ -316,14 +346,15 @@ export class FormReorderController {
     }
 
     if (phase === 'dragging') {
-      const dropFieldId = this.getFieldIdAtClientPosition(event.clientX, event.clientY);
-      this.onReorder?.(sourceFieldId, dropFieldId);
+      const dropFieldId = this.getFieldGroupIdAtClientPosition(event.clientX, event.clientY);
+      if (dropFieldId && dropFieldId !== sourceFieldId) {
+        this.onReorder?.(sourceFieldId, dropFieldId);
+      }
       event.preventDefault();
     }
 
     this.state.previewFieldId = null;
     this.state.phase = 'idle';
-    this.activePointerType = 'mouse';
     this.updatePreviewTarget(null);
     this.notifyDragState({ active: false, phase: 'idle', sourceFieldId: null, pointerId: null });
 
@@ -335,7 +366,6 @@ export class FormReorderController {
     if (this.state.pointerId !== null && event.pointerId !== this.state.pointerId) return;
     this.state.previewFieldId = null;
     this.state.phase = 'idle';
-    this.activePointerType = 'mouse';
     this.updatePreviewTarget(null);
     this.notifyDragState({ active: false, phase: 'idle', sourceFieldId: null, pointerId: null });
     this.detachDragListeners();
@@ -368,30 +398,8 @@ export class FormReorderController {
     return this.hitTestSystem.hitTest(rootNode, scenePoint.x, scenePoint.y, this.context?.ctx);
   }
 
-  getDragHandleFieldIdAtClientPosition(clientX, clientY) {
+  getFieldGroupIdAtClientPosition(clientX, clientY) {
     const hitNode = this.getHitNodeAtClientPosition(clientX, clientY);
-    return this.getDragHandleFieldIdFromNode(hitNode);
-  }
-
-  getDragHandleFieldIdFromNode(node) {
-    let current = node;
-
-    while (current) {
-      const id = current.id;
-      if (typeof id === 'string' && id.startsWith('drag-handle-')) {
-        return id.slice('drag-handle-'.length);
-      }
-      current = current.parent;
-    }
-
-    return null;
-  }
-
-  getFieldIdAtClientPosition(clientX, clientY) {
-    const hitNode = this.getHitNodeAtClientPosition(clientX, clientY);
-    return this.resolveFieldIdFromNode?.(hitNode, {
-      allowDeleteNode: true,
-      allowHandleNode: true
-    }) ?? null;
+    return this.resolveFieldGroupIdFromNode?.(hitNode) ?? null;
   }
 }

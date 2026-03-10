@@ -79,6 +79,7 @@ export class RuntimeHost {
       getFields,
       getFieldById,
       resolveFieldIdFromNode: (node, options) => this.resolveFieldIdFromNode(node, options),
+      resolveFieldGroupIdFromNode: (node) => this.resolveFieldGroupIdFromNode(node),
       reorderFields,
       dragHandlePresentation,
       isPhotoLikeField,
@@ -158,6 +159,19 @@ export class RuntimeHost {
     });
   }
 
+  resolveFieldGroupIdFromNode(node) {
+    const fieldIds = new Set((this.getFields?.() || []).map((field) => field?.id).filter(Boolean));
+    let current = node;
+
+    while (current) {
+      const id = current?.id;
+      if (typeof id === 'string' && fieldIds.has(id)) return id;
+      current = current.parent;
+    }
+
+    return null;
+  }
+
   dispose() {
     this.interactionController.resetAllState();
     this.interactionController.dispose?.();
@@ -172,7 +186,7 @@ export function createDefaultRuntimeFeatureFactories() {
       editorState,
       getContainer,
       getRootNode,
-      resolveFieldIdFromNode,
+      resolveFieldGroupIdFromNode,
       reorderFields,
       refreshFormContainer,
       host
@@ -184,7 +198,7 @@ export function createDefaultRuntimeFeatureFactories() {
         getContainer,
         editorState,
         getRootNode,
-        resolveFieldIdFromNode,
+        resolveFieldGroupIdFromNode,
         reorderFields,
         stopActiveEditing: () => host.stopActiveEditing(),
         applyPreviewVisuals: () => host.interactionController.applyPreviewVisuals(),

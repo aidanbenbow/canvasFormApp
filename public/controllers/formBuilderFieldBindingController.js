@@ -18,7 +18,7 @@ export class FormBuilderFieldBindingController {
     if (!container) return;
 
     const fields = this.getFields?.() || [];
-    const fieldMap = new Map(fields.map((field) => [field.id, field]));
+    const fieldMap = buildEditableFieldMap(fields);
 
     const walk = (node) => {
       if (!node) return;
@@ -83,6 +83,24 @@ export class FormBuilderFieldBindingController {
 
     walk(container);
   }
+}
+
+function buildEditableFieldMap(fields = []) {
+  const map = new Map();
+
+  const walk = (field) => {
+    if (!field || typeof field !== 'object') return;
+    if (field.id) {
+      map.set(field.id, field);
+    }
+
+    if (field.type === 'fieldGroup' && Array.isArray(field.children)) {
+      field.children.forEach(walk);
+    }
+  };
+
+  fields.forEach(walk);
+  return map;
 }
 
 function toInputName(value) {

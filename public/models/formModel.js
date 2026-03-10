@@ -52,7 +52,15 @@ export class FormModel {
 
   getFieldById(fieldId) {
     if (!fieldId) return null;
-    return this.getFields().find((field) => field?.id === fieldId) ?? null;
+    const fields = this.getFields();
+    for (const field of fields) {
+      if (field?.id === fieldId) return field;
+      if (field?.type === 'fieldGroup' && Array.isArray(field?.children)) {
+        const child = field.children.find((entry) => entry?.id === fieldId);
+        if (child) return child;
+      }
+    }
+    return null;
   }
 
   setFields(fields) {
@@ -69,15 +77,21 @@ export class FormModel {
 
   deleteField(fieldId) {
     if (!fieldId) return;
-    this.setFields(this.getFields().filter((field) => field.id !== fieldId));
+    const topLevelFieldId = resolveOwningTopLevelFieldId(this.getFields(), fieldId);
+    if (!topLevelFieldId) return;
+    this.setFields(this.getFields().filter((field) => field.id !== topLevelFieldId));
   }
 
   reorderField(sourceFieldId, targetFieldId) {
     if (!sourceFieldId || !targetFieldId || sourceFieldId === targetFieldId) return;
 
     const fields = [...this.getFields()];
-    const sourceIndex = fields.findIndex((field) => field.id === sourceFieldId);
-    const targetIndex = fields.findIndex((field) => field.id === targetFieldId);
+    const sourceTopLevelId = resolveOwningTopLevelFieldId(fields, sourceFieldId);
+    const targetTopLevelId = resolveOwningTopLevelFieldId(fields, targetFieldId);
+    if (!sourceTopLevelId || !targetTopLevelId || sourceTopLevelId === targetTopLevelId) return;
+
+    const sourceIndex = fields.findIndex((field) => field.id === sourceTopLevelId);
+    const targetIndex = fields.findIndex((field) => field.id === targetTopLevelId);
     if (sourceIndex < 0 || targetIndex < 0) return;
 
     const [movedField] = fields.splice(sourceIndex, 1);
@@ -133,4 +147,19 @@ function isSubmitField(field) {
   if (id.startsWith('submit-')) return true;
 
   return false;
+}
+
+function resolveOwningTopLevelFieldId(fields = [], fieldId) {
+  if (!fieldId) return null;
+
+  for (const field of fields) {
+    if (field?.id === fieldId) return fieldId;
+
+    if (field?.type === 'fieldGroup' && Array.isArray(field?.children)) {
+      const hasChild = field.children.some((child) => child?.id === fieldId);
+      if (hasChild) return field.id;
+    }
+  }
+
+  return null;
 }

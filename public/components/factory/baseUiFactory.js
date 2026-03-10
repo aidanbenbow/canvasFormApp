@@ -113,7 +113,42 @@ export class BaseUIFactory {
       return node;
     },
     container: (def) => new ScrollNode(def),
-    fieldContainer: (def) => new ContainerNode(def),
+    fieldContainer: (def) => {
+      const context = {
+        ...def.context,
+        commandRegistry: def.context?.commandRegistry
+      };
+
+      const childDefinitions = Array.isArray(def.children) ? def.children : [];
+      const childNodes = childDefinitions
+        .map((childDef) => createUIComponent(childDef, context))
+        .filter(Boolean);
+
+      return new ContainerNode({
+        ...def,
+        context,
+        children: childNodes
+      });
+    },
+    fieldGroup: (def) => {
+      const context = {
+        ...def.context,
+        commandRegistry: def.context?.commandRegistry
+      };
+
+      const childDefinitions = Array.isArray(def.children) ? def.children : [];
+      const childNodes = childDefinitions
+        .map((childDef) => createUIComponent(childDef, context))
+        .filter(Boolean);
+
+      return new ContainerNode({
+        ...def,
+        type: 'fieldContainer',
+        layout: def.layout || 'vertical',
+        context,
+        children: childNodes
+      });
+    },
     dropDown: (def) => {
     
       const registry = def.context.fieldRegistry;

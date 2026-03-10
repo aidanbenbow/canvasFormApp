@@ -25,11 +25,6 @@ export function injectEditorSelectionControlsPlugin({
       }
 
       return [
-        {
-          type: 'text',
-          id: `drag-handle-${field.id}`,
-          ...activeGetDragHandlePresentation?.(field.id, { smallScreen: activeSmallScreen })
-        },
         field,
         {
           type: 'button',

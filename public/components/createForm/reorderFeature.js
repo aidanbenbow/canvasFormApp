@@ -1,4 +1,5 @@
 import { FormReorderController } from '../../controllers/formReorderController.js';
+import { SceneHitTestSystem } from '../../events/sceneHitTestSystem.js';
 
 export class ReorderFeature {
   constructor({
@@ -7,7 +8,7 @@ export class ReorderFeature {
     getContainer,
     editorState,
     getRootNode,
-    resolveFieldIdFromNode,
+    resolveFieldGroupIdFromNode,
     reorderFields,
     stopActiveEditing,
     applyPreviewVisuals,
@@ -24,13 +25,28 @@ export class ReorderFeature {
       getContainer,
       dragThreshold,
       getRootNode,
-      resolveFieldIdFromNode,
+      resolveFieldGroupIdFromNode,
+      getSelectedFieldId: () => this.editorState?.getSelectedFieldId?.(),
+      onSelectField: (fieldId) => this.handleSelectionRequest(fieldId),
+      hitTestSystem: new SceneHitTestSystem(),
       onReorder: (sourceFieldId, targetFieldId) =>
         this.handleReorder(sourceFieldId, targetFieldId),
       onPreviewTargetChange: (fieldId) => this.handlePreviewTargetChange(fieldId),
       onDragStateChange: ({ active, sourceFieldId }) =>
         this.handleDragStateChange({ active, sourceFieldId })
     });
+  }
+
+  handleSelectionRequest(fieldId) {
+    const nextSelectedFieldId = fieldId ?? null;
+    if (this.editorState?.getSelectedFieldId?.() === nextSelectedFieldId) return;
+
+    this.stopActiveEditing?.();
+    this.editorState?.set({
+      selectedFieldId: nextSelectedFieldId,
+      previewInsertionBeforeFieldId: null
+    });
+    this.refreshFormContainer?.();
   }
 
   handlePreviewTargetChange(fieldId) {

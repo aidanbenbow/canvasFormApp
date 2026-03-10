@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test:reorder-harness": "node scripts/reorderController.harness.js"
   },
   "author": "apb",
   "license": "ISC",
